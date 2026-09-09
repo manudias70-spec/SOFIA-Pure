@@ -193,13 +193,14 @@ There are a few core options related to this feature:
   This setting can be used to switch to software rendering with a more faithful emulation but at much higher CPU cost.
 - `Video > 3dfx Voodoo OpenGL Scaling`: Use this setting to increase the render resolution of the OpenGL rendering.
 
-### MIDI Playback with SoundFonts or MT-32
+### MIDI Playback with SoundFonts, MT-32 or SC-55
 If DOSBox Pure finds one or more `.SF2` sound font files in the `system` directory, one of them
-can be selected via the `Audio > MIDI SoundFont` core option. This sound font will then be used to play General Midi and Sound Canvas music.
+can be selected via the `Audio > MIDI Output` core option. This sound font will then be used to play General Midi and Sound Canvas music.
 
-If the `system` directory contains a pair of `_control.rom` and `_pcm.rom` files, an MT-32 synthesizer can be emulated with them.
+If the `system` directory contains a pair of `_control.rom` and `_pcm.rom` files, an MT-32 synthesizer can be emulated with them.  
+Similarily, if it contains a set of `rom1.bin`, `rom2.bin`, `waverom1.bin`, etc. files (with or without a prefix), an SC-55 module can be emulated with them.
 
-Alternatively if the content mounted to the C: drive contains a file named DOSBOX.SF2 or MT32_CONTROL.ROM/MT32_PCM.ROM, it will be used as a per-game override to the core option.
+Alternatively if the content mounted to the C: drive contains a file named DOSBOX.SF2, MT32_CONTROL.ROM/MT32_PCM.ROM or ROM1.BIN/etc., it will be used as a per-game override to the core option.
 
 ### Save States
 DOSBox Pure can save the state of the emulation to disk.
@@ -245,7 +246,7 @@ will reveal further options to customize it.
 
 ### Configuration File
 The program uses a configuration file DOSBoxPure.cfg which it will create automatically.
-Next to the configuration file, it will also create and use two folders `saves` (for game save data and save states) and `system` (for operating system images, SoundFonts2 and MT-32 ROM files).
+Next to the configuration file, it will also create and use two folders `saves` (for game save data and save states) and `system` (for operating system images, SoundFonts2, MT-32 and SC-55 ROM files).
 
 On Windows it will by default use the folder DOSBoxPure.exe exists in but it can be changed by creating a folder called `DOSBoxPure` under the users Roaming AppData folder.
 On Linux and macOS it will by default use a subfolder in the home folder but it can be changed by creating a file called `DOSBoxPure.cfg` in the current directory or next to the executable.

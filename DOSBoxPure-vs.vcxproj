@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <ProjectName>DOSBoxPure</ProjectName>
@@ -55,11 +55,21 @@
       <AdditionalIncludeDirectories>$(DBPDir)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="vfs_implementation.cpp" />
     <ResourceCompile Include="DOSBoxPure.rc" />
-    <ClCompile Include="$(DBPDir)dosbox_pure_libretro.cpp" />
+    <ClCompile Include="$(DBPDir)dosbox_pure_libretro.cpp">
+      <ExceptionHandling>Sync</ExceptionHandling>
+    </ClCompile>
     <ClCompile Include="$(DBPDir)keyb2joypad.cpp" />
     <ClInclude Include="$(DBPDir)core_options.h" />
     <ClInclude Include="$(DBPDir)dosbox_pure_osd.h" />
@@ -78,6 +88,7 @@
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
       <WarningLevel>Level2</WarningLevel>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='DebugGLCORE|x64'">Disabled</Optimization>
     </ClCompile>
     <ClCompile Include="$(DBPDir)src/cpu/callback.cpp">
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
@@ -297,6 +308,10 @@
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
     </ClCompile>
+    <ClCompile Include="$(DBPDir)src/hardware/nukedsc55.cpp">
+      <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
+      <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
+    </ClCompile>
     <ClCompile Include="$(DBPDir)src/hardware/pci_bus.cpp">
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
@@ -357,6 +372,7 @@
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
       <WarningLevel>Level2</WarningLevel>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='DebugGLCORE|x64'">Disabled</Optimization>
     </ClCompile>
     <ClCompile Include="$(DBPDir)src/hardware/vga_gfx.cpp">
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
@@ -387,6 +403,7 @@
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
       <WarningLevel>Level2</WarningLevel>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='DebugGLCORE|x64'">Disabled</Optimization>
     </ClCompile>
     <ClCompile Include="$(DBPDir)src/hardware/vga_seq.cpp">
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
