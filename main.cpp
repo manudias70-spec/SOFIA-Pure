@@ -2093,8 +2093,8 @@ static struct sDOSBoxPure : public ZL_Application
 
 		OnLoad(argc, argv);
 
-		ZL_Audio::Init(AudioLatency * 44100 / 1000);
 		ZL_Audio::HookAudioMix(AudioMix);
+		ZL_Audio::Init(AudioLatency * 44100 / 1000);
 	}
 
 	virtual void AfterFrame()
