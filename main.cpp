@@ -1049,10 +1049,6 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			return false;
 		case RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS:
 			return false;
-		case RETRO_ENVIRONMENT_SET_CONTROLLER_INFO:
-			return false;
-		case RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS:
-			return false;
 		case RETRO_ENVIRONMENT_GET_VFS_INTERFACE:
 		{
 			retro_vfs_interface_info* vfs = (retro_vfs_interface_info*)data;
