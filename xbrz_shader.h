@@ -71,14 +71,13 @@ void main()
     }
 
     // Detect the opposite F-H diagonal.
-    float antiDiagonal = xbrz_dist(B, G) + xbrz_dist(E, F);
-    float antiCross = xbrz_dist(B, E) + xbrz_dist(F, E);
-    if (antiDiagonal + threshold < antiCross &&
-        xbrz_dist(B, G) < 0.12 && xbrz_dist(E, F) > 0.08)
+    float antiDiagonal = xbrz_dist(F, H);
+    float antiCross = xbrz_dist(E, I);
+    if (antiDiagonal < 0.12 && antiCross > 0.08)
     {
         float side = f.x + f.y - 1.0;
         float blend = smoothstep(-edgeWidth, edgeWidth, side);
-        color = mix(B, G, blend);
+        color = mix(E, I, blend);
     }
 
     // Preserve crisp corners where the surrounding neighborhood is uniform.
