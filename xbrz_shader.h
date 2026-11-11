@@ -41,7 +41,7 @@ void main()
     vec2 outputSize = vec2(OutputSize_x, OutputSize_y);
     vec2 scale = outputSize / max(inputSize, vec2(1.0));
 
-    vec2 p = v_texcoord * inputSize;
+    vec2 p = v_texcoord * vec2(TextureSize_x, TextureSize_y);
     vec2 ip = floor(p);
     vec2 f = fract(p);
 
