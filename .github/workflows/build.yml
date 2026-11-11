@@ -26,6 +26,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -55,6 +56,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -84,6 +86,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -118,6 +121,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
     - if: ${{ github.event.inputs.versionstring != '' }}
@@ -171,6 +175,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
     - if: ${{ github.event.inputs.versionstring != '' }}
@@ -221,6 +226,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
     - if: ${{ github.event.inputs.versionstring != '' }}
@@ -248,6 +254,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
     - if: ${{ github.event.inputs.versionstring != '' }}
