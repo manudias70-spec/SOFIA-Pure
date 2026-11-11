@@ -1773,6 +1773,7 @@ static bool DrawIntro()
 	const float scale = 1.5f*(ZLASPECTR > 1 ? 1/ZLASPECTR : 1); //ZL_Math::Min(ZLWIDTH, ZLHEIGHT) / 1800.0f;;
 	const float logoW = scale * 0.93769841772151898734177215189873f, spineW = scale * 0.52397310126582278481012658227848f;
 	const bool holdIntro = (f >= 1.0f && !IntroDismissRequested);
+	const float logoScale = 1.0f + 0.10f * f; // Gently enlarge the SOFIA image by 10%.
 	// Keep the logo in front of the camera while the splash waits for a key.
 	const float dist = (holdIntro ? -6.0f : (1-f)*-10);
 	const float rot = (1-f)*0.69813170079773183076947630739551f;
@@ -1792,7 +1793,7 @@ static bool DrawIntro()
 		ZL_Display::FillQuad(-spineW,-scale , spineW,-scale , spineW,scale , -spineW,scale , colSpine);
 	}
 	ZL_Display::SetMatrix(mtxLogo);
-	srfLogo.DrawQuad(-logoW,-scale , logoW,-scale , logoW,scale , -logoW,scale , colLogo);
+	srfLogo.DrawQuad(-logoW*logoScale,-scale*logoScale , logoW*logoScale,-scale*logoScale , logoW*logoScale,scale*logoScale , -logoW*logoScale,scale*logoScale , colLogo);
 	ZL_Display::PopMatrix();
 
 	if (f == 1.0f && IntroDismissRequested) { srfLogo = ZL_Surface(); IntroActive = false; return true; }
