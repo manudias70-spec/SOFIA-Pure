@@ -26,6 +26,7 @@
 #include <ZL_Thread.h>
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
+#include "xbrz_shader.h"
 
 #include <vector>
 
@@ -53,7 +54,7 @@ static unsigned char ThrottleMode, LastAudioThrottleMode;
 static bool ThrottlePaused, SpeedModHold, DisableSystemALT, UseMiddleMouseMenu, PointerLock, DrawStretched, VariablesUpdated;
 static bool DrawCoreShader, DoApplyInterfaceOptions, DoApplyGeometry, DoSave, DoLoad, AudioSkip, DefaultPointerLock;
 static char Scaling;
-static int CRTFilter, AudioLatency;
+static int XBRZScale, CRTFilter, AudioLatency;
 static float FastRate = 5.0f, SlowRate = 0.3f;
 static std::string PathSaves, PathSystem;
 static ZL_Vector PointerLockPos;
@@ -1457,7 +1458,14 @@ static void ApplyGeometry()
 	float core_ar = av.geometry.aspect_ratio, win_w = ZLWIDTH, win_h = ZL_Math::Max(ZLHEIGHT, 1.0f), win_ar = win_w / win_h, osd_w = DBPS_OSD_WIDTH, osd_h = DBPS_OSD_HEIGHT, osd_ar = osd_w / osd_h;
 	if (DrawStretched) core_ar = win_ar;
 
-	if (Scaling == 'I')
+	if (XBRZScale)
+	{
+		const float base_w = (float)av.geometry.base_width, base_h = base_w / core_ar;
+		const float scale = ZL_Math::Min((float)XBRZScale, ZL_Math::Min(win_w / base_w, win_h / base_h));
+		const float out_w = base_w * scale, out_h = base_h * scale;
+		core_rec = ZL_Rectf::BySize((float)(int)(win_w * 0.5f - out_w * 0.5f + 0.4999f), (float)(int)(win_h * 0.5f - out_h * 0.5f + 0.4999f), (float)(int)(out_w + 0.5f), (float)(int)(out_h + 0.5f));
+	}
+	else if (Scaling == 'I')
 	{
 		int int_w = (int)av.geometry.base_width, int_h = (int)(av.geometry.base_width / core_ar + 0.499f);
 		while (int_w * 2 <= win_w && int_h * 2 <= win_h) { int_w *= 2; int_h *= 2; }
@@ -1472,9 +1480,9 @@ static void ApplyGeometry()
 
 	// Default (sharper) scaling will use nearest neighbor filter with no shader if scale factor is either large or (near) integer
 	const float coreScale = (core_rec.Height() / av.geometry.base_height), coreScaleFrac = (coreScale - (int)coreScale);
-	const bool coreScaleLinear = (CRTFilter || Scaling == 'B' || ((!Scaling || Scaling == 'D') && (coreScale < 3 && coreScaleFrac > 0.01f && coreScaleFrac < 0.99f)));
+	const bool coreScaleLinear = (!XBRZScale && (CRTFilter || Scaling == 'B' || ((!Scaling || Scaling == 'D') && (coreScale < 3 && coreScaleFrac > 0.01f && coreScaleFrac < 0.99f))));
 	srfCore.SetTextureFilterMode(coreScaleLinear, coreScaleLinear);
-	DrawCoreShader = (shdrCore && (CRTFilter || !(!Scaling || Scaling == 'D') || coreScaleLinear));
+	DrawCoreShader = (shdrCore && (XBRZScale || CRTFilter || !(!Scaling || Scaling == 'D') || coreScaleLinear));
 }
 
 static void ApplyInterfaceOptions()
@@ -1700,14 +1708,23 @@ static void ApplyInterfaceOptions()
 	DisableSystemALT = ((GetSetting("interface_systemhotkeys", "true")[0]|0x20) == 'f');
 	UseMiddleMouseMenu = ((GetSetting("interface_middlemouse", "false")[0]|0x20) == 't');
 	DrawStretched = !strcmp(GetSetting("dosbox_pure_aspect_correction", "false"), "fill");
-	Scaling = (GetSetting("interface_scaling", "default")[0]&0x5f);
+	const char* scalingSetting = GetSetting("interface_scaling", "default");
+	Scaling = (scalingSetting[0]&0x5f);
+	XBRZScale = (!strcmp(scalingSetting, "xbrz2x") ? 2 : !strcmp(scalingSetting, "xbrz3x") ? 3 : 0);
 	CRTFilter = atoi(GetSetting("interface_crtfilter", "false"));
 	const int audlatency = ZL_Math::Max(atoi(GetSetting("interface_audiolatency", "25")), 5);
 
 	static const char* sLastShaderSrc;
-	const bool useCoreShader = (CRTFilter || !Scaling || Scaling == 'D');
-	const char* shaderSrc = (CRTFilter ? fragment_shader_crt_src : (useCoreShader ? fragment_shader_scaling_src : NULL));
-	if (shaderSrc != sLastShaderSrc) { sLastShaderSrc = shaderSrc; shdrCore = (shaderSrc ? ZL_Shader(shaderSrc, NULL, "TextureSize_x", "TextureSize_y", (CRTFilter ? 8 : 0), "InputSize_x", "InputSize_y", "ShadowMask", "ScanlineThinness", "HorizontalBlur", "MaskValue", "Curvature", "Corner") : ZL_Shader()); }
+	const bool useCoreShader = (CRTFilter || XBRZScale || !Scaling || Scaling == 'D');
+	const char* shaderSrc = (CRTFilter ? fragment_shader_crt_src : (XBRZScale ? fragment_shader_xbrz_src : (useCoreShader ? fragment_shader_scaling_src : NULL)));
+	if (shaderSrc != sLastShaderSrc)
+	{
+		sLastShaderSrc = shaderSrc;
+		if (!shaderSrc) shdrCore = ZL_Shader();
+		else if (CRTFilter) shdrCore = ZL_Shader(shaderSrc, NULL, "TextureSize_x", "TextureSize_y", 8, "InputSize_x", "InputSize_y", "ShadowMask", "ScanlineThinness", "HorizontalBlur", "MaskValue", "Curvature", "Corner");
+		else if (XBRZScale) shdrCore = ZL_Shader(shaderSrc, NULL, "TextureSize_x", "TextureSize_y", 4, "InputSize_x", "InputSize_y", "OutputSize_x", "OutputSize_y");
+		else shdrCore = ZL_Shader(shaderSrc, NULL, "TextureSize_x", "TextureSize_y");
+	}
 
 	const int crtscanline  = atoi(GetSetting("interface_crtscanline" , "2")); //{ "0", "No scanline gaps" },{ "4", "Weak gaps" },{ "8", "Strong gaps" },
 	const int crtblur      = atoi(GetSetting("interface_crtblur"     , "2")); //{ "0", "Blurry" },{ "1", "Smooth" },{ "2", "Default" },{ "3", "Pixely" },{ "4", "Sharper" },
@@ -1728,7 +1745,14 @@ static void ApplyInterfaceOptions()
 	const float Corner = 2.2f * crtcorner;
 
 	if (useCoreShader)
-		shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()), s(srfCore.GetWidth()*srfCore.GetScaleW()), s(srfCore.GetHeight()*srfCore.GetScaleH()), s(CRTFilter), s(ScanlineThinness), s(HorizontalBlur), s(MaskValue), s(Curvature), s(Corner));
+	{
+		if (CRTFilter)
+			shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()), s(srfCore.GetWidth()*srfCore.GetScaleW()), s(srfCore.GetHeight()*srfCore.GetScaleH()), s(CRTFilter), s(ScanlineThinness), s(HorizontalBlur), s(MaskValue), s(Curvature), s(Corner));
+		else if (XBRZScale)
+			shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()), s(srfCore.GetWidth()*srfCore.GetScaleW()), s(srfCore.GetHeight()*srfCore.GetScaleH()), s(core_rec.Width()), s(core_rec.Height()));
+		else
+			shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()));
+	}
 
 	if (newFastRate != FastRate || newSlowRate != SlowRate)
 	{
