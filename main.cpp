@@ -32,6 +32,7 @@
 #include <libretro-common/include/libretro.h>
 #include <include/cross.h>
 #include "vfs_implementation.h"
+#include "xbrz_shader.h"
 
 #include <dosbox_pure_sta.h>
 int DBPS_SaveSlotIndex;
@@ -1474,7 +1475,7 @@ static void ApplyGeometry()
 	const float coreScale = (core_rec.Height() / av.geometry.base_height), coreScaleFrac = (coreScale - (int)coreScale);
 	const bool coreScaleLinear = (CRTFilter || Scaling == 'B' || ((!Scaling || Scaling == 'D') && (coreScale < 3 && coreScaleFrac > 0.01f && coreScaleFrac < 0.99f)));
 	srfCore.SetTextureFilterMode(coreScaleLinear, coreScaleLinear);
-	DrawCoreShader = (shdrCore && (CRTFilter || !(!Scaling || Scaling == 'D') || coreScaleLinear));
+	DrawCoreShader = (shdrCore && (CRTFilter || Scaling == 'X' || !(!Scaling || Scaling == 'D') || coreScaleLinear));
 }
 
 static void ApplyInterfaceOptions()
@@ -1706,8 +1707,8 @@ static void ApplyInterfaceOptions()
 
 	static const char* sLastShaderSrc;
 	const bool useCoreShader = (CRTFilter || !Scaling || Scaling == 'D');
-	const char* shaderSrc = (CRTFilter ? fragment_shader_crt_src : (useCoreShader ? fragment_shader_scaling_src : NULL));
-	if (shaderSrc != sLastShaderSrc) { sLastShaderSrc = shaderSrc; shdrCore = (shaderSrc ? ZL_Shader(shaderSrc, NULL, "TextureSize_x", "TextureSize_y", (CRTFilter ? 8 : 0), "InputSize_x", "InputSize_y", "ShadowMask", "ScanlineThinness", "HorizontalBlur", "MaskValue", "Curvature", "Corner") : ZL_Shader()); }
+	const char* shaderSrc = (CRTFilter ? fragment_shader_crt_src : (Scaling == 'X' ? xbrz_fragment_shader_src : (useCoreShader ? fragment_shader_scaling_src : NULL)));
+	if (shaderSrc != sLastShaderSrc) { sLastShaderSrc = shaderSrc; const char* vertexSrc = (Scaling == 'X' && !CRTFilter ? xbrz_vertex_shader_src : NULL); shdrCore = (shaderSrc ? ZL_Shader(shaderSrc, vertexSrc, "TextureSize_x", "TextureSize_y", (CRTFilter ? 8 : 0), "InputSize_x", "InputSize_y", "ShadowMask", "ScanlineThinness", "HorizontalBlur", "MaskValue", "Curvature", "Corner") : ZL_Shader()); }
 
 	const int crtscanline  = atoi(GetSetting("interface_crtscanline" , "2")); //{ "0", "No scanline gaps" },{ "4", "Weak gaps" },{ "8", "Strong gaps" },
 	const int crtblur      = atoi(GetSetting("interface_crtblur"     , "2")); //{ "0", "Blurry" },{ "1", "Smooth" },{ "2", "Default" },{ "3", "Pixely" },{ "4", "Sharper" },
@@ -1727,7 +1728,7 @@ static void ApplyInterfaceOptions()
 	const float Curvature = 0.01f * crtcurvature;
 	const float Corner = 2.2f * crtcorner;
 
-	if (useCoreShader)
+	if (useCoreShader || Scaling == 'X')
 		shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()), s(srfCore.GetWidth()*srfCore.GetScaleW()), s(srfCore.GetHeight()*srfCore.GetScaleH()), s(CRTFilter), s(ScanlineThinness), s(HorizontalBlur), s(MaskValue), s(Curvature), s(Corner));
 
 	if (newFastRate != FastRate || newSlowRate != SlowRate)
