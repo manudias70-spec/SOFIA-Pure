@@ -542,6 +542,7 @@ void DBPS_ToggleConfigOverride(const char* key, const char* defaultval)
 		ConfigCache.Erase(key);
 		VariablesUpdated = true;
 		if (IsInterfaceConfigKey(key)) DoApplyInterfaceOptions = true;
+		if (!strcmp(key, "dosbox_pure_aspect_correction")) DoApplyGeometry = true;
 		mtxCoreOptions.Unlock();
 	}
 	else
@@ -1039,6 +1040,7 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			ConfigCache.Erase(((retro_variable*)data)->key);
 			VariablesUpdated = true;
 			if (IsInterfaceConfigKey(((retro_variable*)data)->key)) DoApplyInterfaceOptions = true;
+			if (!strcmp(((retro_variable*)data)->key, "dosbox_pure_aspect_correction")) DoApplyGeometry = true;
 			mtxCoreOptions.Unlock();
 			return true;
 		}
