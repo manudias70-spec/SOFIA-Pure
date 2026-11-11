@@ -33,6 +33,7 @@
 #include <include/cross.h>
 #include "vfs_implementation.h"
 #include "xbrz_shader.h"
+#include "sofia_splash.h"
 
 #include <dosbox_pure_sta.h>
 int DBPS_SaveSlotIndex;
@@ -1758,11 +1759,7 @@ static bool DrawIntro()
 {
 	static ZL_Surface srfLogo;
 	if (!srfLogo)
-	{
-		enum { dbplogopng_size = 12829 };
-		extern const unsigned char* dbplogopng;
-		srfLogo = ZL_Surface(ZL_File(dbplogopng, dbplogopng_size));
-	}
+		srfLogo = ZL_Surface(ZL_File(sofia_splash_png, sizeof(sofia_splash_png)));
 
 	static ticks_t animstart;
 	if (!animstart) animstart = ZLTICKS+50;
