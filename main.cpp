@@ -1772,11 +1772,11 @@ static bool DrawIntro()
 	const float f = ZL_Easing::InOutQuart(ZL_Math::Clamp01(ZLSINCEF(animstart+300, 1000)));
 	const float scale = 1.5f*(ZLASPECTR > 1 ? 1/ZLASPECTR : 1); //ZL_Math::Min(ZLWIDTH, ZLHEIGHT) / 1800.0f;;
 	const float logoW = scale * 0.93769841772151898734177215189873f, spineW = scale * 0.52397310126582278481012658227848f;
-	const float dist = (1-f)*-10;
+	const bool holdIntro = (f >= 1.0f && !IntroDismissRequested);
+	// Keep the logo in front of the camera while the splash waits for a key.
+	const float dist = (holdIntro ? -6.0f : (1-f)*-10);
 	const float rot = (1-f)*0.69813170079773183076947630739551f;
 	const float ups = f * 0.21f * scale;
-
-	const bool holdIntro = (f >= 1.0f && !IntroDismissRequested);
 	const ZL_Color colBG     = (holdIntro ? ZLBLACK : ZLLUMA(0, (early < 1 ? 1.0-(early*.49f) : (0.7f-f)*.7f)));
 	const ZL_Color colLogo   = (holdIntro ? ZLWHITE : ZLLUMA(early, early < 1 ? early : f < 0.5 ? 1.0 : ZL_Easing::InQuad(1.0f - (f * 2.0f - 1.0f))));
 	const ZL_Color colSpine  = (holdIntro ? ZLLUMA(0.95f, 1.0f) : ZLLUMA(early*0.94901960784313725490196078431373f, colLogo.a));
