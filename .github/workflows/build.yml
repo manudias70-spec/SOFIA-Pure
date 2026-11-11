@@ -23,7 +23,8 @@ jobs:
     - uses: microsoft/setup-msbuild@main
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -51,7 +52,8 @@ jobs:
     - uses: microsoft/setup-msbuild@main
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -79,7 +81,8 @@ jobs:
     - uses: microsoft/setup-msbuild@main
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -112,7 +115,8 @@ jobs:
         fetch-depth: 0
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -164,7 +168,8 @@ jobs:
         fetch-depth: 0
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -213,7 +218,8 @@ jobs:
     - name: Checkout Deps
       run: |
         sudo xcode-select -s /Applications/Xcode_16.app
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -239,7 +245,8 @@ jobs:
     - name: Checkout Deps
       run: |
         sudo xcode-select -s /Applications/Xcode_15.0.1.app
-        git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/dosbox-pure.git dosbox-pure
+        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
