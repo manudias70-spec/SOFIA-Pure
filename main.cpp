@@ -1483,6 +1483,8 @@ static void ApplyGeometry()
 	const bool coreScaleLinear = (!XBRZScale && (CRTFilter || Scaling == 'B' || ((!Scaling || Scaling == 'D') && (coreScale < 3 && coreScaleFrac > 0.01f && coreScaleFrac < 0.99f))));
 	srfCore.SetTextureFilterMode(coreScaleLinear, coreScaleLinear);
 	DrawCoreShader = (shdrCore && (XBRZScale || CRTFilter || !(!Scaling || Scaling == 'D') || coreScaleLinear));
+	if (XBRZScale && shdrCore)
+		shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()), s(srfCore.GetWidth()*srfCore.GetScaleW()), s(srfCore.GetHeight()*srfCore.GetScaleH()), s(core_rec.Width()), s(core_rec.Height()));
 }
 
 static void ApplyInterfaceOptions()
