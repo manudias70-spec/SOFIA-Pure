@@ -1786,15 +1786,23 @@ static bool DrawIntro()
 
 	ZL_Display::FillRect(0, 0, ZLWIDTH, ZLHEIGHT, colBG);
 	ZL_Display::PushMatrix();
-	if (mtxSpine.PerspectiveTransformPositionTo2D(ZL_Vector3(-spineW,0)).x > mtxSpine.PerspectiveTransformPositionTo2D(ZL_Vector3(spineW,0)).x)
+	if (holdIntro)
 	{
-		ZL_Display::SetMatrix(mtxSpine);
-		ZL_Display::FillQuad(-spineW,-scale , spineW,-scale , spineW,scale , -spineW,scale , colSpine);
+		// Fill the complete viewport while waiting for the user's key.
+		ZL_Display::SetMatrix(ZL_Matrix());
+		srfLogo.DrawQuad(0, 0, ZLWIDTH, 0, ZLWIDTH, ZLHEIGHT, 0, ZLHEIGHT, ZLWHITE);
 	}
-	ZL_Display::SetMatrix(mtxLogo);
-	srfLogo.DrawQuad(-logoW,-scale , logoW,-scale , logoW,scale , -logoW,scale , colLogo);
+	else
+	{
+		if (mtxSpine.PerspectiveTransformPositionTo2D(ZL_Vector3(-spineW,0)).x > mtxSpine.PerspectiveTransformPositionTo2D(ZL_Vector3(spineW,0)).x)
+		{
+			ZL_Display::SetMatrix(mtxSpine);
+			ZL_Display::FillQuad(-spineW,-scale , spineW,-scale , spineW,scale , -spineW,scale , colSpine);
+		}
+		ZL_Display::SetMatrix(mtxLogo);
+		srfLogo.DrawQuad(-logoW,-scale , logoW,-scale , logoW,scale , -logoW,scale , colLogo);
+	}
 	ZL_Display::PopMatrix();
-
 	if (f == 1.0f && IntroDismissRequested) { srfLogo = ZL_Surface(); IntroActive = false; return true; }
 	return false;
 }
