@@ -53,6 +53,7 @@ enum EHotkeyFKeys
 static unsigned short HotkeyMod;
 static unsigned char ThrottleMode, LastAudioThrottleMode;
 static bool ThrottlePaused, SpeedModHold, DisableSystemALT, UseMiddleMouseMenu, PointerLock, DrawStretched, VariablesUpdated;
+static bool IntroActive = true, IntroDismissRequested;
 static bool DrawCoreShader, DoApplyInterfaceOptions, DoApplyGeometry, DoSave, DoLoad, AudioSkip, DefaultPointerLock;
 static char Scaling;
 static int CRTFilter, AudioLatency;
@@ -1401,6 +1402,7 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 
 static void OnKeyDown(ZL_KeyboardEvent& e)
 {
+	if (IntroActive && e.is_down) { IntroDismissRequested = true; return; }
 	if (OnKeyUseHotKey(e)) return;
 	unsigned rk = (unsigned)ZLKtoRETROKEY[e.key];
 	if (e.is_repeat || rk == RETROK_UNKNOWN) return;
@@ -1772,9 +1774,10 @@ static bool DrawIntro()
 	const float rot = (1-f)*0.69813170079773183076947630739551f;
 	const float ups = f * 0.21f * scale;
 
-	const ZL_Color colBG     = ZLLUMA(0, (early < 1 ? 1.0-(early*.49f) : (0.7f-f)*.7f));
-	const ZL_Color colLogo   = ZLLUMA(early, early < 1 ? early : f < 0.5 ? 1.0 : ZL_Easing::InQuad(1.0f - (f * 2.0f - 1.0f)));
-	const ZL_Color colSpine  = ZLLUMA(early*0.94901960784313725490196078431373f, colLogo.a);
+	const bool holdIntro = (f >= 1.0f && !IntroDismissRequested);
+	const ZL_Color colBG     = (holdIntro ? ZLBLACK : ZLLUMA(0, (early < 1 ? 1.0-(early*.49f) : (0.7f-f)*.7f)));
+	const ZL_Color colLogo   = (holdIntro ? ZLWHITE : ZLLUMA(early, early < 1 ? early : f < 0.5 ? 1.0 : ZL_Easing::InQuad(1.0f - (f * 2.0f - 1.0f))));
+	const ZL_Color colSpine  = (holdIntro ? ZLLUMA(0.95f, 1.0f) : ZLLUMA(early*0.94901960784313725490196078431373f, colLogo.a));
 	const ZL_Matrix mtxBase  = ZL_Matrix::MakePerspectiveHorizontal(40, ZLASPECTR, 0, 1) * ZL_Matrix::MakeTranslate(0, ups, dist);
 	const ZL_Matrix mtxSpine = mtxBase * ZL_Matrix::MakeRotate(ZL_Quat::FromRotateY(rot+PIHALF)) * ZL_Matrix::MakeTranslate(spineW, 0, -logoW);
 	const ZL_Matrix mtxLogo  = mtxBase * ZL_Matrix::MakeRotate(ZL_Quat::FromRotateY(rot));
@@ -1790,7 +1793,7 @@ static bool DrawIntro()
 	srfLogo.DrawQuad(-logoW,-scale , logoW,-scale , logoW,scale , -logoW,scale , colLogo);
 	ZL_Display::PopMatrix();
 
-	if (f == 1.0f) { srfLogo = ZL_Surface(); return true; }
+	if (f == 1.0f && IntroDismissRequested) { srfLogo = ZL_Surface(); IntroActive = false; return true; }
 	return false;
 }
 
