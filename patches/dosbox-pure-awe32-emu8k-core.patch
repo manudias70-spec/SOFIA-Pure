@@ -3172,7 +3172,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  
  static SB_INFO sb;
  
-+static bool SB_Is16(void) { return SB_Is16() || sb.type == SBT_AWE32; }
++static bool SB_Is16(void) { return sb.type == SBT_16 || sb.type == SBT_AWE32; }
 +static EMU8K awe8k;
 +static MixerChannel *awe_chan = NULL;
 +static bool awe_enabled = false;
@@ -3617,3 +3617,21 @@ diff --git a/src/dosbox.cpp b/src/dosbox.cpp
  
  	Phex = secprop->Add_hex("sbbase",Property::Changeable::WhenIdle,0x220);
  	Phex->Set_values(ios);
+
+diff --git a/DOSBoxPure-vs.vcxproj b/DOSBoxPure-vs.vcxproj
+--- a/DOSBoxPure-vs.vcxproj
++++ b/DOSBoxPure-vs.vcxproj
+@@ -328,0 +329,5 @@
++    <ClCompile Include="$(DBPDir)src/hardware/emu8k.cpp">
++      <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
++      <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
++      <WarningLevel>Level2</WarningLevel>
++    </ClCompile>
+
+diff --git a/DOSBoxPure-vs.vcxproj.filters b/DOSBoxPure-vs.vcxproj.filters
+--- a/DOSBoxPure-vs.vcxproj.filters
++++ b/DOSBoxPure-vs.vcxproj.filters
+@@ -256,0 +257,3 @@
++    <ClCompile Include="$(DBPDir)src/hardware/emu8k.cpp">
++      <Filter>DOSBox</Filter>
++    </ClCompile>
