@@ -1,7 +1,7 @@
 diff --git a/core_options.h b/core_options.h
 --- a/core_options.h
 +++ b/core_options.h
-@@ -739,6 +739,8 @@
+@@ -739,6 +739,7 @@
  			{ "default", "Sharp Scaling (default)" },
  			{ "nearest", "Simple Scaling (nearest neighbor)" },
  			{ "bilinear", "Bilinear Scaling" },
