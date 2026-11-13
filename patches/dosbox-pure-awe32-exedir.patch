@@ -1,0 +1,33 @@
+diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
+--- a/src/hardware/sblaster.cpp
++++ b/src/hardware/sblaster.cpp
+@@ -1,6 +1,8 @@
+ #include "emu8k.h"
+ #include <stdio.h>
++#define NOMINMAX
++#include <windows.h>
+ using namespace std;
+ 
+ extern FILE* DBP_FileOpenContentOrSystem(const char* fname);
++
++static FILE* AWE32_OpenROMBesideExe(void)
++{
++    wchar_t path[MAX_PATH];
++    DWORD length = GetModuleFileNameW(NULL, path, MAX_PATH);
++    if (!length || length >= MAX_PATH) return NULL;
++    wchar_t *slash = wcsrchr(path, L'\\');
++    wchar_t *forward = wcsrchr(path, L'/');
++    if (!slash || (forward && forward > slash)) slash = forward;
++    if (!slash) return NULL;
++    if (wcscpy_s(slash + 1, MAX_PATH - (size_t)(slash + 1 - path), L"awe32.raw")) return NULL;
++    return _wfopen(path, L"rb");
++}
+@@ -1,7 +1,7 @@
+-            FILE *rom = DBP_FileOpenContentOrSystem("awe32.raw");
++            FILE *rom = AWE32_OpenROMBesideExe();
+diff --git a/core_options.h b/core_options.h
+--- a/core_options.h
++++ b/core_options.h
+@@ -1,1 +1,1 @@
+-            { "awe32", "SoundBlaster AWE32 (requires awe32.raw in system)" },
++            { "awe32", "SoundBlaster AWE32 (awe32.raw beside DOSBoxPure.exe)" },
