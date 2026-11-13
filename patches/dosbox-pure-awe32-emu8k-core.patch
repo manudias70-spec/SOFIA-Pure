@@ -3190,16 +3190,16 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 +static Bitu AWE32_Read(Bitu port, Bitu iolen)
 +{
 +    if (!awe_enabled) return 0xff;
-+    Bitu emu_port = port - sb.hw.base + 0x200;
-+    return (iolen == 1) ? awe8k.Inb(emu_port) : awe8k.Inw(emu_port);
++    if (awe_chan) awe_chan->FillUp();
++    return (iolen == 1) ? awe8k.Inb(port) : awe8k.Inw(port);
 +}
 +
 +static void AWE32_Write(Bitu port, Bitu val, Bitu iolen)
 +{
 +    if (!awe_enabled) return;
-+    Bitu emu_port = port - sb.hw.base + 0x200;
-+    if (iolen == 1) awe8k.Outb(emu_port, (uint8_t)val);
-+    else awe8k.Outw(emu_port, (uint16_t)val);
++    if (awe_chan) awe_chan->FillUp();
++    if (iolen == 1) awe8k.Outb(port, (uint8_t)val);
++    else awe8k.Outw(port, (uint16_t)val);
 +}
 +
  static char const * const copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
@@ -3544,7 +3544,8 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  			WriteHandler[i].Install(sb.hw.base+i,write_sb,IO_MB);
  		}
 +		if (awe_enabled) {
-+			awe_chan = AweMixerChan.Install(&AWE32_CallBack, 44100, "SB");
++			awe8k.ChangeAddr(sb.hw.base + 0x400);
++			awe_chan = AweMixerChan.Install(&AWE32_CallBack, 44100, "AWE");
 +			awe_chan->Enable(true);
 +			for (i=0; i<3; i++) {
 +				AweReadHandler[i].Install(sb.hw.base + 0x400 + i * 0x400, AWE32_Read, IO_MB | IO_MW, 4);
@@ -3570,6 +3571,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 -		if (sb.type==SBT_16) temp << " H" << (Bitu)sb.hw.dma16;
 -		temp << " T" << static_cast<unsigned int>(sb.type) << ends;
 +		if (SB_Is16()) temp << " H" << (Bitu)sb.hw.dma16;
++		if (awe_enabled) temp << " E" << hex << (sb.hw.base + 0x400);
 +		temp << " T" << static_cast<unsigned int>(SB_Is16() ? SBT_16 : sb.type) << ends;
  
  		autoexecline.Install(temp.str());
