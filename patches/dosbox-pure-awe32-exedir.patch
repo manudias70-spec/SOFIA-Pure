@@ -1,7 +1,7 @@
 diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 --- a/src/hardware/sblaster.cpp
 +++ b/src/hardware/sblaster.cpp
-@@ -1,6 +1,8 @@
+@@ -1,6 +1,21 @@
  #include "emu8k.h"
  #include <stdio.h>
 +#define NOMINMAX
