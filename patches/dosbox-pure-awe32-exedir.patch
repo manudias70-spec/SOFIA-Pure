@@ -1,11 +1,15 @@
 diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 --- a/src/hardware/sblaster.cpp
 +++ b/src/hardware/sblaster.cpp
-@@ -1,6 +1,21 @@
+@@ -33,8 +33,10 @@
+ #include "support.h"
+ #include "shell.h"
++#ifndef NOMINMAX
++#define NOMINMAX
++#endif
++#include <windows.h>
  #include "emu8k.h"
  #include <stdio.h>
-+#define NOMINMAX
-+#include <windows.h>
  using namespace std;
  
  extern FILE* DBP_FileOpenContentOrSystem(const char* fname);
@@ -22,7 +26,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 +    if (wcscpy_s(slash + 1, MAX_PATH - (size_t)(slash + 1 - path), L"awe32.raw")) return NULL;
 +    return _wfopen(path, L"rb");
 +}
-@@ -1,7 +1,7 @@
+@@ -1743,7 +1760,7 @@
 -            FILE *rom = DBP_FileOpenContentOrSystem("awe32.raw");
 +            FILE *rom = AWE32_OpenROMBesideExe();
 diff --git a/core_options.h b/core_options.h
