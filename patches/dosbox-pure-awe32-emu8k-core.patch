@@ -342,6 +342,8 @@ index 0000000..0000000
 +    uint32_t dmawritebit;
 +} emu8k_t;
 +
++struct DBPArchive;
++
 +class EMU8K {
 +public:
 +    EMU8K();
@@ -355,9 +357,11 @@ index 0000000..0000000
 +    uint8_t Inb(Bitu addr);
 +    void Outb(Bitu addr, uint8_t val);
 +    void Generate(int16_t *stereo, Bitu frames);
++    void Serialize(DBPArchive& ar);
 +    Bitu SampleRate() const { return 44100; }
 +
 +private:
++    uint32_t ram_bytes;
 +    emu8k_t chip;
 +};
 +
@@ -384,6 +388,7 @@ index 0000000..0000000
 +
 +#include "dosbox.h"
 +#include "emu8k.h"
++#include "dbp_serialize.h"
 +#include "cross.h"
 +#include "logging.h"
 +#include <inttypes.h>
@@ -3036,7 +3041,7 @@ index 0000000..0000000
 +    }
 +}
 +
-+EMU8K::EMU8K()
++EMU8K::EMU8K() : ram_bytes(0)
 +{
 +    memset(&chip, 0, sizeof(chip));
 +}
@@ -3048,22 +3053,36 @@ index 0000000..0000000
 +
 +bool EMU8K::Init(const char *rom_path, int ram_kb)
 +{
-+    Close();
-+    memset(&chip, 0, sizeof(chip));
 +    FILE *fp = (rom_path && rom_path[0]) ? fopen_wrap(rom_path, "rb") : 0;
-+    return emu8k_init(&chip, fp, ram_kb) != 0;
++    return Init(fp, ram_kb);
 +}
 +
 +bool EMU8K::Init(FILE *rom_file, int ram_kb)
 +{
 +    Close();
 +    memset(&chip, 0, sizeof(chip));
-+    return emu8k_init(&chip, rom_file, ram_kb) != 0;
++    const bool ok = emu8k_init(&chip, rom_file, ram_kb) != 0;
++    ram_bytes = ok ? (uint32_t)(1024 * (size_t)ram_kb) : 0;
++    return ok;
 +}
 +
 +void EMU8K::Close()
 +{
 +    emu8k_close(&chip);
++    ram_bytes = 0;
++}
++
++void EMU8K::Serialize(DBPArchive& ar)
++{
++    /* Keep host pointers out of the state. Allocations and the ROM remain
++       owned by this live device; the writable sample RAM is serialized. */
++    ar.DoExceptionList(&chip, sizeof(chip), 4,
++                       &chip.ram, sizeof(chip.ram),
++                       &chip.rom, sizeof(chip.rom),
++                       &chip.empty, sizeof(chip.empty),
++                       &chip.ram_pointers, sizeof(chip.ram_pointers));
++    if (chip.ram && ram_bytes)
++        ar.SerializeBytes(chip.ram, ram_bytes);
 +}
 +
 +void EMU8K::ChangeAddr(Bitu emu_addr)
@@ -3123,3 +3142,478 @@ diff --git a/dosbox_pure_libretro.vcxproj b/dosbox_pure_libretro.vcxproj
 +      <Optimization Condition="'$(Configuration)'=='Debug'">MaxSpeed</Optimization>
 +      <BasicRuntimeChecks Condition="'$(Configuration)'=='Debug'">Default</BasicRuntimeChecks>
 +    </ClCompile>
+
+diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
+--- a/src/hardware/sblaster.cpp
++++ b/src/hardware/sblaster.cpp
+@@ -30,8 +30,12 @@
+ #include "setup.h"
+ #include "support.h"
+ #include "shell.h"
++#include "emu8k.h"
++#include <stdio.h>
+ using namespace std;
+ 
++extern FILE* DBP_FileOpenContentOrSystem(const char* fname);
++
+ void MIDI_RawOutByte(Bit8u data);
+ bool MIDI_Available(void);
+ 
+@@ -62,7 +66,7 @@
+ #define SB_SH_MASK	((1 << SB_SH)-1)
+ 
+ enum {DSP_S_RESET,DSP_S_RESET_WAIT,DSP_S_NORMAL,DSP_S_HIGHSPEED};
+-enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6,SBT_GB=7};
++enum SB_TYPES {SBT_NONE=0,SBT_1=1,SBT_PRO1=2,SBT_2=3,SBT_PRO2=4,SBT_16=6,SBT_GB=7,SBT_AWE32=8};
+ enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
+ 
+ enum DSP_MODES {
+@@ -162,6 +166,27 @@
+ 
+ static SB_INFO sb;
+ 
++static bool SB_Is16(void) { return SB_Is16() || sb.type == SBT_AWE32; }
++static EMU8K awe8k;
++static MixerChannel *awe_chan = NULL;
++static bool awe_enabled = false;
++static int16_t awe_mixbuf[EMU8K_MIXBUF * 2];
++
++static Bitu AWE32_Read(Bitu port, Bitu iolen)
++{
++    if (!awe_enabled) return 0xff;
++    Bitu emu_port = port - sb.hw.base + 0x200;
++    return (iolen == 1) ? awe8k.Inb(emu_port) : awe8k.Inw(emu_port);
++}
++
++static void AWE32_Write(Bitu port, Bitu val, Bitu iolen)
++{
++    if (!awe_enabled) return;
++    Bitu emu_port = port - sb.hw.base + 0x200;
++    if (iolen == 1) awe8k.Outb(emu_port, (uint8_t)val);
++    else awe8k.Outw(emu_port, (uint16_t)val);
++}
++
+ static char const * const copyright_string="COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
+ 
+ // number of bytes in input for commands (sb/sbpro)
+@@ -238,7 +263,7 @@
+ static void DSP_SetSpeaker(bool how) {
+ 	if (sb.speaker==how) return;
+ 	sb.speaker=how;
+-	if (sb.type==SBT_16) return;
++	if (SB_Is16()) return;
+ 	sb.chan->Enable(how);
+ 	if (sb.speaker) {
+ 		PIC_RemoveEvents(DMA_Silent_Event);
+@@ -629,7 +654,7 @@
+ 
+ static void CheckDMAEnd(void) {
+ 	if (!sb.dma.left) return;
+-	if (!sb.speaker && sb.type!=SBT_16) {
++	if (!sb.speaker && !SB_Is16()) {
+ 		Bitu bigger=(sb.dma.left > sb.dma.min) ? sb.dma.min : sb.dma.left;
+ 		float delay=(bigger*1000.0f)/sb.dma.rate;
+ 		PIC_AddEvent(DMA_Silent_Event,delay,bigger);
+@@ -870,7 +895,7 @@
+ 
+ Bitu DEBUG_EnableDebugger(void);
+ 
+-#define DSP_SB16_ONLY if (sb.type != SBT_16) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB16",sb.dsp.cmd); break; }
++#define DSP_SB16_ONLY if (!SB_Is16()) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB16",sb.dsp.cmd); break; }
+ #define DSP_SB2_ABOVE if (sb.type <= SBT_1) { LOG(LOG_SB,LOG_ERROR)("DSP:Command %2X requires SB2 or above",sb.dsp.cmd); break; }
+ 
+ static void DSP_DoCommand(void) {
+@@ -877,7 +902,7 @@
+ //	LOG_MSG("DSP Command %X",sb.dsp.cmd);
+ 	switch (sb.dsp.cmd) {
+ 	case 0x04:
+-		if (sb.type == SBT_16) {
++		if (SB_Is16()) {
+ 			/* SB16 ASP set mode register */
+ 			if ((sb.dsp.in.data[0]&0xf1)==0xf1) ASP_init_in_progress=true;
+ 			else ASP_init_in_progress=false;
+@@ -895,7 +920,7 @@
+ 		break;
+ 	case 0x08:	/* SB16 ASP get version */
+ 		LOG(LOG_SB,LOG_NORMAL)("DSP Unhandled SB16ASP command %X sub %X",sb.dsp.cmd,sb.dsp.in.data[0]);
+-		if (sb.type == SBT_16) {
++		if (SB_Is16()) {
+ 			switch (sb.dsp.in.data[0]) {
+ 				case 0x03:
+ 					DSP_AddData(0x18);	// version ID (??)
+@@ -909,7 +934,7 @@
+ 		}
+ 		break;
+ 	case 0x0e:	/* SB16 ASP set register */
+-		if (sb.type == SBT_16) {
++		if (SB_Is16()) {
+ //			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP set register %X := %X",sb.dsp.in.data[0],sb.dsp.in.data[1]);
+ 			ASP_regs[sb.dsp.in.data[0]] = sb.dsp.in.data[1];
+ 		} else {
+@@ -917,7 +942,7 @@
+ 		}
+ 		break;
+ 	case 0x0f:	/* SB16 ASP get register */
+-		if (sb.type == SBT_16) {
++		if (SB_Is16()) {
+ 			if ((ASP_init_in_progress) && (sb.dsp.in.data[0]==0x83)) {
+ 				ASP_regs[0x83] = ~ASP_regs[0x83];
+ 			}
+@@ -1129,7 +1154,7 @@
+ 		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented input command %2X",sb.dsp.cmd);
+ 		break;
+ 	case 0xf9:	/* SB16 ASP ??? */
+-		if (sb.type == SBT_16) {
++		if (SB_Is16()) {
+ 			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP unknown function %x",sb.dsp.in.data[0]);
+ 			// just feed it what it expects
+ 			switch (sb.dsp.in.data[0]) {
+@@ -1181,7 +1206,7 @@
+ 	switch (sb.dsp.cmd) {
+ 	case DSP_NO_COMMAND:
+ 		sb.dsp.cmd=val;
+-		if (sb.type == SBT_16) sb.dsp.cmd_len=DSP_cmd_len_sb16[val];
++		if (SB_Is16()) sb.dsp.cmd_len=DSP_cmd_len_sb16[val];
+ 		else sb.dsp.cmd_len=DSP_cmd_len_sb[val];
+ 		sb.dsp.in.pos=0;
+ 		if (!sb.dsp.cmd_len) DSP_DoCommand();
+@@ -1246,8 +1271,8 @@
+ }
+ 
+ #define SETPROVOL(_WHICH_,_VAL_)										\
+-	_WHICH_[0]=   ((((_VAL_) & 0xf0) >> 3)|(sb.type==SBT_16 ? 1:3));	\
+-	_WHICH_[1]=   ((((_VAL_) & 0x0f) << 1)|(sb.type==SBT_16 ? 1:3));	\
++	_WHICH_[0]=   ((((_VAL_) & 0xf0) >> 3)|(SB_Is16() ? 1:3));	\
++	_WHICH_[1]=   ((((_VAL_) & 0x0f) << 1)|(SB_Is16() ? 1:3));	\
+ 
+ #define MAKEPROVOL(_WHICH_)											\
+ 	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) |	\
+@@ -1298,7 +1323,7 @@
+ 			sb.mixer.dac[0]=sb.mixer.dac[1]=((val & 0x6) << 2)|3;
+ 			CTMIXER_UpdateVolumes();
+ 		} else {
+-			sb.mixer.mic=((val & 0x7) << 2)|(sb.type==SBT_16?1:3);
++			sb.mixer.mic=((val & 0x7) << 2)|(SB_Is16()?1:3);
+ 		}
+ 		break;
+ 	case 0x0e:		/* Output/Stereo Select */
+@@ -1324,7 +1349,7 @@
+ 		break;
+ 	//case 0x20:		/* Master Volume Left (SBPRO) ? */
+ 	case 0x30:		/* Master Volume Left (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.master[0]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+@@ -1331,55 +1356,55 @@
+ 		break;
+ 	//case 0x21:		/* Master Volume Right (SBPRO) ? */
+ 	case 0x31:		/* Master Volume Right (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.master[1]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+ 		break;
+ 	case 0x32:		/* DAC Volume Left (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.dac[0]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+ 		break;
+ 	case 0x33:		/* DAC Volume Right (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.dac[1]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+ 		break;
+ 	case 0x34:		/* FM Volume Left (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.fm[0]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+                 break;
+ 	case 0x35:		/* FM Volume Right (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.fm[1]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+ 		break;
+ 	case 0x36:		/* CD Volume Left (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.cda[0]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+ 		break;
+ 	case 0x37:		/* CD Volume Right (SB16) */
+-		if (sb.type==SBT_16) {
++		if (SB_Is16()) {
+ 			sb.mixer.cda[1]=val>>3;
+ 			CTMIXER_UpdateVolumes();
+ 		}
+ 		break;
+ 	case 0x38:		/* Line-in Volume Left (SB16) */
+-		if (sb.type==SBT_16) sb.mixer.lin[0]=val>>3;
++		if (SB_Is16()) sb.mixer.lin[0]=val>>3;
+ 		break;
+ 	case 0x39:		/* Line-in Volume Right (SB16) */
+-		if (sb.type==SBT_16) sb.mixer.lin[1]=val>>3;
++		if (SB_Is16()) sb.mixer.lin[1]=val>>3;
+ 		break;
+ 	case 0x3a:
+-		if (sb.type==SBT_16) sb.mixer.mic=val>>3;
++		if (SB_Is16()) sb.mixer.mic=val>>3;
+ 		break;
+ 	case 0x80:		/* IRQ Select */
+ 		sb.hw.irq=0xff;
+@@ -1402,7 +1427,7 @@
+ 	default:
+ 
+ 		if(	((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
+-			 (sb.type == SBT_16 && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
++			 (SB_Is16() && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
+ 			sb.mixer.unhandled[sb.mixer.index] = val;
+ 		LOG(LOG_SB,LOG_WARN)("MIXER:Write %X to unhandled index %X",val,sb.mixer.index);
+ 	}
+@@ -1426,7 +1451,7 @@
+ 		return ((sb.mixer.cda[1]>>1) & 0xe);
+ 	case 0x0a:		/* Mic Level (SBPRO) or Voice (SB2 Only) */
+ 		if (sb.type==SBT_2) return (sb.mixer.dac[0]>>2);
+-		else return ((sb.mixer.mic >> 2) & (sb.type==SBT_16 ? 7:6));
++		else return ((sb.mixer.mic >> 2) & (SB_Is16() ? 7:6));
+ 	case 0x0e:		/* Output/Stereo Select */
+ 		return 0x11|(sb.mixer.stereo ? 0x02 : 0x00)|(sb.mixer.filtered ? 0x20 : 0x00);
+ 	case 0x26:		/* FM Volume (SBPRO) */
+@@ -1436,47 +1461,47 @@
+ 	case 0x2e:		/* Line-IN Volume (SBPRO) */
+ 		return MAKEPROVOL(sb.mixer.lin);
+ 	case 0x30:		/* Master Volume Left (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.master[0]<<3;
++		if (SB_Is16()) return sb.mixer.master[0]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x31:		/* Master Volume Right (S16) */
+-		if (sb.type==SBT_16) return sb.mixer.master[1]<<3;
++		if (SB_Is16()) return sb.mixer.master[1]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x32:		/* DAC Volume Left (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.dac[0]<<3;
++		if (SB_Is16()) return sb.mixer.dac[0]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x33:		/* DAC Volume Right (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.dac[1]<<3;
++		if (SB_Is16()) return sb.mixer.dac[1]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x34:		/* FM Volume Left (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.fm[0]<<3;
++		if (SB_Is16()) return sb.mixer.fm[0]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x35:		/* FM Volume Right (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.fm[1]<<3;
++		if (SB_Is16()) return sb.mixer.fm[1]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x36:		/* CD Volume Left (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.cda[0]<<3;
++		if (SB_Is16()) return sb.mixer.cda[0]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x37:		/* CD Volume Right (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.cda[1]<<3;
++		if (SB_Is16()) return sb.mixer.cda[1]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x38:		/* Line-in Volume Left (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.lin[0]<<3;
++		if (SB_Is16()) return sb.mixer.lin[0]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x39:		/* Line-in Volume Right (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.lin[1]<<3;
++		if (SB_Is16()) return sb.mixer.lin[1]<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x3a:		/* Mic Volume (SB16) */
+-		if (sb.type==SBT_16) return sb.mixer.mic<<3;
++		if (SB_Is16()) return sb.mixer.mic<<3;
+ 		ret=0xa;
+ 		break;
+ 	case 0x80:		/* IRQ Select */
+@@ -1502,10 +1527,10 @@
+ 	case 0x82:		/* IRQ Status */
+ 		return	(sb.irq.pending_8bit ? 0x1 : 0) |
+ 				(sb.irq.pending_16bit ? 0x2 : 0) | 
+-				((sb.type == SBT_16) ? 0x20 : 0);
++				((SB_Is16()) ? 0x20 : 0);
+ 	default:
+ 		if (	((sb.type == SBT_PRO1 || sb.type == SBT_PRO2) && sb.mixer.index==0x0c) || /* Input control on SBPro */
+-			(sb.type == SBT_16 && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
++			(SB_Is16() && sb.mixer.index >= 0x3b && sb.mixer.index <= 0x47)) /* New SB16 registers */
+ 			ret = sb.mixer.unhandled[sb.mixer.index];
+ 		else
+ 			ret=0xa;
+@@ -1619,6 +1644,22 @@
+ 	}
+ }
+ 
++static void AWE32_CallBack(Bitu len)
++{
++    if (!awe_enabled || !awe_chan) {
++        if (awe_chan) awe_chan->AddSilence();
++        return;
++    }
++    Bitu done = 0;
++    while (done < len) {
++        Bitu count = len - done;
++        if (count > EMU8K_MIXBUF) count = EMU8K_MIXBUF;
++        awe8k.Generate(awe_mixbuf, count);
++        awe_chan->AddSamples_s16(count, awe_mixbuf);
++        done += count;
++    }
++}
++
+ class SBLASTER: public Module_base {
+ private:
+ 	/* Data */
+@@ -1626,6 +1667,9 @@
+ 	IO_WriteHandleObject WriteHandler[0x10];
+ 	AutoexecObject autoexecline;
+ 	MixerObject MixerChan;
++	MixerObject AweMixerChan;
++	IO_ReadHandleObject AweReadHandler[3];
++	IO_WriteHandleObject AweWriteHandler[3];
+ 	OPL_Mode oplmode;
+ 
+ 	/* Support Functions */
+@@ -1636,6 +1680,7 @@
+ 		else if (!strcasecmp(sbtype,"sbpro1")) type=SBT_PRO1;
+ 		else if (!strcasecmp(sbtype,"sbpro2")) type=SBT_PRO2;
+ 		else if (!strcasecmp(sbtype,"sb16")) type=SBT_16;
++		else if (!strcasecmp(sbtype,"awe32")) type=SBT_AWE32;
+ 		else if (!strcasecmp(sbtype,"gb")) type=SBT_GB;
+ 		else if (!strcasecmp(sbtype,"none")) type=SBT_NONE;
+ 		else type=SBT_16;
+@@ -1670,6 +1715,7 @@
+ 				break;
+ 			case SBT_PRO2:
+ 			case SBT_16:
++			case SBT_AWE32:
+ 				opl_mode=OPL_opl3;
+ 				break;
+ 			}
+@@ -1694,6 +1740,18 @@
+ 
+ 		Find_Type_And_Opl(section,sb.type,oplmode);
+ 
++		awe_enabled = false;
++		if (sb.type == SBT_AWE32) {
++			FILE *rom = DBP_FileOpenContentOrSystem("awe32.raw");
++			if (!awe8k.Init(rom, 0x7000)) {
++				LOG_MSG("AWE32: awe32.raw missing or invalid; continuing as Sound Blaster 16");
++				sb.type = SBT_16;
++			} else {
++				awe_enabled = true;
++				LOG_MSG("AWE32: EMU8000 initialized from awe32.raw");
++			}
++		}
++
+ 		switch (oplmode) {
+ 		case OPL_none:
+ 			WriteHandler[0].Install(0x388,adlib_gusforward,IO_MB);
+@@ -1725,6 +1783,14 @@
+ 			ReadHandler[i].Install(sb.hw.base+i,read_sb,IO_MB);
+ 			WriteHandler[i].Install(sb.hw.base+i,write_sb,IO_MB);
+ 		}
++		if (awe_enabled) {
++			awe_chan = AweMixerChan.Install(&AWE32_CallBack, 44100, "SB");
++			awe_chan->Enable(true);
++			for (i=0; i<3; i++) {
++				AweReadHandler[i].Install(sb.hw.base + 0x400 + i * 0x400, AWE32_Read, IO_MB | IO_MW, 4);
++				AweWriteHandler[i].Install(sb.hw.base + 0x400 + i * 0x400, AWE32_Write, IO_MB | IO_MW, 4);
++			}
++		}
+ 		for (i=0;i<256;i++) ASP_regs[i] = 0;
+ 		ASP_regs[5] = 0x01;
+ 		ASP_regs[9] = 0xf8;
+@@ -1736,7 +1802,7 @@
+ 		// or disabled. Real SBPro2 has it disabled.
+ 		sb.speaker=false;
+ 		// On SB16 the speaker flag does not affect actual speaker state.
+-		if (sb.type == SBT_16) sb.chan->Enable(true);
++		if (SB_Is16()) sb.chan->Enable(true);
+ 		else sb.chan->Enable(false);
+ 
+ 		// Create set blaster line
+@@ -1743,8 +1809,8 @@
+ 		ostringstream temp;
+ 		temp << "SET BLASTER=A" << setw(3)<< hex << sb.hw.base
+ 		     << " I" << dec << (Bitu)sb.hw.irq << " D" << (Bitu)sb.hw.dma8;
+-		if (sb.type==SBT_16) temp << " H" << (Bitu)sb.hw.dma16;
+-		temp << " T" << static_cast<unsigned int>(sb.type) << ends;
++		if (SB_Is16()) temp << " H" << (Bitu)sb.hw.dma16;
++		temp << " T" << static_cast<unsigned int>(SB_Is16() ? SBT_16 : sb.type) << ends;
+ 
+ 		autoexecline.Install(temp.str());
+ 
+@@ -1772,6 +1838,9 @@
+ 		//DBP: Added cleanup for restart support
+ 		if (sb.type!=SBT_NONE && sb.type!=SBT_GB)
+ 			DSP_Reset(); // Stop everything
++		if (awe_enabled) awe8k.Close();
++		awe_enabled = false;
++		awe_chan = NULL;
+ 		sb.chan=0;
+ 	}
+ }; //End of SBLASTER class
+@@ -1796,6 +1865,16 @@
+ 	DBPArchiveOptional ar(ar_outer, sb.chan);
+ 	if (ar.IsSkip()) return;
+ 
++	DBPArchiveOptional ar_awe(ar_outer, awe_chan);
++	if (!ar_awe.IsSkip()) {
++		if (ar_awe.IsReset()) {
++			awe_enabled = awe8k.Init(DBP_FileOpenContentOrSystem("awe32.raw"), 0x7000);
++			if (awe_chan) awe_chan->Enable(awe_enabled);
++		} else {
++			awe8k.Serialize(ar_awe);
++		}
++	}
++
+ 	Bit8u dma_num = 0;
+ 	if (ar.mode == DBPArchive::MODE_SAVE)
+ 		for (; dma_num != 8; dma_num++)
+@@ -1818,7 +1897,7 @@
+ 			DSP_Reset();
+ 			CTMIXER_Reset();
+ 			sb.speaker=false;
+-			if (sb.type == SBT_16) sb.chan->Enable(true);
++			if (SB_Is16()) sb.chan->Enable(true);
+ 			else sb.chan->Enable(false);
+ 			sb.midi = MIDI_Available();
+ 		}
+diff --git a/src/dosbox.cpp b/src/dosbox.cpp
+--- a/src/dosbox.cpp
++++ b/src/dosbox.cpp
+@@ -764,10 +764,10 @@
+ 
+ 	secprop=control->AddSection_prop("sblaster",&SBLASTER_Init,true);//done
+ 
+-	const char* sbtypes[] = { "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0 };
++	const char* sbtypes[] = { "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "awe32", "gb", "none", 0 };
+ 	Pstring = secprop->Add_string("sbtype",Property::Changeable::WhenIdle,"sb16");
+ 	Pstring->Set_values(sbtypes);
+-	Pstring->Set_help("Type of Soundblaster to emulate. gb is Gameblaster.");
++	Pstring->Set_help("Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster.");
+ 
+ 	Phex = secprop->Add_hex("sbbase",Property::Changeable::WhenIdle,0x220);
+ 	Phex->Set_values(ios);
