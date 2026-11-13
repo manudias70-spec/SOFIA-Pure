@@ -67,6 +67,16 @@ The DOSBox-X implementation provides a useful integration reference and explicit
 
 Before enabling AWE32 in the user-facing config, complete the EMU8000 core adaptation and its explicit serializer, then wire the first-SB-only AWE32 type. Do not add a config option that can select an incomplete device. The first acceptance build remains Windows x64 on the frozen core SHA.
 
+
+## Current implementation checkpoint (experimental; not yet accepted)
+
+- Added `patches/dosbox-pure-awe32-emu8k-core.patch` to the SOFIA-Pure experimental branch. It introduces the DOSBox-X EMU8000 implementation and header, retaining the upstream GPL/copyright attribution to 86Box/Sarah Walker.
+- The new source is added to the pinned core's Visual Studio project; the Makefile already discovers `src/*/*.cpp` automatically.
+- The Build 9 workflow now applies this patch after the existing xBRZ patch in all seven build jobs.
+- The workflow's patch paths were corrected to `../main/patches/...`: `git -C dosbox-pure` resolves patch paths relative to the core checkout, not the workflow root. Earlier run attempts failed at dependency checkout because the old relative path was invalid.
+- A fresh workflow run was queued for commit `30e3fa4cc56fff45ac2eca4b0a4a703c031c8ce2`. Its build jobs are running; no compile result has been confirmed yet.
+- This is only the EMU8000 engine source scaffold. It is not yet connected to SB16, not selectable as an AWE32 device, and not yet serialized. Do not describe it as working AWE32 support until those steps and functional tests pass.
+
 ## Safety rule
 
 This branch is experimental. Keep the known-good Build 9 branch untouched. Do not merge or publish a release until the Windows build and functional AWE32 tests pass.
