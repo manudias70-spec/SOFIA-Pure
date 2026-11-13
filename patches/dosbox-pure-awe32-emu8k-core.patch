@@ -3114,12 +3114,10 @@ index 0000000..0000000
 +    }
 +}
 diff --git a/dosbox_pure_libretro.vcxproj b/dosbox_pure_libretro.vcxproj
-index f77f6e6..0000000 100644
 --- a/dosbox_pure_libretro.vcxproj
 +++ b/dosbox_pure_libretro.vcxproj
-@@ -327,1 +327,4 @@
+@@ -327,0 +328,4 @@
 +    <ClCompile Include="src\hardware\emu8k.cpp">
 +      <Optimization Condition="'$(Configuration)'=='Debug'">MaxSpeed</Optimization>
 +      <BasicRuntimeChecks Condition="'$(Configuration)'=='Debug'">Default</BasicRuntimeChecks>
 +    </ClCompile>
-    <ClCompile Include="src\hardware\mixer.cpp">
