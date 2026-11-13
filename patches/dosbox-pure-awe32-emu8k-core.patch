@@ -3,7 +3,7 @@ new file mode 100644
 index 0000000..0000000
 --- /dev/null
 +++ b/include/emu8k.h
-@@ -0,0 +1,356 @@
+@@ -0,0 +1,362 @@
 +/*
 + *  Copyright Notice:
 + *
@@ -371,7 +371,7 @@ new file mode 100644
 index 0000000..0000000
 --- /dev/null
 +++ b/src/hardware/emu8k.cpp
-@@ -0,0 +1,2747 @@
+@@ -0,0 +1,2762 @@
 +/*
 + *  Copyright Notice:
 + *
