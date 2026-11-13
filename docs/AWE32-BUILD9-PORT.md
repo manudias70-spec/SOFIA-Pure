@@ -34,6 +34,25 @@ DOSBox-X's `emu8k.cpp` / `emu8k.h` implementation identifies its EMU8000 voice, 
 6. Build Windows x64 first, then expand to the other existing Build 9 targets.
 7. Test DOS AWE utilities and a known AWE32 MIDI/sample workload before merging.
 
+
+## Verified EMU8000 reference details
+
+The DOSBox-X implementation provides a useful integration reference and explicitly attributes its EMU8000 register/voice/DRAM/envelope/interpolation work to 86Box's `snd_emu8k.c` (Sarah Walker). Preserve those notices and the GPL-2.0 terms when adapting code.
+
+- ROM contract in the reference implementation: exactly 1 MiB (`1,048,576` bytes), loaded as raw data. It recognizes the AWE-DUMP two-byte-offset variant by checking the GM marker and shifting the image back two bytes.
+- The reference initializes the EMU8000 at ISA base `0x620`, with register windows at `0x620`, `0xA20`, and `0xE20` (the latter two are base + `0x400` and base + `0x800`), each with four byte/word-spaced ports.
+- The existing frontend helper `DBP_FileOpenContentOrSystem()` already opens a named file from the content directory and then the Libretro system directory. This can support the user-managed `awe32.raw` without adding ROM data to the repository.
+- The core's six Libretro volume slots do not currently include AWE. Decide explicitly whether AWE shares the SB volume slot or receives a new user-facing control; do not add an unchecked mixer channel name because the current mixer asserts on unknown names.
+- Save states are a major integration requirement: the EMU8000 owns dynamically allocated ROM/RAM plus a large mutable state structure containing voice, chorus, reverb, and output buffers. Pointer fields and ROM data must not be serialized as raw addresses. On load, rebuild RAM pointer tables and restore mutable sample RAM and synth state. The memory cost of including sample RAM in save states must be measured.
+
+## Integration shape from DOSBox-X
+
+- Keep the existing SB16 DSP/PCM path active when the selected card type is AWE32.
+- Register the three EMU8000 I/O windows separately from the SB16 DSP ports.
+- Synchronize the wavetable mixer channel before EMU8000 register reads/writes, so register changes take effect at the correct audio boundary.
+- Stop/uninstall the AWE mixer callback before freeing EMU8000 memory during shutdown; otherwise an audio callback could access freed state.
+- If the ROM is absent or invalid, log a warning and leave the ordinary SB16 path available rather than failing core initialization.
+
 ## Safety rule
 
 This branch is experimental. Keep the known-good Build 9 branch untouched. Do not merge or publish a release until the Windows build and functional AWE32 tests pass.
