@@ -3134,15 +3134,6 @@ index 0000000..0000000
 +        stereo[i * 2 + 1] = (int16_t)r;
 +    }
 +}
-diff --git a/dosbox_pure_libretro.vcxproj b/dosbox_pure_libretro.vcxproj
---- a/dosbox_pure_libretro.vcxproj
-+++ b/dosbox_pure_libretro.vcxproj
-@@ -327,0 +328,4 @@
-+    <ClCompile Include="src\hardware\emu8k.cpp">
-+      <Optimization Condition="'$(Configuration)'=='Debug'">MaxSpeed</Optimization>
-+      <BasicRuntimeChecks Condition="'$(Configuration)'=='Debug'">Default</BasicRuntimeChecks>
-+    </ClCompile>
-
 diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 --- a/src/hardware/sblaster.cpp
 +++ b/src/hardware/sblaster.cpp
