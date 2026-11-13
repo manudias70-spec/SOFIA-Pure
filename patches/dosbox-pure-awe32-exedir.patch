@@ -1,7 +1,7 @@
 diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 --- a/src/hardware/sblaster.cpp
 +++ b/src/hardware/sblaster.cpp
-@@ -33,7 +33,23 @@
+@@ -33,7 +33,24 @@
  #include "support.h"
  #include "shell.h"
 +#ifndef NOMINMAX
