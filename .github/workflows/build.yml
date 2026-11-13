@@ -26,9 +26,9 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
-        git -C dosbox-pure apply "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        git -C dosbox-pure apply --recount "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
-        git -C dosbox-pure apply "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-exedir.patch"
+        git -C dosbox-pure apply --recount "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-exedir.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply AWE32 ROM loader patch" }
         if (-not (Select-String -Path dosbox-pure/core_options.h -Pattern 'SoundBlaster AWE32' -Quiet)) { throw "AWE32 core option was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
