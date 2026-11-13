@@ -3635,3 +3635,15 @@ diff --git a/DOSBoxPure-vs.vcxproj.filters b/DOSBoxPure-vs.vcxproj.filters
 +    <ClCompile Include="$(DBPDir)src/hardware/emu8k.cpp">
 +      <Filter>DOSBox</Filter>
 +    </ClCompile>
+
+diff --git a/core_options.h b/core_options.h
+--- a/core_options.h
++++ b/core_options.h
+@@ -1114,6 +1114,7 @@
+ 		{
+ 			{ "sb16", "SoundBlaster 16 (default)" },
++			{ "awe32", "SoundBlaster AWE32 (requires awe32.raw in system)" },
+ 			{ "sbpro2", "SoundBlaster Pro 2" },
+ 			{ "sbpro1", "SoundBlaster Pro" },
+ 			{ "sb2", "SoundBlaster 2.0" },
+ 			{ "sb1", "SoundBlaster 1.0" },
