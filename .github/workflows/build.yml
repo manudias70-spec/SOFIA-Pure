@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/xbrz-glsl" ]
+    branches: [ "main", "feature/xbrz-glsl", "feature/awe32-build9" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
