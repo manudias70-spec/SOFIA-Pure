@@ -53,6 +53,20 @@ The DOSBox-X implementation provides a useful integration reference and explicit
 - Stop/uninstall the AWE mixer callback before freeing EMU8000 memory during shutdown; otherwise an audio callback could access freed state.
 - If the ROM is absent or invalid, log a warning and leave the ordinary SB16 path available rather than failing core initialization.
 
+
+## Build 9 serialization and mixer findings
+
+- The SB device is a single `SB_INFO sb` instance in this pinned Pure core, not DOSBox-X's multi-card array. Its config parser currently accepts `sb1`, `sb2`, `sbpro1`, `sbpro2`, `sb16`, `gb`, and `none`. AWE32 should be a distinct SB type that retains the SB16 DSP command behavior.
+- SB save-state data is handled by `DBPSerialize_SBLASTER()` in `src/hardware/sblaster.cpp`, registered in `src/dbp_serialize.cpp`. This is the natural place to serialize the EMU8000 state alongside the SB device.
+- `DBPArchive::SerializeExcept` has overloads for up to three pointer exceptions; the EMU8000 structure has four pointer-bearing fields/groups (`ram`, `rom`, `empty`, and `ram_pointers`). Its serializer should use `DoExceptionList` directly or serialize explicit fields, never dump pointer values.
+- The ROM is immutable and can be reloaded from the user's system directory on initialization/load. The writable EMU8000 sample RAM and mutable chip state must be preserved. After load, reconstruct the 256-entry RAM pointer table from the reallocated RAM, ROM, and empty buffers.
+- The mixer volume assertion is in `MixerChannel::UpdateVolume()`; the current volume index switch routes known channels into six Libretro volume slots. AWE should share the SB volume slot initially, avoiding a new UI option and avoiding an unrecognized channel name. This is the least invasive Build 9 behavior.
+- The Build 9 Windows project has explicit compile entries for hardware source files in `dosbox_pure_libretro.vcxproj` and `.filters`. The workflow itself applies the frontend patch to the pinned core before building, so all core changes must be delivered as a patch file in the frontend repository and applied in each build job.
+
+## Next implementation gate
+
+Before enabling AWE32 in the user-facing config, complete the EMU8000 core adaptation and its explicit serializer, then wire the first-SB-only AWE32 type. Do not add a config option that can select an incomplete device. The first acceptance build remains Windows x64 on the frozen core SHA.
+
 ## Safety rule
 
 This branch is experimental. Keep the known-good Build 9 branch untouched. Do not merge or publish a release until the Windows build and functional AWE32 tests pass.
