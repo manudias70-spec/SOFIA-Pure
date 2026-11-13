@@ -26,6 +26,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -56,6 +57,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -86,6 +88,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -121,6 +124,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -175,6 +179,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -226,6 +231,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
@@ -254,6 +260,7 @@ jobs:
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         git -C dosbox-pure apply main/patches/dosbox-pure-xbrz-options.patch
+        git -C dosbox-pure apply main/patches/dosbox-pure-awe32-emu8k-core.patch
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
