@@ -836,7 +836,7 @@ index 0000000..0000000
 +    if (start < 0x100)
 +        return;
 +    const char *src = (start < EMU8K_RAM_MEM_START) ? "ROM" : "RAM";
-+    LOG(LOG_MISC, LOG_DEBUG)("EMU8000: note voice=%u src=%s start=%06Xh loop=%06Xh-%06Xh",
++    LOG(LOG_MISC, LOG_NORMAL)("EMU8000: note voice=%u src=%s start=%06Xh loop=%06Xh-%06Xh",
 +        (unsigned)emu8k->cur_voice, src, (unsigned)start, (unsigned)ls, (unsigned)le);
 +}
 +
