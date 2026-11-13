@@ -3155,7 +3155,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  using namespace std;
  
 +extern FILE* DBP_FileOpenContentOrSystem(const char* fname);
-
++
 +#ifndef NOMINMAX
 +#define NOMINMAX
 +#endif
