@@ -3166,7 +3166,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 +    wchar_t path[MAX_PATH];
 +    DWORD length = GetModuleFileNameW(NULL, path, MAX_PATH);
 +    if (!length || length >= MAX_PATH) return NULL;
-+    wchar_t *slash = wcsrchr(path, L'\\\\');
++    wchar_t *slash = wcsrchr(path, L'\\');
 +    wchar_t *forward = wcsrchr(path, L'/');
 +    if (!slash || (forward && forward > slash)) slash = forward;
 +    if (!slash) return NULL;
