@@ -3155,6 +3155,24 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  using namespace std;
  
 +extern FILE* DBP_FileOpenContentOrSystem(const char* fname);
+
++#ifndef NOMINMAX
++#define NOMINMAX
++#endif
++#include <windows.h>
++
++static FILE* AWE32_OpenROMBesideExe(void)
++{
++    wchar_t path[MAX_PATH];
++    DWORD length = GetModuleFileNameW(NULL, path, MAX_PATH);
++    if (!length || length >= MAX_PATH) return NULL;
++    wchar_t *slash = wcsrchr(path, L'\\\\');
++    wchar_t *forward = wcsrchr(path, L'/');
++    if (!slash || (forward && forward > slash)) slash = forward;
++    if (!slash) return NULL;
++    if (wcscpy_s(slash + 1, MAX_PATH - (size_t)(slash + 1 - path), L"awe32.raw")) return NULL;
++    return _wfopen(path, L"rb");
++}
 +
  void MIDI_RawOutByte(Bit8u data);
  bool MIDI_Available(void);
@@ -3517,7 +3535,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  
 +		awe_enabled = false;
 +		if (sb.type == SBT_AWE32) {
-+			FILE *rom = DBP_FileOpenContentOrSystem("awe32.raw");
++			FILE *rom = AWE32_OpenROMBesideExe();
 +			if (!awe8k.Init(rom, 0x7000)) {
 +				LOG_MSG("AWE32: awe32.raw missing or invalid; continuing as Sound Blaster 16");
 +				sb.type = SBT_16;
@@ -3582,7 +3600,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 +	DBPArchiveOptional ar_awe(ar_outer, awe_chan);
 +	if (!ar_awe.IsSkip()) {
 +		if (ar_awe.IsReset()) {
-+			awe_enabled = awe8k.Init(DBP_FileOpenContentOrSystem("awe32.raw"), 0x7000);
++			awe_enabled = awe8k.Init(AWE32_OpenROMBesideExe(), 0x7000);
 +			if (awe_chan) awe_chan->Enable(awe_enabled);
 +		} else {
 +			awe8k.Serialize(ar_awe);
@@ -3624,7 +3642,7 @@ diff --git a/core_options.h b/core_options.h
 @@ -1114,6 +1114,7 @@
  		{
  			{ "sb16", "SoundBlaster 16 (default)" },
-+			{ "awe32", "SoundBlaster AWE32 (requires awe32.raw in system)" },
++			{ "awe32", "SoundBlaster AWE32 (awe32.raw beside DOSBoxPure.exe)" },
  			{ "sbpro2", "SoundBlaster Pro 2" },
  			{ "sbpro1", "SoundBlaster Pro" },
  			{ "sb2", "SoundBlaster 2.0" },
