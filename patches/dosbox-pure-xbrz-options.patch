@@ -6,7 +6,6 @@ diff --git a/core_options.h b/core_options.h
  			{ "nearest", "Simple Scaling (nearest neighbor)" },
  			{ "bilinear", "Bilinear Scaling" },
  			{ "integer", "Integer Scaling" },
-+			{ "xbrz2x", "xBRZ-inspired 2x (GPU)" },
-+			{ "xbrz3x", "xBRZ-inspired 3x (GPU)" },
++			{ "xbrz4x", "xBRZ-inspired 4x (GPU)" },
  		},
  		"default"
