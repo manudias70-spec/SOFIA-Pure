@@ -22,6 +22,7 @@ index 0000000..0000000
 +#define DOSBOX_EMU8K_H
 +
 +#include "dosbox.h"
++#include <stdio.h>
 +
 +#define EMU8K_MIXBUF            (16 * 1024)
 +#define EMU8K_MEM_ADDRESS_MASK  0xFFFFFF
@@ -346,6 +347,7 @@ index 0000000..0000000
 +    EMU8K();
 +    ~EMU8K();
 +    bool Init(const char *rom_path, int ram_kb);
++    bool Init(FILE *rom_file, int ram_kb);
 +    void Close();
 +    void ChangeAddr(Bitu emu_addr);
 +    uint16_t Inw(Bitu addr);
@@ -2763,28 +2765,20 @@ index 0000000..0000000
 +}
 +
 +static int
-+emu8k_init(emu8k_t *emu8k, const char *rom_path, int onboard_ram)
++emu8k_init(emu8k_t *emu8k, FILE *fp, int onboard_ram)
 +{
 +    uint32_t const BLOCK_SIZE_WORDS = 0x10000;
 +    int            c;
 +    double         out;
-+    FILE          *fp;
-+
-+    if (!rom_path || !rom_path[0])
++    if (!fp)
 +        return 0;
-+
-+    fp = fopen_wrap(rom_path, "rb");
-+    if (!fp) {
-+        LOG_MSG("EMU8000: ROM not found: %s", rom_path);
-+        return 0;
-+    }
 +    emu8k->rom = (int16_t *)calloc(1024, 1024);
 +    if (!emu8k->rom) {
 +        fclose(fp);
 +        return 0;
 +    }
 +    if (fread(emu8k->rom, 1, 1048576, fp) != 1048576) {
-+        LOG_MSG("EMU8000: ROM read failed: %s", rom_path);
++        LOG_MSG("EMU8000: ROM read failed or file is shorter than 1 MiB");
 +        fclose(fp);
 +        free(emu8k->rom);
 +        emu8k->rom = 0;
@@ -3056,7 +3050,15 @@ index 0000000..0000000
 +{
 +    Close();
 +    memset(&chip, 0, sizeof(chip));
-+    return emu8k_init(&chip, rom_path, ram_kb) != 0;
++    FILE *fp = (rom_path && rom_path[0]) ? fopen_wrap(rom_path, "rb") : 0;
++    return emu8k_init(&chip, fp, ram_kb) != 0;
++}
++
++bool EMU8K::Init(FILE *rom_file, int ram_kb)
++{
++    Close();
++    memset(&chip, 0, sizeof(chip));
++    return emu8k_init(&chip, rom_file, ram_kb) != 0;
 +}
 +
 +void EMU8K::Close()
