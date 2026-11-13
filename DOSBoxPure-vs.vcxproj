@@ -326,7 +326,6 @@
       <WarningLevel>Level2</WarningLevel>
     </ClCompile>
     <ClCompile Include="$(DBPDir)src/hardware/sblaster.cpp">
-    <ClCompile Include="$(DBPDir)src/hardware/emu8k.cpp" />
       <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
       <WarningLevel>Level2</WarningLevel>
