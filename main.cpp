@@ -1712,7 +1712,7 @@ static void ApplyInterfaceOptions()
 	DrawStretched = !strcmp(GetSetting("dosbox_pure_aspect_correction", "false"), "fill");
 	const char* scalingSetting = GetSetting("interface_scaling", "default");
 	Scaling = (scalingSetting[0]&0x5f);
-	XBRZScale = (!strcmp(scalingSetting, "xbrz2x") ? 2 : !strcmp(scalingSetting, "xbrz3x") ? 3 : 0);
+	XBRZScale = (!strcmp(scalingSetting, "xbrz4x") ? 4 : 0);
 	CRTFilter = atoi(GetSetting("interface_crtfilter", "false"));
 	const int audlatency = ZL_Math::Max(atoi(GetSetting("interface_audiolatency", "25")), 5);
 
