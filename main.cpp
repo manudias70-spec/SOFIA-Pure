@@ -1799,6 +1799,16 @@ static bool DrawIntro()
 	return false;
 }
 
+// Presentation stage: consumes the latest completed core frame without advancing emulation.
+static void PresentCoreFrame()
+{
+	const float VerticesBox[] = { core_rec.left,core_rec.high , core_rec.right,core_rec.high , core_rec.left,core_rec.low , core_rec.right,core_rec.low };
+	const float u = srfCore.GetScaleW(), v = srfCore.GetScaleH(), TexCoordBox[] = { 0,v , u,v , 0,0 , u,0 };
+	if (DrawCoreShader) shdrCore.Activate();
+	srfCore.DrawBox(VerticesBox, TexCoordBox, ZLWHITE);
+	if (DrawCoreShader) shdrCore.Deactivate();
+}
+
 static void OnDraw()
 {
 	SynchronizeSettings(false);
@@ -1848,13 +1858,7 @@ static void OnDraw()
 	ZL_Display::ClearFill();
 
 	float win_w = ZLWIDTH, win_h = ZLHEIGHT, win_ar = win_w / win_h;
-	{
-		const float VerticesBox[] = { core_rec.left,core_rec.high , core_rec.right,core_rec.high , core_rec.left,core_rec.low , core_rec.right,core_rec.low };
-		const float u = srfCore.GetScaleW(), v = srfCore.GetScaleH(), TexCoordBox[] = { 0,v , u,v , 0,0 , u,0 };
-		if (DrawCoreShader) shdrCore.Activate();
-		srfCore.DrawBox(VerticesBox, TexCoordBox, ZLWHITE);
-		if (DrawCoreShader) shdrCore.Deactivate();
-	}
+	PresentCoreFrame();
 
 	static float osdf;
 	static bool pastFirstFrame;
