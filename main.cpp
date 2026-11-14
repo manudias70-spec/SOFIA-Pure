@@ -1802,29 +1802,7 @@ static bool DrawIntro()
 
 static void OnDraw()
 {
-	SynchronizeSettings(false);
-
-	if (UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
-
 	bool showOSD = DBPS_IsShowingOSD();
-	static bool doPointerLock, doHideCursor, lastHiddenCursor;
-	if (PointerLock && !showOSD && !ThrottlePaused)
-	{
-		if (!doPointerLock) { ZL_Display::SetPointerLock((doPointerLock = true)); PointerLockPos = ZL_Input::Pointer(); }
-		PointerLockPos = (showOSD ? osd_rec : core_rec).Clamp(PointerLockPos + ZL_Input::MouseDelta());
-	}
-	else
-	{
-		bool showCursorAgain = (doPointerLock && !showOSD && doHideCursor && lastHiddenCursor); // show when pausing or disabling pointer lock
-		if (doPointerLock) ZL_Display::SetPointerLock((doPointerLock = false));
-		if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
-		if ((doHideCursor && lastHiddenCursor != ((showOSD ? osd_rec : core_rec) + 10).Contains(ZL_Input::Pointer())) || showCursorAgain)
-		{
-			SDL_ShowCursor((int)lastHiddenCursor);
-			lastHiddenCursor ^= true;
-			if (showCursorAgain) doHideCursor = false;
-		}
-	}
 
 	// Unlimited fast-forward retains its existing run-as-fast-as-possible path.
 	if (!ThrottlePaused && ThrottleMode == RETRO_THROTTLE_FAST_FORWARD && !FastRate)
@@ -1992,6 +1970,32 @@ static struct sDOSBoxPure : public ZL_ApplicationConstantTicks
 				ThrottlePaused = true;
 				CoreFrameAccumulator = 0.0;
 				break;
+			}
+		}
+	}
+
+	virtual void BeforeFrame()
+	{
+		SynchronizeSettings(false);
+		if (UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
+
+		bool showOSD = DBPS_IsShowingOSD();
+		static bool doPointerLock, doHideCursor, lastHiddenCursor;
+		if (PointerLock && !showOSD && !ThrottlePaused)
+		{
+			if (!doPointerLock) { ZL_Display::SetPointerLock((doPointerLock = true)); PointerLockPos = ZL_Input::Pointer(); }
+			PointerLockPos = (showOSD ? osd_rec : core_rec).Clamp(PointerLockPos + ZL_Input::MouseDelta());
+		}
+		else
+		{
+			bool showCursorAgain = (doPointerLock && !showOSD && doHideCursor && lastHiddenCursor); // show when pausing or disabling pointer lock
+			if (doPointerLock) ZL_Display::SetPointerLock((doPointerLock = false));
+			if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
+			if ((doHideCursor && lastHiddenCursor != ((showOSD ? osd_rec : core_rec) + 10).Contains(ZL_Input::Pointer())) || showCursorAgain)
+			{
+				SDL_ShowCursor((int)lastHiddenCursor);
+				lastHiddenCursor ^= true;
+				if (showCursorAgain) doHideCursor = false;
 			}
 		}
 	}
