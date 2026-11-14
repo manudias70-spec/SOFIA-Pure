@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14" ]
+    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/frame-generation-windows" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
