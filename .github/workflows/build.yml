@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/sofia-awe32-build9-test" ]
+    branches: [ "main", "feature/sofia-awe32-build9-test", "experiment/windows-ci-optimization" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
