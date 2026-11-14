@@ -3625,6 +3625,25 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  			else sb.chan->Enable(false);
  			sb.midi = MIDI_Available();
  		}
+@@ -1056,16 +1056,17 @@
+ 	case 0xe1:	/* Get DSP Version */
+ 		DSP_FlushData();
+ 		switch (sb.type) {
+ 		case SBT_1:
+ 			DSP_AddData(0x1);DSP_AddData(0x05);break;
+ 		case SBT_2:
+ 			DSP_AddData(0x2);DSP_AddData(0x1);break;
+ 		case SBT_PRO1:
+ 			DSP_AddData(0x3);DSP_AddData(0x0);break;
+ 		case SBT_PRO2:
+ 			DSP_AddData(0x3);DSP_AddData(0x2);break;
+ 		case SBT_16:
++		case SBT_AWE32:
+ 			DSP_AddData(0x4);DSP_AddData(0x5);break;
+ 		default:
+ 			break;
+ 		}
+ 		break;
 diff --git a/src/dosbox.cpp b/src/dosbox.cpp
 --- a/src/dosbox.cpp
 +++ b/src/dosbox.cpp
