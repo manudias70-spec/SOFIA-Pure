@@ -214,7 +214,6 @@
       <WarningLevel>Level2</WarningLevel>
     </ClCompile>
     <ClCompile Include="$(DBPDir)src/gui/midi.cpp">
-      <Optimization Condition="'$(DBPOptimize)'=='No'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(DBPOptimize)'=='No'">Default</BasicRuntimeChecks>
       <Optimization Condition="'$(DBPOptimize)'=='No'">Disabled</Optimization>
     </ClCompile>
