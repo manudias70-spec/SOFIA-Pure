@@ -64,11 +64,19 @@ static ZL_Vector PointerLockPos;
 static ZL_Json ConfigCache, ConfigOverrides;
 enum { FAST_FPS_LIMIT = 200 };
 
-// Run the emulation scheduler at millisecond precision while presenting at 60 Hz.
+// Run emulation on its native cadence; present at a suitable display rate.
 static const unsigned short CoreSchedulerTicksPerSecond = 1000;
-static const float PresentationFps = 60.0f;
+static float PresentationFps = 60.0f;
 static double CoreFrameAccumulator, CoreFrameRate = 70.0;
 static void SetApplicationTiming(float fps, unsigned short tps);
+static float GetPresentationFps()
+{
+	SDL_DisplayMode displayMode;
+	float displayFps = (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0 ? (float)displayMode.refresh_rate : 60.0f);
+	// Avoid dropping native 70 Hz DOS frames on a 75 Hz display, while
+	// retaining a 60 Hz minimum target for slower games that need FG.
+	return (displayFps < 60.0f ? displayFps : (float)std::min((double)displayFps, std::max(60.0, CoreFrameRate)));
+}
 
 static ZL_Surface srfCore, srfOSD;
 static ZL_Color colOSDBG;
@@ -717,6 +725,7 @@ static void ApplyFPSLimit(unsigned char newThrottleMode = ThrottleMode, bool unp
 	if (newThrottleMode == RETRO_THROTTLE_SLOW_MOTION) CoreFrameRate *= SlowRate;
 	else if (newThrottleMode == RETRO_THROTTLE_FAST_FORWARD) CoreFrameRate *= FastRate;
 	CoreFrameAccumulator = 0.0;
+	PresentationFps = GetPresentationFps();
 	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	if (unpause) ThrottlePaused = false;
 	AudioSkip = true;
@@ -1943,6 +1952,7 @@ static void OnLoad(int argc, char *argv[])
 
 	CoreFrameAccumulator = 0.0;
 	CoreFrameRate = av.timing.fps;
+	PresentationFps = GetPresentationFps();
 	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	srfCore = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
 	srfOSD = ZL_Surface(DBPS_OSD_WIDTH, DBPS_OSD_HEIGHT, true);
