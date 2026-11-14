@@ -30,6 +30,16 @@
 
 #include <vector>
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 #include <libretro-common/include/libretro.h>
 #include <include/cross.h>
 #include "vfs_implementation.h"
@@ -71,11 +81,21 @@ static double CoreFrameAccumulator, CoreFrameRate = 70.0;
 static void SetApplicationTiming(float fps, unsigned short tps);
 static float GetPresentationFps()
 {
-	SDL_DisplayMode displayMode;
-	float displayFps = (SDL_GetCurrentDisplayMode(0, &displayMode) == 0 && displayMode.refresh_rate > 0 ? (float)displayMode.refresh_rate : 60.0f);
+	// Query the active Windows display mode without depending on SDL headers
+	// in this translation unit. Fall back safely if the driver reports no rate.
+	float displayFps = 60.0f;
+#ifdef _WIN32
+	DEVMODEA displayMode = {};
+	displayMode.dmSize = sizeof(displayMode);
+	if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &displayMode) &&
+	    displayMode.dmDisplayFrequency > 1)
+		displayFps = (float)displayMode.dmDisplayFrequency;
+#endif
 	// Avoid dropping native 70 Hz DOS frames on a 75 Hz display, while
 	// retaining a 60 Hz minimum target for slower games that need FG.
-	return (displayFps < 60.0f ? displayFps : (float)std::min((double)displayFps, std::max(60.0, CoreFrameRate)));
+	double targetFps = (CoreFrameRate < 60.0 ? 60.0 : CoreFrameRate);
+	if (targetFps > displayFps) targetFps = displayFps;
+	return (float)targetFps;
 }
 
 static ZL_Surface srfCore, srfOSD;
