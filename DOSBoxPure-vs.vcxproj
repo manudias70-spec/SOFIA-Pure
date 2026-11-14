@@ -48,7 +48,8 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PreprocessorDefinitions>__LIBRETRO__;DBP_STANDALONE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(DBPDir);$(DBPDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <WholeProgramOptimization Condition="'$(DBPOptimize)'=='Yes'">false</WholeProgramOptimization>
+      <WholeProgramOptimization Condition="'$(DBPOptimize)'=='Yes'">true</WholeProgramOptimization>
+      <FavorSizeOrSpeed Condition="'$(DBPOptimize)'=='Yes'">Speed</FavorSizeOrSpeed>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x009</Culture>
