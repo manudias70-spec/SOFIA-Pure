@@ -1,0 +1,12 @@
+diff --git a/src/hardware/emu8k.cpp b/src/hardware/emu8k.cpp
+--- a/src/hardware/emu8k.cpp
++++ b/src/hardware/emu8k.cpp
+@@ -54,3 +54,3 @@
+-#if 0
++#if 1
+ #define EMU8K_DEBUG_REGISTERS
+ #endif
+@@ -337,2 +337,3 @@
+-#ifdef ENABLE_EMU8K_LOG
++#define ENABLE_EMU8K_LOG 1
++#ifdef ENABLE_EMU8K_LOG
