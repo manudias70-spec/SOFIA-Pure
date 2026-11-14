@@ -99,6 +99,8 @@ static float GetPresentationFps()
 }
 
 static ZL_Surface srfCore, srfOSD;
+static ZL_Surface srfFramePrevious, srfFrameCurrent;
+static bool CoreFrameReady, FrameHistoryValid;
 static ZL_Color colOSDBG;
 static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
@@ -1126,9 +1128,13 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			if (av.geometry.max_width > (unsigned)srfCore.GetWidth() ||av.geometry.max_height > (unsigned)srfCore.GetHeight())
 			{
 				srfCore = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
+				srfFramePrevious = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
+				srfFrameCurrent = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
+				FrameHistoryValid = false;
 				DoApplyInterfaceOptions = true;
 			}
-			else { srfCore.RenderToBegin(true, false); srfCore.RenderToEnd(); } // clear to black
+			else { srfCore.RenderToBegin(true, false); srfCore.RenderToEnd(); }
+			FrameHistoryValid = false; // AV timing/geometry changed; restart the snapshot history
 			DoApplyGeometry = true;
 			return true;
 		case RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER:
@@ -1196,8 +1202,40 @@ static void RETRO_CALLCONV retro_video_refresh_cb(const void *data, unsigned wid
 	if (scaleX != srfCore.GetScaleW() || scaleY != srfCore.GetScaleH())
 	{
 		srfCore.SetScaleTo((float)width, (float)height);
+		FrameHistoryValid = false;
 		DoApplyInterfaceOptions = true;
 	}
+	CoreFrameReady = true;
+}
+
+// Copy a completed hardware-rendered core frame into an independent GPU surface.
+static void CopyCoreSurface(ZL_Surface &destination, const ZL_Surface &source)
+{
+	if (!destination || !source) return;
+	const float width = (float)destination.GetWidth();
+	const float height = (float)destination.GetHeight();
+	const float u = source.GetScaleW(), v = source.GetScaleH();
+	const float vertices[] = { 0,height, width,height, 0,0, width,0 };
+	const float texcoords[] = { 0,v, u,v, 0,0, u,0 };
+	destination.RenderToBegin(true, true);
+	source.DrawBox(vertices, texcoords, ZLWHITE);
+	destination.RenderToEnd();
+}
+
+// Preserve two independent snapshots without advancing DOSBox or its audio.
+static void CaptureCoreFrame()
+{
+	if (!CoreFrameReady) return;
+	CoreFrameReady = false;
+	if (!FrameHistoryValid)
+	{
+		CopyCoreSurface(srfFrameCurrent, srfCore);
+		CopyCoreSurface(srfFramePrevious, srfFrameCurrent);
+		FrameHistoryValid = (bool)srfFrameCurrent && (bool)srfFramePrevious;
+		return;
+	}
+	CopyCoreSurface(srfFramePrevious, srfFrameCurrent);
+	CopyCoreSurface(srfFrameCurrent, srfCore);
 }
 
 void DBPS_SubmitOSDFrame(const void *data, unsigned width, unsigned height)
@@ -1836,7 +1874,10 @@ static void OnDraw()
 	// Unlimited fast-forward retains its existing run-as-fast-as-possible path.
 	if (!ThrottlePaused && ThrottleMode == RETRO_THROTTLE_FAST_FORWARD && !FastRate)
 		for (retro_time_t rt = dbp_cpu_features_get_time_usec(), rtMax = rt + ((retro_time_t)1200000 / (retro_time_t)av.timing.fps); rt < rtMax; rt = dbp_cpu_features_get_time_usec())
+		{
 			retro_run();
+			CaptureCoreFrame();
+		}
 
 	if (DoSave) RunSave();
 	if (DoLoad) RunLoad();
@@ -1975,6 +2016,8 @@ static void OnLoad(int argc, char *argv[])
 	PresentationFps = GetPresentationFps();
 	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	srfCore = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
+	srfFramePrevious = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
+	srfFrameCurrent = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
 	srfOSD = ZL_Surface(DBPS_OSD_WIDTH, DBPS_OSD_HEIGHT, true);
 	shdrOSD = ZL_Shader(ZL_SHADER_SOURCE_HEADER(ZL_GLES_PRECISION_LOW) "uniform sampler2D u_texture; varying vec4 v_color; varying vec2 v_texcoord; void main() { gl_FragColor = v_color * texture2D(u_texture, v_texcoord).bgra; }");
 	DoApplyGeometry = DoApplyInterfaceOptions = true;
@@ -1994,6 +2037,7 @@ static struct sDOSBoxPure : public ZL_ApplicationConstantTicks
 		while (CoreFrameAccumulator >= 1.0)
 		{
 			retro_run();
+			CaptureCoreFrame();
 			CoreFrameAccumulator -= 1.0;
 			if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING)
 			{
