@@ -715,7 +715,7 @@ static void ApplyFPSLimit(unsigned char newThrottleMode = ThrottleMode, bool unp
 	ThrottleMode = newThrottleMode;
 	CoreFrameRate = av.timing.fps;
 	if (newThrottleMode == RETRO_THROTTLE_SLOW_MOTION) CoreFrameRate *= SlowRate;
-	else if (newThrottleMode == RETRO_THROTTLE_FAST_FORWARD && FastRate) CoreFrameRate *= FastRate;
+	else if (newThrottleMode == RETRO_THROTTLE_FAST_FORWARD) CoreFrameRate *= FastRate;
 	CoreFrameAccumulator = 0.0;
 	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	if (unpause) ThrottlePaused = false;
@@ -1083,7 +1083,7 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			// Presentation is decoupled from emulation; never ask the core to
 			// change its native cadence to match the display refresh rate.
 			((retro_throttle_state*)data)->mode = ThrottleMode;
-			((retro_throttle_state*)data)->rate = (float)CoreFrameRate;
+			((retro_throttle_state*)data)->rate = (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING ? 0.0f : (float)CoreFrameRate);
 			return true;
 		}
 		case RETRO_ENVIRONMENT_SET_GEOMETRY:
