@@ -29,6 +29,7 @@ jobs:
         perl -0pi -e 's/"sb16", "gb"/"sb16", "awe32", "gb"/; s/Type of Soundblaster to emulate\. gb is Gameblaster\./Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster./' dosbox-pure/src/dosbox.cpp
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
+        perl -0pi -e 's/("dosbox_pure_cpu_core".*?\n\s*)"auto"(\n\s*#endif)/$1"dynamic"$2/s or die "Could not set Dynamic CPU core default";' dosbox-pure/core_options.h
         if (-not (Select-String -Path dosbox-pure/core_options.h -Pattern 'SoundBlaster AWE32' -Quiet)) { throw "AWE32 core option was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'AWE32_OpenROMBesideExe' -Quiet)) { throw "AWE32 ROM loader was not added" }
@@ -66,6 +67,7 @@ jobs:
         perl -0pi -e 's/"sb16", "gb"/"sb16", "awe32", "gb"/; s/Type of Soundblaster to emulate\. gb is Gameblaster\./Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster./' dosbox-pure/src/dosbox.cpp
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
+        perl -0pi -e 's/("dosbox_pure_cpu_core".*?\n\s*)"auto"(\n\s*#endif)/$1"dynamic"$2/s or die "Could not set Dynamic CPU core default";' dosbox-pure/core_options.h
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
