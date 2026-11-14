@@ -59,8 +59,12 @@ jobs:
     - uses: microsoft/setup-msbuild@main
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
+        git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
+        git -C dosbox-pure apply --recount "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
+        if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
@@ -89,8 +93,12 @@ jobs:
     - uses: microsoft/setup-msbuild@main
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
+        git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
+        git -C dosbox-pure apply --recount "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
+        if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
@@ -124,8 +132,11 @@ jobs:
         fetch-depth: 0
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
+        git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
+        git -C dosbox-pure apply --recount "$GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        grep -q 'SBT_AWE32' dosbox-pure/src/hardware/sblaster.cpp || { echo 'AWE32 Sound Blaster integration was not added' >&2; exit 1; }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
@@ -178,8 +189,11 @@ jobs:
         fetch-depth: 0
     - name: Checkout Deps
       run: |
-        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
+        git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
+        git -C dosbox-pure apply --recount "$GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        grep -q 'SBT_AWE32' dosbox-pure/src/hardware/sblaster.cpp || { echo 'AWE32 Sound Blaster integration was not added' >&2; exit 1; }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
@@ -229,8 +243,11 @@ jobs:
     - name: Checkout Deps
       run: |
         sudo xcode-select -s /Applications/Xcode_16.app
-        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
+        git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
+        git -C dosbox-pure apply --recount "$GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        grep -q 'SBT_AWE32' dosbox-pure/src/hardware/sblaster.cpp || { echo 'AWE32 Sound Blaster integration was not added' >&2; exit 1; }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
@@ -257,8 +274,11 @@ jobs:
     - name: Checkout Deps
       run: |
         sudo xcode-select -s /Applications/Xcode_15.0.1.app
-        git clone --single-branch --branch main --depth 1 https://codeberg.org/schelling/dosbox-pure.git dosbox-pure
+        git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
+        git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
+        git -C dosbox-pure apply --recount "$GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        grep -q 'SBT_AWE32' dosbox-pure/src/hardware/sblaster.cpp || { echo 'AWE32 Sound Blaster integration was not added' >&2; exit 1; }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
     - if: ${{ github.event.inputs.versionstring == '' }}
