@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/xbrz-glsl", "feature/awe32-build9" ]
+    branches: [ "main", "feature/xbrz-glsl", "feature/awe32-build9", "feature/awe32-midi-bridge" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
