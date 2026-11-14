@@ -32,6 +32,8 @@
 #include <libretro-common/include/libretro.h>
 #include <include/cross.h>
 #include "vfs_implementation.h"
+#include "xbrz_shader.h"
+#include "sofia_splash.h"
 
 #include <dosbox_pure_sta.h>
 int DBPS_SaveSlotIndex;
@@ -51,6 +53,7 @@ enum EHotkeyFKeys
 static unsigned short HotkeyMod;
 static unsigned char ThrottleMode, LastAudioThrottleMode;
 static bool ThrottlePaused, SpeedModHold, DisableSystemALT, UseMiddleMouseMenu, PointerLock, DrawStretched, VariablesUpdated;
+static bool IntroActive = true, IntroDismissRequested;
 static bool DrawCoreShader, DoApplyInterfaceOptions, DoApplyGeometry, DoSave, DoLoad, AudioSkip, DefaultPointerLock;
 static char Scaling;
 static int CRTFilter, AudioLatency;
@@ -539,6 +542,7 @@ void DBPS_ToggleConfigOverride(const char* key, const char* defaultval)
 		ConfigCache.Erase(key);
 		VariablesUpdated = true;
 		if (IsInterfaceConfigKey(key)) DoApplyInterfaceOptions = true;
+		if (!strcmp(key, "dosbox_pure_aspect_correction")) DoApplyGeometry = true;
 		mtxCoreOptions.Unlock();
 	}
 	else
@@ -1036,6 +1040,7 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			ConfigCache.Erase(((retro_variable*)data)->key);
 			VariablesUpdated = true;
 			if (IsInterfaceConfigKey(((retro_variable*)data)->key)) DoApplyInterfaceOptions = true;
+			if (!strcmp(((retro_variable*)data)->key, "dosbox_pure_aspect_correction")) DoApplyGeometry = true;
 			mtxCoreOptions.Unlock();
 			return true;
 		}
@@ -1399,6 +1404,7 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 
 static void OnKeyDown(ZL_KeyboardEvent& e)
 {
+	if (IntroActive && e.is_down) { IntroDismissRequested = true; return; }
 	if (OnKeyUseHotKey(e)) return;
 	unsigned rk = (unsigned)ZLKtoRETROKEY[e.key];
 	if (e.is_repeat || rk == RETROK_UNKNOWN) return;
@@ -1474,7 +1480,7 @@ static void ApplyGeometry()
 	const float coreScale = (core_rec.Height() / av.geometry.base_height), coreScaleFrac = (coreScale - (int)coreScale);
 	const bool coreScaleLinear = (CRTFilter || Scaling == 'B' || ((!Scaling || Scaling == 'D') && (coreScale < 3 && coreScaleFrac > 0.01f && coreScaleFrac < 0.99f)));
 	srfCore.SetTextureFilterMode(coreScaleLinear, coreScaleLinear);
-	DrawCoreShader = (shdrCore && (CRTFilter || !(!Scaling || Scaling == 'D') || coreScaleLinear));
+	DrawCoreShader = (shdrCore && (CRTFilter || Scaling == 'X' || !(!Scaling || Scaling == 'D') || coreScaleLinear));
 }
 
 static void ApplyInterfaceOptions()
@@ -1706,8 +1712,8 @@ static void ApplyInterfaceOptions()
 
 	static const char* sLastShaderSrc;
 	const bool useCoreShader = (CRTFilter || !Scaling || Scaling == 'D');
-	const char* shaderSrc = (CRTFilter ? fragment_shader_crt_src : (useCoreShader ? fragment_shader_scaling_src : NULL));
-	if (shaderSrc != sLastShaderSrc) { sLastShaderSrc = shaderSrc; shdrCore = (shaderSrc ? ZL_Shader(shaderSrc, NULL, "TextureSize_x", "TextureSize_y", (CRTFilter ? 8 : 0), "InputSize_x", "InputSize_y", "ShadowMask", "ScanlineThinness", "HorizontalBlur", "MaskValue", "Curvature", "Corner") : ZL_Shader()); }
+	const char* shaderSrc = (CRTFilter ? fragment_shader_crt_src : (Scaling == 'X' ? xbrz_fragment_shader_src : (useCoreShader ? fragment_shader_scaling_src : NULL)));
+	if (shaderSrc != sLastShaderSrc) { sLastShaderSrc = shaderSrc; const char* vertexSrc = (Scaling == 'X' && !CRTFilter ? xbrz_vertex_shader_src : NULL); shdrCore = (shaderSrc ? ZL_Shader(shaderSrc, vertexSrc, "TextureSize_x", "TextureSize_y", (CRTFilter ? 8 : 0), "InputSize_x", "InputSize_y", "ShadowMask", "ScanlineThinness", "HorizontalBlur", "MaskValue", "Curvature", "Corner") : ZL_Shader()); }
 
 	const int crtscanline  = atoi(GetSetting("interface_crtscanline" , "2")); //{ "0", "No scanline gaps" },{ "4", "Weak gaps" },{ "8", "Strong gaps" },
 	const int crtblur      = atoi(GetSetting("interface_crtblur"     , "2")); //{ "0", "Blurry" },{ "1", "Smooth" },{ "2", "Default" },{ "3", "Pixely" },{ "4", "Sharper" },
@@ -1727,7 +1733,7 @@ static void ApplyInterfaceOptions()
 	const float Curvature = 0.01f * crtcurvature;
 	const float Corner = 2.2f * crtcorner;
 
-	if (useCoreShader)
+	if (useCoreShader || Scaling == 'X')
 		shdrCore.SetUniform(s(srfCore.GetWidth()), s(srfCore.GetHeight()), s(srfCore.GetWidth()*srfCore.GetScaleW()), s(srfCore.GetHeight()*srfCore.GetScaleH()), s(CRTFilter), s(ScanlineThinness), s(HorizontalBlur), s(MaskValue), s(Curvature), s(Corner));
 
 	if (newFastRate != FastRate || newSlowRate != SlowRate)
@@ -1757,11 +1763,7 @@ static bool DrawIntro()
 {
 	static ZL_Surface srfLogo;
 	if (!srfLogo)
-	{
-		enum { dbplogopng_size = 12829 };
-		extern const unsigned char* dbplogopng;
-		srfLogo = ZL_Surface(ZL_File(dbplogopng, dbplogopng_size));
-	}
+		srfLogo = ZL_Surface(ZL_File(sofia_splash_png, sizeof(sofia_splash_png)));
 
 	static ticks_t animstart;
 	if (!animstart) animstart = ZLTICKS+50;
@@ -1770,13 +1772,14 @@ static bool DrawIntro()
 	const float f = ZL_Easing::InOutQuart(ZL_Math::Clamp01(ZLSINCEF(animstart+300, 1000)));
 	const float scale = 1.5f*(ZLASPECTR > 1 ? 1/ZLASPECTR : 1); //ZL_Math::Min(ZLWIDTH, ZLHEIGHT) / 1800.0f;;
 	const float logoW = scale * 0.93769841772151898734177215189873f, spineW = scale * 0.52397310126582278481012658227848f;
-	const float dist = (1-f)*-10;
+	const bool holdIntro = (f >= 1.0f && !IntroDismissRequested);
+	// Keep the logo in front of the camera while the splash waits for a key.
+	const float dist = (holdIntro ? -6.0f : (1-f)*-10);
 	const float rot = (1-f)*0.69813170079773183076947630739551f;
 	const float ups = f * 0.21f * scale;
-
-	const ZL_Color colBG     = ZLLUMA(0, (early < 1 ? 1.0-(early*.49f) : (0.7f-f)*.7f));
-	const ZL_Color colLogo   = ZLLUMA(early, early < 1 ? early : f < 0.5 ? 1.0 : ZL_Easing::InQuad(1.0f - (f * 2.0f - 1.0f)));
-	const ZL_Color colSpine  = ZLLUMA(early*0.94901960784313725490196078431373f, colLogo.a);
+	const ZL_Color colBG     = (holdIntro ? ZLBLACK : ZLLUMA(0, (early < 1 ? 1.0-(early*.49f) : (0.7f-f)*.7f)));
+	const ZL_Color colLogo   = (holdIntro ? ZLWHITE : ZLLUMA(early, early < 1 ? early : f < 0.5 ? 1.0 : ZL_Easing::InQuad(1.0f - (f * 2.0f - 1.0f))));
+	const ZL_Color colSpine  = (holdIntro ? ZLLUMA(0.95f, 1.0f) : ZLLUMA(early*0.94901960784313725490196078431373f, colLogo.a));
 	const ZL_Matrix mtxBase  = ZL_Matrix::MakePerspectiveHorizontal(40, ZLASPECTR, 0, 1) * ZL_Matrix::MakeTranslate(0, ups, dist);
 	const ZL_Matrix mtxSpine = mtxBase * ZL_Matrix::MakeRotate(ZL_Quat::FromRotateY(rot+PIHALF)) * ZL_Matrix::MakeTranslate(spineW, 0, -logoW);
 	const ZL_Matrix mtxLogo  = mtxBase * ZL_Matrix::MakeRotate(ZL_Quat::FromRotateY(rot));
@@ -1792,7 +1795,7 @@ static bool DrawIntro()
 	srfLogo.DrawQuad(-logoW,-scale , logoW,-scale , logoW,scale , -logoW,scale , colLogo);
 	ZL_Display::PopMatrix();
 
-	if (f == 1.0f) { srfLogo = ZL_Surface(); return true; }
+	if (f == 1.0f && IntroDismissRequested) { srfLogo = ZL_Surface(); IntroActive = false; return true; }
 	return false;
 }
 

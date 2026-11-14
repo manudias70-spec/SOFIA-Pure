@@ -256,6 +256,9 @@
     <ClCompile Include="$(DBPDir)src/hardware/sblaster.cpp">
       <Filter>DOSBox</Filter>
     </ClCompile>
+    <ClCompile Include="$(DBPDir)src/hardware/emu8k.cpp">
+      <Filter>DOSBox</Filter>
+    </ClCompile>
     <ClCompile Include="$(DBPDir)src/hardware/serialport/serialdummy.cpp">
       <Filter>DOSBox</Filter>
     </ClCompile>
