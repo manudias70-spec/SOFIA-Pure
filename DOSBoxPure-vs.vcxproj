@@ -592,4 +592,10 @@
     <ClInclude Include="$(DBPDir)src/ints/int10.h" />
     <ClInclude Include="$(DBPDir)src/ints/xms.h" />
   </ItemGroup>
+  <!-- Experimental: prefer execution speed over binary size in Release builds. -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' Or '$(Configuration)'=='ReleaseGLCORE'">
+    <ClCompile>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+  </ItemDefinitionGroup>
 </Project>
