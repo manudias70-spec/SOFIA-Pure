@@ -79,25 +79,6 @@ static const unsigned short CoreSchedulerTicksPerSecond = 1000;
 static float PresentationFps = 60.0f;
 static double CoreFrameAccumulator, CoreFrameRate = 70.0;
 static void SetApplicationTiming(float fps, unsigned short tps);
-static float GetPresentationFps()
-{
-	// Query the active Windows display mode without depending on SDL headers
-	// in this translation unit. Fall back safely if the driver reports no rate.
-	float displayFps = 60.0f;
-#ifdef _WIN32
-	DEVMODEA displayMode = {};
-	displayMode.dmSize = sizeof(displayMode);
-	if (EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &displayMode) &&
-	    displayMode.dmDisplayFrequency > 1)
-		displayFps = (float)displayMode.dmDisplayFrequency;
-#endif
-	// Avoid dropping native 70 Hz DOS frames on a 75 Hz display, while
-	// retaining a 60 Hz minimum target for slower games that need FG.
-	double targetFps = (CoreFrameRate < 60.0 ? 60.0 : CoreFrameRate);
-	if (targetFps > displayFps) targetFps = displayFps;
-	return (float)targetFps;
-}
-
 static ZL_Surface srfCore, srfOSD;
 static ZL_Surface srfFramePrevious, srfFrameCurrent;
 static bool CoreFrameReady, FrameHistoryValid;
@@ -747,7 +728,6 @@ static void ApplyFPSLimit(unsigned char newThrottleMode = ThrottleMode, bool unp
 	if (newThrottleMode == RETRO_THROTTLE_SLOW_MOTION) CoreFrameRate *= SlowRate;
 	else if (newThrottleMode == RETRO_THROTTLE_FAST_FORWARD) CoreFrameRate *= FastRate;
 	CoreFrameAccumulator = 0.0;
-	PresentationFps = GetPresentationFps();
 	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	if (unpause) ThrottlePaused = false;
 	AudioSkip = true;
@@ -2013,7 +1993,6 @@ static void OnLoad(int argc, char *argv[])
 
 	CoreFrameAccumulator = 0.0;
 	CoreFrameRate = av.timing.fps;
-	PresentationFps = GetPresentationFps();
 	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	srfCore = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
 	srfFramePrevious = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
