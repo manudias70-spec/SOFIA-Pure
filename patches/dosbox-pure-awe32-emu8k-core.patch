@@ -3177,7 +3177,7 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
  enum SB_IRQS {SB_IRQ_8,SB_IRQ_16,SB_IRQ_MPU};
  
  enum DSP_MODES {
-@@ -162,6 +166,27 @@
+@@ -162,6 +166,35 @@
  
  static SB_INFO sb;
  
@@ -3186,17 +3186,30 @@ diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
 +static MixerChannel *awe_chan = NULL;
 +static bool awe_enabled = false;
 +static int16_t awe_mixbuf[EMU8K_MIXBUF * 2];
++static unsigned awe_io_read_log_count = 0;
++static unsigned awe_io_write_log_count = 0;
 +
 +static Bitu AWE32_Read(Bitu port, Bitu iolen)
 +{
 +    if (!awe_enabled) return 0xff;
 +    if (awe_chan) awe_chan->FillUp();
-+    return (iolen == 1) ? awe8k.Inb(port) : awe8k.Inw(port);
++    Bitu value = (iolen == 1) ? awe8k.Inb(port) : awe8k.Inw(port);
++    if (awe_io_read_log_count < 64) {
++        LOG_MSG("AWE32 IO READ  port=%04X width=%u value=%04X",
++                (unsigned)port, (unsigned)iolen, (unsigned)value);
++        ++awe_io_read_log_count;
++    }
++    return value;
 +}
 +
 +static void AWE32_Write(Bitu port, Bitu val, Bitu iolen)
 +{
 +    if (!awe_enabled) return;
++    if (awe_io_write_log_count < 64) {
++        LOG_MSG("AWE32 IO WRITE port=%04X width=%u value=%04X",
++                (unsigned)port, (unsigned)iolen, (unsigned)val);
++        ++awe_io_write_log_count;
++    }
 +    if (awe_chan) awe_chan->FillUp();
 +    if (iolen == 1) awe8k.Outb(port, (uint8_t)val);
 +    else awe8k.Outw(port, (uint16_t)val);
