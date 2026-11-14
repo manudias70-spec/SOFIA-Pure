@@ -17,6 +17,7 @@
  */
 
 #include <ZL_Application.h>
+#include <ZL_Scene.h>
 #include <ZL_Display.h>
 #include <ZL_Surface.h>
 #include <ZL_Audio.h>
@@ -62,6 +63,12 @@ static std::string PathSaves, PathSystem;
 static ZL_Vector PointerLockPos;
 static ZL_Json ConfigCache, ConfigOverrides;
 enum { FAST_FPS_LIMIT = 200 };
+
+// Run the emulation scheduler at millisecond precision while presenting at 60 Hz.
+static const unsigned short CoreSchedulerTicksPerSecond = 1000;
+static const float PresentationFps = 60.0f;
+static double CoreFrameAccumulator, CoreFrameRate = 70.0;
+static void SetApplicationTiming(float fps, unsigned short tps);
 
 static ZL_Surface srfCore, srfOSD;
 static ZL_Color colOSDBG;
@@ -706,10 +713,11 @@ static void SetCaptureJoyBind(const SJoyBind& setbind)
 static void ApplyFPSLimit(unsigned char newThrottleMode = ThrottleMode, bool unpause = false)
 {
 	ThrottleMode = newThrottleMode;
-	double rate = av.timing.fps;
-	if (newThrottleMode == RETRO_THROTTLE_SLOW_MOTION) rate *= SlowRate;
-	else if (newThrottleMode == RETRO_THROTTLE_FAST_FORWARD && FastRate && (rate *= FastRate) >= FAST_FPS_LIMIT) rate /= (int)FastRate;
-	ZL_Application::SetFpsLimit((float)rate);
+	CoreFrameRate = av.timing.fps;
+	if (newThrottleMode == RETRO_THROTTLE_SLOW_MOTION) CoreFrameRate *= SlowRate;
+	else if (newThrottleMode == RETRO_THROTTLE_FAST_FORWARD && FastRate) CoreFrameRate *= FastRate;
+	CoreFrameAccumulator = 0.0;
+	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	if (unpause) ThrottlePaused = false;
 	AudioSkip = true;
 }
@@ -1072,17 +1080,10 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 		}
 		case RETRO_ENVIRONMENT_GET_THROTTLE_STATE:
 		{
-			float corefps = (float)av.timing.fps, vsyncfps = ZL_Application::GetVsyncFps();
-			if (vsyncfps && vsyncfps != corefps && ThrottleMode == RETRO_THROTTLE_NONE)
-			{
-				((retro_throttle_state*)data)->mode = RETRO_THROTTLE_VSYNC;
-				((retro_throttle_state*)data)->rate = vsyncfps;
-			}
-			else
-			{
-				((retro_throttle_state*)data)->mode = ThrottleMode;
-				((retro_throttle_state*)data)->rate = corefps * (ThrottleMode == RETRO_THROTTLE_SLOW_MOTION ? SlowRate : ThrottleMode == RETRO_THROTTLE_FAST_FORWARD ? FastRate : ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING ? 0.0f : 1.0f);
-			}
+			// Presentation is decoupled from emulation; never ask the core to
+			// change its native cadence to match the display refresh rate.
+			((retro_throttle_state*)data)->mode = ThrottleMode;
+			((retro_throttle_state*)data)->rate = (float)CoreFrameRate;
 			return true;
 		}
 		case RETRO_ENVIRONMENT_SET_GEOMETRY:
@@ -1825,17 +1826,10 @@ static void OnDraw()
 		}
 	}
 
-	if (!ThrottlePaused)
-	{
-		retro_run();
-		if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING) ThrottlePaused = true;
-		if (ThrottleMode == RETRO_THROTTLE_FAST_FORWARD && (av.timing.fps * FastRate) >= FAST_FPS_LIMIT)
-			for (int repeats = (int)FastRate; --repeats;)
-				retro_run();
-		if (ThrottleMode == RETRO_THROTTLE_FAST_FORWARD && !FastRate)
-			for (retro_time_t rt = dbp_cpu_features_get_time_usec(), rtMax = rt + ((retro_time_t)1200000 / (retro_time_t)av.timing.fps); rt < rtMax; rt = dbp_cpu_features_get_time_usec())
-				retro_run();
-	}
+	// Unlimited fast-forward retains its existing run-as-fast-as-possible path.
+	if (!ThrottlePaused && ThrottleMode == RETRO_THROTTLE_FAST_FORWARD && !FastRate)
+		for (retro_time_t rt = dbp_cpu_features_get_time_usec(), rtMax = rt + ((retro_time_t)1200000 / (retro_time_t)av.timing.fps); rt < rtMax; rt = dbp_cpu_features_get_time_usec())
+			retro_run();
 
 	if (DoSave) RunSave();
 	if (DoLoad) RunLoad();
@@ -1969,16 +1963,38 @@ static void OnLoad(int argc, char *argv[])
 	for (int i = 0; i != 4; i++)
 		retro_set_controller_port_device(i, RETRO_DEVICE_JOYPAD);
 
-	ZL_Application::SetFpsLimit((float)av.timing.fps);
+	CoreFrameAccumulator = 0.0;
+	CoreFrameRate = av.timing.fps;
+	SetApplicationTiming(PresentationFps, CoreSchedulerTicksPerSecond);
 	srfCore = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
 	srfOSD = ZL_Surface(DBPS_OSD_WIDTH, DBPS_OSD_HEIGHT, true);
 	shdrOSD = ZL_Shader(ZL_SHADER_SOURCE_HEADER(ZL_GLES_PRECISION_LOW) "uniform sampler2D u_texture; varying vec4 v_color; varying vec2 v_texcoord; void main() { gl_FragColor = v_color * texture2D(u_texture, v_texcoord).bgra; }");
 	DoApplyGeometry = DoApplyInterfaceOptions = true;
 }
 
-static struct sDOSBoxPure : public ZL_Application
+static struct sDOSBoxPure : public ZL_ApplicationConstantTicks
 {
-	sDOSBoxPure() : ZL_Application(70) { }
+	sDOSBoxPure() : ZL_ApplicationConstantTicks(PresentationFps, CoreSchedulerTicksPerSecond) { }
+
+	static void SetTiming(float fps, unsigned short tps) { SetFpsTps(fps, tps); }
+
+	virtual void AfterCalculate()
+	{
+		if (ThrottlePaused || (ThrottleMode == RETRO_THROTTLE_FAST_FORWARD && !FastRate) || CoreFrameRate <= 0.0)
+			return;
+		CoreFrameAccumulator += CoreFrameRate / (double)CoreSchedulerTicksPerSecond;
+		while (CoreFrameAccumulator >= 1.0)
+		{
+			retro_run();
+			CoreFrameAccumulator -= 1.0;
+			if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING)
+			{
+				ThrottlePaused = true;
+				CoreFrameAccumulator = 0.0;
+				break;
+			}
+		}
+	}
 
 	virtual void Load(int argc, char *argv[])
 	{
@@ -2058,6 +2074,7 @@ static struct sDOSBoxPure : public ZL_Application
 		ZL_Display::ClearFill(ZL_Color::White);
 		ZL_Display::SetAA(true);
 		ZL_Input::Init();
+		ZL_SceneManager::Init(); // Required by ZL_ApplicationConstantTicks, no scene is registered.
 
 		// Load early so the core can send RETRO_ENVIRONMENT_SET_MESSAGE_EXT
 		enum { typomodernottfzlib_size = 8699, typomodernottf_size = 19568 };
@@ -2114,6 +2131,11 @@ static struct sDOSBoxPure : public ZL_Application
 		retro_unload_game();
 	}
 } DOSBoxPure;
+
+static void SetApplicationTiming(float fps, unsigned short tps)
+{
+	sDOSBoxPure::SetTiming(fps, tps);
+}
 
 const unsigned char* typomodernottfzlib = (const unsigned char*)"x\1l\221\3\260\34K\24\206\277\356\231\331\235\330\266m\333\266\235\254\256\315\330\266m\333\266\223\302\263Ux\266\315y\323\267\243M\355\277\365\357A\37\17\2\310\307,\f\6v\357>\264_\324\357\367\252@\337\241@\331\1C\32\64\336\177\263Ia\20#\1_0\311\237\272\364\364\230e`\236\2\261(\306\237\221Jw\32B\337\256@\301\230\304\311\321\237\36\372y\36x/A\333\212\261Q\376\220\363\307\233*\367\3\240y\254\353(0\314\23\3\242(P56)s\322/q\265\276\7q\t\344\37\tQ\351\311T\376\67\n\272\274\3\326\310\304\224\240?\177\340\277m\340i\tbF\222\177R*w\351\2\302\265\251\230\354O\212\232\261\352\245L\350\325\20\344\217\251)\31\231Nm6@\337\252\352\35\1\210\263MR\3I\367'\24h\373+yl\24^\314\377u\301\307\322)\364_\252\367\260\275\t\201\215DC\200\275\351\277T\260q\n9-\275\207\21\204\343\6B\375\323\5\223\310\60\214_\345\65,lk\213\325\4D\31-\215W\211\226\205\355\2RX\272\21\263\340\344@|\177\3\25\1z\366\255X\21\365s\254I\356\f/\332\233\304*_yJ\255\372\25\214/\254Iz3\33\r%\345H\20\253\b\311$\332Y\313ig\336\245\235\347\212\253\327\246\235\350B;\345wY\313\330B;Eq\227\356\362\25%\335\234W\234w\315\240\233\343\23\321\246\217\266J\217L\35o\374\253k(\351\306\267\267~\326}T\317'\364\241\251\364\207n\336*\235\247t3\250g\324\71\332\367$\347\261\355\323\61\336\217Q\266\216\365\351=\324\274J\252\31\314\276\220\243\377\33\201-\320r\213\356/::\205\214\267\335\374\334\272\266\253\207\305\313\327\321{5\247\266\222fP\337P\327\320T\271.w\273T\376'{Y\265h\223s\213\332\372]\305\272\366.u\33=\237\316W\266\232\371\271z:f\213\236Kzh\355\372Rt\36j\206\335\217\371\270G$z\347\252\373E\370f\253\234\226jN\231\333\71\350\352\333\254U\272F\330\367Z\0J\32[\"\327P\361J\352[E\246\347Jd\377\363\375]_\23}\373\b\334\362X\206\61\314\17\30h\226E\240\60\7\3\201\262M\242\201\334\330H$\255\231\301\5\34\307\1*\322\226]\\r\215\217\235\217\300\271\201\316\365\240`\340'@\220\20QD\23C,q\304\223@\"\5I\"\231\24RI#\235\f2\311\2\341q\211\206\220\200$\34\2\f\323\362x\355\\\271\363\344\315\227\277@"
 	"\301B\205\213\24-V\274D\311R\245\313\224-G\371\n\25+U\256R\265Z\365\32\65k\325\256S\267^\375\6\r\33\65n\322\264Y\363\26-[\265n\323\266]\373\16\35;u\356\322\265[\367\36={\365\356\323\267_\377\1\3\7\r\36\62t\330\360\21#G\215\36\63v\334\370\t>\346\314\235\277p\345\272-;w\354\332\263{\357\376\203\7\16\35>z\344\330\361\223\247O\235\71w\366\322\305\313WH\t\4c\310\332\236\24GF,\363\66\220\nQ\231(\304Ob\337\205\351\376D\200\204\311\30\63f\257\5\215\363\\\347\31\314Z4s\361\202\245\313\226/Y\275\206U\233\66o\4\222\201l\302P\222\206\304rB\344\25\335\305p\221,\26\210c\342\236xC|$\276\23\377\311\206\262\243L\227\307\344=\371\223Q\327\350h,0\356\30o\31\337\230\230\305\315\336\346*\363\230\371?A\360\f@U\24\0\0\364\206k>\363\277\354\226l\267ds\311\306\232\261ec\311\266m\333\266m\267\304s^B\37\326\206\355\341@\270\24\356\205\247\341K\224\37\271\250<j\214F\242\245\350.&\270!\356\210\207\342\251x#\276\210_\22@\\R\224T%MIg\322\237\314'\227)\240\25i_:\236\236\244o\351_\226\262\272\254#\233\316\66\263\347\334\347\215yW>\227o\347\327\371[ADq\321Z\364\25\263\305RqQ\274\225yeu\331_\256\225\327\345kUTUV3\325Q\365R\375\324Mug=V/\326G\365{\375\333d\246\246ioz\233\231f\267yl\371V{k\262\265\325\272m\3\273\274\335\331\236k\37v\200S\330i\350\364w\246;+\235\375\316M\347\243[\330m\351NvO{\310k\352M\364Vz\357}\337\257\353\17\366\347\373\373\375\257A\311\240g\260\70x\34\26\17{\206;#\25\65\217&Ggc\26\67\216\273\307C\343\231\361\372\370cR4\351\232\314O\356\247E\323\236\351\350\364p\372\66\347\346\352\347\6\347\226\347ng\6\0\220\27\364\4 OYT\27@@\1\370\317\272\227@7u\235\t\277\357-\22\16nA\310\262\rd\261x\261\25\7eAB\270\305YhN\226.pJ\3m\374\227\343t\323t\240[\224\tf\334\216\273s&\335\353\241E\263d%\vuwgO\246>\35\222n7\vY\235.\304\63C\326CM\366\270\v\262\336e\276\357\273\367IW\212\204\311\177J\254\247\247\247\253o\273\337\376\335@\314\361\235X<\341\347 }\374\67\216\27\"\262\246\274_\26`\324\351*}E\bZ\177\246;n\257\340\365\363q}\"\352\247rI\276\202\227\311g`\6/\221\65B\377\243\365\30\203\337\203\361f\251"
