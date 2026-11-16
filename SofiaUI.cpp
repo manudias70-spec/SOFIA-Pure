@@ -8,6 +8,7 @@ namespace SofiaUI
 {
 	static bool initialized = false;
 	static bool initializationAttempted = false;
+	static bool visible = false;
 
 	static bool Initialize()
 	{
@@ -47,9 +48,14 @@ namespace SofiaUI
 		return true;
 	}
 
+	void Toggle()
+	{
+		visible = !visible;
+	}
+
 	void Draw()
 	{
-		if (!Initialize()) return;
+		if (!visible || !Initialize()) return;
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.DisplaySize = ImVec2((float)ZL_Display::Width, (float)ZL_Display::Height);
@@ -60,15 +66,17 @@ namespace SofiaUI
 		ImGui::NewFrame();
 
 		ImGui::SetNextWindowPos(ImVec2(18.0f, 18.0f), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowSize(ImVec2(360.0f, 158.0f), ImGuiCond_FirstUseEver);
-		if (ImGui::Begin("SOFIA-Pure | Diagnostico", NULL, ImGuiWindowFlags_NoCollapse))
+		ImGui::SetNextWindowSize(ImVec2(390.0f, 176.0f), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("SOFIA-Pure", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
 		{
-			ImGui::TextColored(ImVec4(0.18f, 0.82f, 0.96f, 1.0f), "SOFIA UI / OPENGL CORE");
+			ImGui::TextColored(ImVec4(0.18f, 0.82f, 0.96f, 1.0f), "MODERN RETRO DOS");
 			ImGui::Separator();
-			ImGui::Text("Estado: inicializado");
-			ImGui::Text("Ventana: %.0f x %.0f", io.DisplaySize.x, io.DisplaySize.y);
-			ImGui::Text("Renderer: OpenGL3 | GLSL 140");
-			ImGui::Text("Motor DOSBox: sin modificaciones");
+			ImGui::Text("Panel de SOFIA-Pure");
+			ImGui::TextDisabled("La nueva interfaz esta en desarrollo.");
+			ImGui::Spacing();
+			ImGui::Text("Motor: activo");
+			ImGui::Text("Resolucion: %.0f x %.0f", io.DisplaySize.x, io.DisplaySize.y);
+			ImGui::TextDisabled("ALT + F12  |  Mostrar / ocultar");
 		}
 		ImGui::End();
 
