@@ -8,10 +8,10 @@
 #include <cctype>
 #include <string>
 #include <vector>
-#include <dosbox_pure_sta.h>
+#include <libretro-common/include/libretro.h>
 #include <include/cross.h>
 #include "vfs_implementation.h"
-#include <libretro-common/include/libretro.h>
+#include <dosbox_pure_sta.h>
 
 namespace SofiaUI
 {
