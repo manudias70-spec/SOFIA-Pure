@@ -79,6 +79,7 @@
     <ClInclude Include="third_party\imgui\imstb_textedit.h" />
     <ClInclude Include="third_party\imgui\imstb_truetype.h" />
     <ClInclude Include="third_party\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="third_party\imgui\backends\imgui_impl_opengl3_loader.h" />
     <ClCompile Include="vfs_implementation.cpp" />
     <ResourceCompile Include="DOSBoxPure.rc" />
     <ClCompile Include="$(DBPDir)dosbox_pure_libretro.cpp">
