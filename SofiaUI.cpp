@@ -115,7 +115,9 @@ namespace SofiaUI
 			NavigationButton("Acerca de", 3);
 			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 42.0f);
 			ImGui::Separator();
-			ImGui::TextDisabled("ALT + F12  |  Cerrar");
+			ImGui::TextDisabled("ALT + F12  |  Acceso rapido");
+			if (ImGui::Button("Volver al explorador", ImVec2(-1.0f, 34.0f)))
+				visible = false;
 			ImGui::EndChild();
 
 			ImGui::SameLine();
