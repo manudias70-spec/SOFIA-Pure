@@ -235,8 +235,6 @@ namespace SofiaUI
 			ImGui::TextDisabled("ALT + F12  |  Acceso rapido");
 			if (ImGui::Button("Volver al explorador", ImVec2(-1.0f, 34.0f)))
 				visible = false;
-			if (ImGui::Button("Salir al escritorio", ImVec2(-1.0f, 34.0f)))
-				ImGui::OpenPopup("Confirmar salida");
 			ImGui::EndChild();
 
 			ImGui::SameLine();
@@ -330,6 +328,23 @@ namespace SofiaUI
 				ImGui::TextDisabled("Una interfaz nueva sobre una base DOSBox conservada.");
 				ImGui::TextDisabled("Proyecto independiente. Solo Windows por ahora.");
 			}
+			// Exit action lives in the conventional lower-right corner of the main area.
+			ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - 218.0f, ImGui::GetWindowHeight() - 48.0f));
+			const ImVec2 exitButtonPos = ImGui::GetCursorScreenPos();
+			if (ImGui::Button("     Salir al escritorio", ImVec2(198.0f, 36.0f)))
+				ImGui::OpenPopup("Confirmar salida");
+			// Small door-and-arrow pictogram, drawn directly so it works with the bundled font.
+			ImDrawList* draw = ImGui::GetWindowDrawList();
+			const ImU32 doorColor = IM_COL32(80, 195, 235, 255);
+			draw->AddRect(ImVec2(exitButtonPos.x + 12.0f, exitButtonPos.y + 8.0f),
+				ImVec2(exitButtonPos.x + 25.0f, exitButtonPos.y + 28.0f), doorColor, 1.5f, 0, 1.8f);
+			draw->AddCircleFilled(ImVec2(exitButtonPos.x + 21.0f, exitButtonPos.y + 18.0f), 1.2f, doorColor);
+			draw->AddLine(ImVec2(exitButtonPos.x + 4.0f, exitButtonPos.y + 18.0f),
+				ImVec2(exitButtonPos.x + 10.0f, exitButtonPos.y + 18.0f), doorColor, 1.8f);
+			draw->AddLine(ImVec2(exitButtonPos.x + 7.0f, exitButtonPos.y + 15.0f),
+				ImVec2(exitButtonPos.x + 10.0f, exitButtonPos.y + 18.0f), doorColor, 1.8f);
+			draw->AddLine(ImVec2(exitButtonPos.x + 7.0f, exitButtonPos.y + 21.0f),
+				ImVec2(exitButtonPos.x + 10.0f, exitButtonPos.y + 18.0f), doorColor, 1.8f);
 			ImGui::EndChild();
 		}
 		ImGui::End();
