@@ -376,3 +376,46 @@ The verified order is:
 - `BeforeFrame()` is currently not overridden by SOFIA-Pure. A future implementation could use it to begin the ImGui frame after input dispatch and before `AfterFrame()`, but must verify that the retro core's `retro_run()` and all ZillaLib GL state transitions do not invalidate assumptions made by the renderer backend. The simpler first spike may begin and build the ImGui frame at the tail of `OnDraw()`, then render immediately there; this avoids an unnecessary split frame lifecycle.
 
 This resolves the event-pump/draw/swap ordering from source. It does not prove GL state compatibility or teardown safety at runtime.
+
+
+## OpenGL 3.1 Core and renderer-backend audit (Dear ImGui v1.91.9b)
+
+The Windows x64 CI target is `ReleaseGLCORE`. Its ZillaLib SDL window setup explicitly requests:
+- `SDL_GL_CONTEXT_PROFILE_CORE`
+- OpenGL major 3, minor 1
+- double buffering
+
+This is a concrete desktop target, not a runtime observation from a built executable. SDL's request is confirmed in source; the actual driver-created context still needs to be logged during the first run.
+
+### Dear ImGui backend compatibility
+
+Inspected the upstream Dear ImGui tag `v1.91.9b`, specifically `backends/imgui_impl_opengl3.cpp` and its bundled `imgui_impl_opengl3_loader.h`.
+
+- The backend includes its own stripped GL3W loader unless `IMGUI_IMPL_OPENGL_LOADER_CUSTOM` is defined. It does not require ZillaLib's private `InitExtensionEntries()` or SDL window/context handles.
+- The desktop path uses VAOs and supports desktop GL 3.1. The requested context is therefore within the backend's stated desktop GL 3.x target.
+- The backend's default desktop GLSL string is `#version 130`; an explicit `#version 140` is also valid for OpenGL 3.1. For the spike, use explicit `#version 140` to match the previously selected target, then confirm shader compilation on the CI/runtime driver.
+- The renderer backend does not bind a framebuffer. It renders into whichever framebuffer is already bound, so it must be called while ZillaLib's intended window framebuffer is active.
+- Its render function backs up/restores the state it changes: active texture (and unit-0 texture binding), current program, sampler where supported, array buffer, VAO, blend equations/functions and blend/cull/depth/stencil/scissor enables, primitive restart, polygon mode, viewport and scissor box.
+- In the inspected version it does not change framebuffer binding, depth function, or depth write mask. Those states are not part of its backup; the first runtime spike must still verify the real host/core state and draw result.
+- This backend is not a universal GL state transaction. Keep the UI render at the end of the existing frame and do not use `ZL_GL_ResetFrameBuffer()` as a substitute for state preservation.
+
+### Teardown point resolved for the current SDL desktop implementation
+
+The inspected SDL desktop loop calls `OnQuit()` after it exits the Frame/swap loop. The loop then returns; this source path contains no explicit `SDL_GL_DeleteContext`, `SDL_DestroyWindow`, `SDL_VideoQuit`, or `SDL_Quit` call. The GL context created by `SDL_GL_CreateContext()` therefore remains available during the application's `OnQuit()` callback in this implementation.
+
+Recommended shutdown ordering for the future adapter:
+1. Call `SofiaUI::Shutdown()` at the start of SOFIA-Pure's `OnQuit()`, while the desktop GL context is still alive.
+2. Then continue the existing settings synchronization and `retro_unload_game()` path.
+3. Keep shutdown idempotent so partial initialization and initialization failure are safe.
+
+This is source-level lifecycle evidence for the current SDL desktop path, not a runtime validation and not a guarantee for other ZillaLib platform backends. If explicit SDL context destruction is added later, the shutdown ordering must be revisited.
+
+### Remaining gates
+
+- Log the actual GL version/profile and renderer string on the first Windows x64 `ReleaseGLCORE` run.
+- Confirm the ImGui shader compiles with explicit GLSL `#version 140`.
+- Verify framebuffer binding and visible compositing at runtime after the DOSBox core has rendered.
+- Verify framebuffer scale and pointer coordinate mapping on high-DPI/scaled windows.
+- Confirm input arbitration and focus-loss recovery with the real guest.
+
+No application source, build files, vendored ImGui sources, ZillaLib code, or DOSBox core code has been changed. No build or runtime test has been performed.
