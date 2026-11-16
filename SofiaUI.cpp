@@ -113,7 +113,9 @@ namespace SofiaUI
 			NavigationButton("Biblioteca", 1);
 			NavigationButton("Configuracion", 2);
 			NavigationButton("Acerca de", 3);
-			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 42.0f);
+			// Reserve enough vertical space for the complete footer controls.
+			// The previous 42px offset clipped the return button at the bottom.
+			ImGui::SetCursorPosY(ImGui::GetWindowHeight() - 100.0f);
 			ImGui::Separator();
 			ImGui::TextDisabled("ALT + F12  |  Acceso rapido");
 			if (ImGui::Button("Volver al explorador", ImVec2(-1.0f, 34.0f)))
