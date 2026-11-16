@@ -294,3 +294,60 @@ Inspected the public event structures, the SDL-to-ZillaLib translation, and `ZL_
 ### Consequence for the adapter
 
 The adapter can use ZillaLib's public signals without SDL handles or a second event loop. It must explicitly handle coordinate-origin conversion, DPI/input scaling, wheel normalization, UTF-8 text, focus loss, and per-key routing. This audit is source-based; no runtime coordinate test has been performed. No application, ZillaLib, or build code has been modified.
+
+
+## Adapter integration design: minimal diagnostic overlay
+
+This section defines the first implementation boundary. It is a design contract, not an implementation.
+
+### Ownership and module boundary
+
+Add a small frontend-only adapter module (proposed files: `SofiaUI.h/.cpp`) that owns:
+- ImGui context lifetime and IO configuration;
+- the pinned OpenGL3 renderer backend lifetime;
+- translation of ZillaLib public input events into ImGui IO;
+- the UI visibility/interaction mode and input-routing bookkeeping;
+- one minimal diagnostic window for the first spike.
+
+It must not own or create the SDL window, GL context, event loop, game surface, or DOSBox core. Do not call SDL_PollEvent, SDL_GL_SwapWindow, or ZL_GL_ResetFrameBuffer from the adapter. Keep ImGui's OpenGL3 backend implementation in its own translation unit so its embedded GL loader remains isolated.
+
+### Lifecycle and frame order
+
+1. Initialize the adapter only after `ZL_Display::Init()` has created the GL context and ZillaLib's GL setup is complete. Initialization failure leaves the existing frontend fully usable.
+2. Connect the adapter to public ZillaLib signals for key down/up, UTF-8 text, pointer move/down/up, wheel, activation/focus, and resize. Keep the existing frontend callbacks connected; do not rely on signal consumption.
+3. Each application frame, feed display size, framebuffer scale and delta time to ImGui, then call the OpenGL3 renderer's NewFrame and `ImGui::NewFrame()`.
+4. Preserve the current game/OSD/notification drawing order. Submit ImGui draw data as the final overlay after existing frontend drawing (including the intro/logo overlay), so the diagnostic panel is above the game and existing HUD.
+5. Render ImGui before ZillaLib performs its normal frame presentation/swap. Do not introduce another swap or frame loop.
+6. Shut down the ImGui renderer and context before the GL context is destroyed. The exact ZillaLib quit/destruction ordering must be verified before implementation; if `OnQuit()` is not guaranteed to run while GL is valid, use a confirmed earlier teardown hook.
+
+### Input routing and capture policy
+
+- Feed every relevant public event to ImGui regardless of whether it is also routed to the emulator. ImGui's `WantCaptureKeyboard` and `WantCaptureMouse` are the policy inputs for routing, not a reason to stop populating IO.
+- For the first diagnostic spike, use the last completed ImGui frame's capture flags when dispatching the next batch of ZillaLib events. Document the one-frame capture-state boundary; do not attempt to query a half-built frame.
+- Keyboard arbitration belongs at the top of `OnKeyDown()` and `OnKeyUp()`, before `OnKeyUseHotKey()`. Track, per physical ZillaLib key, whether its key-down was delivered to the guest or owned by the UI. On key-up, release only keys previously delivered to the guest; never let a UI-owned key-up trigger a DOSBox hotkey. Preserve guest key-up for keys that were already down when UI capture begins.
+- The libretro keyboard polling path must reflect the same routed state. A UI-captured key must not remain visible through `RETRO_DEVICE_KEYBOARD`.
+- Pointer arbitration must gate all relevant paths, not just event signals: relative mouse axes, mouse buttons, wheel, absolute pointer axes, pointer-pressed state, and the middle-button OSD shortcut. When UI owns the pointer, return neutral values to the core for these devices.
+- Keep joystick/gamepad routing untouched in this spike.
+- When UI opens, release pointer lock and show the cursor. When UI closes, restore the pre-UI pointer-lock/cursor policy through one owner-controlled transition, not competing toggles.
+- On keyboard-focus loss, synthesize releases for guest-routed keys, clear per-key ownership and mouse-button state, and reset ImGui's transient input state. On shutdown, perform equivalent cleanup.
+- Respect existing ZillaLib Alt+Enter/Alt+F4 prevention flags; do not add a second shortcut handler for these keys.
+
+### Minimal first visual test
+
+The first visible build should be deliberately small:
+- a toggleable, non-modal diagnostic panel;
+- a title and a few read-only values (UI active state, display dimensions, capture flags, frame time);
+- no file browser, game library, settings persistence, custom fonts, mascot, animations, or complex styling yet.
+
+The panel is considered successful only if it can be opened/closed repeatedly, mouse/keyboard capture does not leak to DOSBox hotkeys or guest input, joystick input remains unchanged, focus loss does not leave stuck keys/buttons, resizing keeps pointer hit-testing aligned, and disabling the adapter restores the current frontend behavior.
+
+### Remaining implementation gates
+
+Before coding, verify:
+- the exact ZillaLib frame/event dispatch order and the timing of `AfterFrame()` relative to `sigKeepAlive` and SDL buffer swap;
+- the actual GL context profile/version on the Windows x64 `ReleaseGLCORE` CI path;
+- the actual framebuffer scale on high-DPI and input-scaled windows;
+- the safe GL-context teardown point;
+- the exact Dear ImGui v1.91.9b backend compile definitions and project/Makefile source inclusion strategy.
+
+No implementation, vendoring, project-file, workflow, ZillaLib, or DOSBox core change is included in this design update. No build or runtime test has been performed.
