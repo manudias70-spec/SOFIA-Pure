@@ -133,3 +133,42 @@ The existing `OnDraw()` calls `retro_run()`, applies save/load and geometry/inte
 Input must be arbitrated before it reaches existing DOSBox hotkey and emulated-input handlers: when the SOFIA UI owns keyboard or pointer interaction, consumed events must not leak into the emulated machine. The current code also uses pointer lock and direct SDL cursor calls in the host, so overlay mode must deliberately suspend or coordinate pointer lock rather than fighting it.
 
 No source, project, build, or engine code was changed. This remains a documentation-only audit. No compilation or runtime test has been performed.
+
+
+## Follow-up audit: actual context and input boundaries
+
+Inspected the current ZillaLib SDL implementation, public event structures, and the SOFIA-Pure frontend callbacks.
+
+### Actual GL context request
+
+- With `ZL_VIDEO_OPENGL_CORE`, ZillaLib requests an OpenGL **3.1 Core** context through SDL.
+- With the desktop `ZL_VIDEO_OPENGL2` path, ZillaLib does **not** set an explicit GL version or profile in the inspected SDL creation path. The resulting compatibility context is therefore platform/driver dependent and must be queried at runtime; it is not safe to assume a specific GLSL version from the macro name alone.
+- ZillaLib creates the SDL GL context internally, but the inspected implementation does not retain the return value from `SDL_GL_CreateContext()` in a public handle. The SDL window pointer is also private to the platform source.
+- Consequently, the standard ImGui SDL2 platform backend cannot be initialized from SOFIA-Pure without reaching into ZillaLib internals. That remains outside the preferred integration boundary.
+
+### Public event data and the real input path
+
+ZillaLib's public event structures provide the fields needed for a small adapter:
+- keyboard: `is_down`, `is_repeat`, key and modifier mask;
+- pointer motion: absolute and relative coordinates plus button-state bits;
+- pointer button: button, down/up state and coordinates;
+- wheel: horizontal and vertical deltas;
+- window resize: previous dimensions plus fullscreen/maximized flags;
+- activation: keyboard focus, mouse focus and minimized/maximized state.
+
+Important limitation: these signals do not expose a general-purpose “consumed” return value. In SOFIA-Pure, `OnKeyDown()` and `OnKeyUp()` currently pass keyboard events into the libretro keyboard callback after hotkey handling. Therefore UI capture must be implemented explicitly in the SOFIA-Pure frontend callbacks; merely subscribing another listener to the same ZillaLib signal will not prevent the event reaching DOSBox.
+
+Mouse input has a separate, critical path: `retro_input_state_cb()` polls `ZL_Input::MouseDelta()`, `Held()`, `MouseWheel()`, and pointer position directly. UI capture must gate those libretro mouse/pointer reads while the UI owns the pointer. Otherwise clicks and movement can leak into the emulated game even if pointer events were also delivered to ImGui.
+
+### Pointer-lock coordination
+
+The existing frontend applies pointer lock and cursor visibility from `OnDraw()`, based on the DOSBox OSD state, pause state and its pointer-lock option. The SOFIA-Pure UI needs an explicit ownership state:
+- when the UI is interactive, release the game's pointer lock and expose the cursor;
+- while the UI is closed, preserve the existing pointer-lock and cursor behavior;
+- do not change the core's OSD behavior or mouse emulation policy outside this frontend arbitration.
+
+### Updated implementation gate
+
+The next safe implementation is still a compile-time optional frontend-only adapter and diagnostic panel. Before source changes, the build target must be identified: Windows Visual Studio standard configurations request the GL2 path, Windows GLCORE configurations request 3.1 Core, and the Makefile can select a different default according to target platform. The actual Git-based build job/configuration has not yet been identified.
+
+No application source, build configuration, ZillaLib source, or DOSBox Pure core code has been modified. This remains a source audit only; no build or runtime test has been performed.
