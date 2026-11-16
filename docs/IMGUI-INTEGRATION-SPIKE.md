@@ -351,3 +351,28 @@ Before coding, verify:
 - the exact Dear ImGui v1.91.9b backend compile definitions and project/Makefile source inclusion strategy.
 
 No implementation, vendoring, project-file, workflow, ZillaLib, or DOSBox core change is included in this design update. No build or runtime test has been performed.
+
+
+## Lifecycle gate resolved: exact desktop frame ordering
+
+Inspected the current ZillaLib SDL desktop loop and `ZL_Application::Frame()`.
+
+The verified order is:
+
+1. Desktop loop calls `ZL_MainApplication->Frame()`.
+2. `Frame()` updates timing, then calls `sigKeepAlive`.
+3. ZillaLib's SDL platform connects `ProcessSDLEvents()` to `sigKeepAlive`, so pending SDL events are translated and dispatched before application drawing.
+4. `Frame()` calls `BeforeFrame()`, scene calculation/drawing if present, then `AfterFrame()`.
+5. SOFIA-Pure overrides `AfterFrame()` and calls `OnDraw()`.
+6. `OnDraw()` completes the existing game, OSD, notification, diagnostic and intro drawing.
+7. Control returns to the SDL desktop loop, which calls `SDL_GL_SwapWindow()`.
+
+### Consequences
+
+- Public ZillaLib input signals are dispatched before `AfterFrame()`; the adapter can queue translated input during event dispatch, then consume it when starting its ImGui frame from the frontend's drawing path.
+- The natural render insertion point is at the very end of SOFIA-Pure's `OnDraw()`, after `DrawIntro()`, immediately before `AfterFrame()` returns. The existing SDL loop then performs the only buffer swap.
+- Do not render ImGui from a separate keep-alive callback: that would place it before the frontend's normal drawing and allow the game frame to overwrite it.
+- The desktop SDL loop calls `OnQuit()` after leaving the frame/swap loop. The current SOFIA-Pure override performs settings synchronization and `retro_unload_game()`. The inspected loop invokes `OnQuit()` before returning from the platform main function; the exact GL-context destruction/SDL shutdown path still needs confirmation before selecting the final ImGui backend shutdown point.
+- `BeforeFrame()` is currently not overridden by SOFIA-Pure. A future implementation could use it to begin the ImGui frame after input dispatch and before `AfterFrame()`, but must verify that the retro core's `retro_run()` and all ZillaLib GL state transitions do not invalidate assumptions made by the renderer backend. The simpler first spike may begin and build the ImGui frame at the tail of `OnDraw()`, then render immediately there; this avoids an unnecessary split frame lifecycle.
+
+This resolves the event-pump/draw/swap ordering from source. It does not prove GL state compatibility or teardown safety at runtime.
