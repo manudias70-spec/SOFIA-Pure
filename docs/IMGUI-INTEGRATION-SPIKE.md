@@ -419,3 +419,51 @@ This is source-level lifecycle evidence for the current SDL desktop path, not a 
 - Confirm input arbitration and focus-loss recovery with the real guest.
 
 No application source, build files, vendored ImGui sources, ZillaLib code, or DOSBox core code has been changed. No build or runtime test has been performed.
+
+
+## Build-system integration audit: Windows x64 and Linux
+
+Inspected the current SOFIA-Pure Visual Studio project and Makefile, plus ZillaLib's Linux app makefile.
+
+### Confirmed source discovery behavior
+
+- Visual Studio uses explicit `<ClCompile Include=...>` entries. A new `SofiaUI.cpp` and the Dear ImGui translation units will not be picked up automatically.
+- The SOFIA-Pure Makefile includes ZillaLib's app Makefile and defines `ZL_ADD_SRC_FILES` for DOSBox Pure sources.
+- ZillaLib's Linux app makefile builds root-level `*.cpp` files and then appends files expanded from `ZL_ADD_SRC_FILES`. A root-level `SofiaUI.cpp` would therefore be picked up automatically on Linux; ImGui sources under a third-party subdirectory need explicit entries in `ZL_ADD_SRC_FILES`.
+- The Windows project currently sets include paths for DOSBox Pure and its own headers; no ImGui include path or ImGui source entries exist.
+
+### Minimal future source layout
+
+If the first code spike is approved, keep the third-party code isolated:
+
+```
+SOFIA-Pure/
+  SofiaUI.h
+  SofiaUI.cpp
+  third_party/
+    imgui/                 # pinned Dear ImGui v1.91.9b source
+      imgui.cpp
+      imgui_draw.cpp
+      imgui_tables.cpp
+      imgui_widgets.cpp
+      imgui.h
+      imconfig.h
+      imgui_internal.h
+      imstb_*.h
+      backends/
+        imgui_impl_opengl3.cpp
+        imgui_impl_opengl3.h
+        imgui_impl_opengl3_loader.h
+```
+
+Only the four core ImGui translation units and `backends/imgui_impl_opengl3.cpp` are required for this custom ZillaLib platform adapter. Do not compile `imgui_impl_sdl2.cpp` or any other platform backend.
+
+### Required build-file edits when implementation begins
+
+- Visual Studio: add `SofiaUI.cpp`, the four ImGui core `.cpp` files and `imgui_impl_opengl3.cpp` as `ClCompile` items; add `third_party/imgui` and, where needed, `third_party/imgui/backends` to include directories.
+- Linux Makefile: add the four ImGui core source paths and OpenGL3 backend source path to `ZL_ADD_SRC_FILES`; add the same include directories to `APPFLAGS`. `SofiaUI.cpp` at repository root is already included by the app source wildcard.
+- Keep the ImGui version pinned in-repository so CI does not depend on an unpinned upstream checkout at build time.
+
+The Windows Visual Studio project and Linux source-discovery path are confirmed from source. The macOS-specific makefile path and any platform-specific OpenGL loader/link requirements remain to be checked before claiming cross-platform build coverage.
+
+No build files or source code have been modified in this documentation-only step.
