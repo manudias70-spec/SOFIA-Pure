@@ -467,3 +467,42 @@ Only the four core ImGui translation units and `backends/imgui_impl_opengl3.cpp`
 The Windows Visual Studio project and Linux source-discovery path are confirmed from source. The macOS-specific makefile path and any platform-specific OpenGL loader/link requirements remain to be checked before claiming cross-platform build coverage.
 
 No build files or source code have been modified in this documentation-only step.
+
+
+## Windows-only implementation checkpoint: first ImGui diagnostic overlay
+
+Project scope is now explicitly Windows desktop only. Linux and macOS integration are out of scope; the Makefile is intentionally unchanged.
+
+### Files added
+
+- `SofiaUI.h` / `SofiaUI.cpp`: isolated frontend module.
+- `third_party/imgui/`: Dear ImGui v1.91.9b core source, required headers, OpenGL3 renderer backend, its bundled GL loader, and upstream MIT license.
+- No SDL2 platform backend was added.
+
+### Host integration
+
+- `main.cpp` includes `SofiaUI.h`.
+- The first diagnostic overlay is rendered at the very end of `OnDraw()`, after the existing intro/logo and other frontend drawing.
+- `SofiaUI::Shutdown()` is called at the beginning of `OnQuit()`, before settings synchronization and `retro_unload_game()`.
+- Initialization is lazy, on the first draw while ZillaLib's existing GL context is current.
+- Renderer initialization explicitly requests GLSL `#version 140`, matching the Windows `ReleaseGLCORE` target.
+- The panel uses a dark background with cyan accents, and reports initialization state, display dimensions, renderer and the fact that the DOSBox engine is untouched.
+
+### Windows project integration
+
+- `DOSBoxPure-vs.vcxproj` now compiles `SofiaUI.cpp`, the four ImGui core translation units and `imgui_impl_opengl3.cpp`.
+- Include paths point to the vendored ImGui root and backend directory.
+- Header items, including the backend's bundled loader, are registered in the project.
+- No Linux/macOS Makefile changes were made.
+
+### Deliberate limitations of this first visual spike
+
+- The diagnostic panel is currently always visible.
+- It does not yet receive keyboard, text or mouse events and has no interactive controls.
+- It therefore does not capture guest input; the existing keyboard, mouse and joystick paths remain unchanged.
+- High-DPI framebuffer scaling and input coordinate conversion are not yet implemented.
+- No changes were made to DOSBox Pure core sources or ZillaLib.
+
+### Verification status
+
+The files and project references have been committed to the feature branch and checked for presence. No Windows build or runtime test has been performed from this environment. The current workflow builds on pull requests to `main` or manual dispatch; a push to this feature branch alone does not start the Windows CI job.
