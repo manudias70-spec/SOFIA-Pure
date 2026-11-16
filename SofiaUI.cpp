@@ -85,8 +85,8 @@ namespace SofiaUI
 	static void BrowserGoUp()
 	{
 		std::string& path = DBPS_BrowsePath;
-		while (path.size() > 3 && (path.back() == '\\\\' || path.back() == '/')) path.pop_back();
-		const size_t slash = path.find_last_of("\\\\/");
+		while (path.size() > 3 && (path.back() == 92 || path.back() == '/')) path.pop_back();
+		const size_t slash = path.find_last_of(std::string(1, (char)92) + "/");
 		if (slash == std::string::npos) path.clear();
 		else if (slash == 2 && path.size() >= 3 && path[1] == ':') path.resize(3);
 		else if (slash == 0) path.resize(1);
@@ -97,8 +97,8 @@ namespace SofiaUI
 	static void BrowserEnterDirectory(const std::string& name)
 	{
 		if (name == "..") { BrowserGoUp(); return; }
-		if (!DBPS_BrowsePath.empty() && DBPS_BrowsePath.back() != '\\\\' && DBPS_BrowsePath.back() != '/')
-			DBPS_BrowsePath += '\\\\';
+		if (!DBPS_BrowsePath.empty() && DBPS_BrowsePath.back() != 92 && DBPS_BrowsePath.back() != '/')
+			DBPS_BrowsePath += (char)92;
 		DBPS_BrowsePath += name;
 		browserDirty = true;
 	}
