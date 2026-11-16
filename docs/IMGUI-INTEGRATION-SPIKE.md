@@ -231,3 +231,36 @@ Use Dear ImGui v1.91.9b, the OpenGL3 renderer backend only, and GLSL `#version 1
 This is a source-level compatibility decision only. The tag has not been vendored, linked, compiled, or run in SOFIA-Pure. Input capture, mouse coordinate scaling, frame ordering, and actual CI validation remain open gates.
 
 No application or build source has been modified; this update records the chosen integration candidate and its rationale.
+
+
+## Follow-up audit: frontend input routing contract
+
+Inspected the current `main.cpp` input callbacks and pointer-lock logic at the branch head.
+
+### Keyboard path
+
+- `OnKeyDown()` currently calls `OnKeyUseHotKey()` before translating and forwarding the key to the libretro keyboard callback.
+- `OnKeyUp()` also calls `OnKeyUseHotKey()` first, then clears `RETROKDown[]` and sends the release event.
+- Therefore the UI ownership check must sit **before hotkey handling**, not merely before the final libretro callback. Otherwise UI shortcuts can still trigger DOSBox frontend hotkeys.
+- Do not implement capture as a naive early return on both key-down and key-up. A key pressed by the emulated machine before the UI opens still needs its release delivered; otherwise the guest can retain a stuck key. The adapter needs per-key routing/ownership bookkeeping and a focus-loss cleanup policy.
+- ZillaLib's text-input signal should feed ImGui text input separately from physical key mapping; avoid synthesizing duplicate character input from key-down events.
+
+### Mouse and pointer path
+
+- `retro_input_state_cb()` polls relative mouse motion, buttons and wheel directly from `ZL_Input`.
+- The same callback separately maps absolute pointer X/Y into the emulated core rectangle and reports the left button as pointer-pressed.
+- When the UI owns the pointer, the frontend must return neutral mouse/pointer state for the corresponding libretro device queries; suppressing only pointer callbacks would not stop the polling path.
+- `OnDraw()` also checks the middle mouse button to toggle the DOSBox OSD. That shortcut must be suppressed while the SOFIA UI owns pointer input.
+- Existing pointer-lock and cursor-visibility management runs in `OnDraw()`. UI ownership must release pointer lock and keep the cursor visible, then restore the existing policy when the UI closes. Avoid competing cursor changes from two independent owners.
+
+### Isolation rules for the first prototype
+
+1. UI capture affects keyboard and pointer devices only; do not swallow joystick/gamepad input.
+2. Preserve correct key-up delivery for keys already held when UI ownership changes.
+3. Clear any UI/game routing state on window focus loss and shutdown so no stuck keys/buttons survive.
+4. Keep DOSBox OSD and its existing input behavior unchanged when the new UI is inactive.
+5. Do not change the core callbacks or DOSBox Pure source; implement arbitration in the SOFIA-Pure host only.
+
+### Still not proven
+
+Exact pointer coordinate units/scaling, text-input event payload details, signal ordering, and the correct focus-loss callback wiring still require a targeted read of the ZillaLib event definitions and dispatch implementation. No implementation should assume these details. No code or build files have been changed, and no build/runtime test has been performed.
