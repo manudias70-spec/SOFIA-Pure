@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature/sofia-ui-redesign" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -42,6 +42,7 @@ jobs:
         path: main/Release-vs2026x64/DOSBoxPure.exe
 
   build-win32-msvc:
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@main
@@ -70,6 +71,7 @@ jobs:
         path: main/Release-vs2026/DOSBoxPure.exe
 
   build-winarm64-msvc:
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     runs-on: windows-11-arm
     steps:
     - uses: actions/checkout@main
@@ -104,6 +106,7 @@ jobs:
         path: main/Release-vs2022ARM64/DOSBoxPure.exe
 
   build-linux_x64:
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@main
@@ -156,6 +159,7 @@ jobs:
         path: main/Release-linux-gles/DOSBoxPure
 
   build-linux_arm64:
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@main
@@ -204,6 +208,7 @@ jobs:
         path: main/Release-linux-gles/DOSBoxPure
 
   build-macos-x64:
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     runs-on: macos-15-intel
     steps:
     - uses: actions/checkout@main
@@ -230,6 +235,7 @@ jobs:
         path: main/Release-macos/DOSBoxPure.app.zip
 
   build-macos-arm64:
+    if: github.ref == 'refs/heads/main' || github.event_name != 'push'
     runs-on: macos-14
     steps:
     - uses: actions/checkout@main
