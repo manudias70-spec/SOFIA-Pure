@@ -73,6 +73,11 @@ namespace SofiaUI
 		visible = !visible;
 	}
 
+	void Show()
+	{
+		visible = true;
+	}
+
 	void Draw()
 	{
 		if (!visible || !Initialize()) return;

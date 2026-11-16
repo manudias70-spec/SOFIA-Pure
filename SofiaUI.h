@@ -8,6 +8,9 @@ namespace SofiaUI
 	// Toggle the optional in-game overlay (Alt+F12).
 	void Toggle();
 
+	// Show the SOFIA home screen after a game exits.
+	void Show();
+
 	// Release ImGui renderer resources while the host OpenGL context is still alive.
 	void Shutdown();
 }

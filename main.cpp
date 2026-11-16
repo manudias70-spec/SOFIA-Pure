@@ -1804,6 +1804,13 @@ static bool DrawIntro()
 
 static void OnDraw()
 {
+	// Return to SOFIA when DOSBox Pure reports a game-to-shell transition.
+	// The Pure OSD/menu does not clear this state, so opening it won't trigger the UI.
+	static bool previousGameRunning = false;
+	const bool gameRunning = DBPS_IsGameRunning();
+	if (previousGameRunning && !gameRunning) SofiaUI::Show();
+	previousGameRunning = gameRunning;
+
 	SynchronizeSettings(false);
 
 	if (UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
