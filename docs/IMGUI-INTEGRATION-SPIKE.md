@@ -172,3 +172,40 @@ The existing frontend applies pointer lock and cursor visibility from `OnDraw()`
 The next safe implementation is still a compile-time optional frontend-only adapter and diagnostic panel. Before source changes, the build target must be identified: Windows Visual Studio standard configurations request the GL2 path, Windows GLCORE configurations request 3.1 Core, and the Makefile can select a different default according to target platform. The actual Git-based build job/configuration has not yet been identified.
 
 No application source, build configuration, ZillaLib source, or DOSBox Pure core code has been modified. This remains a source audit only; no build or runtime test has been performed.
+
+
+## GitHub Actions build target verified
+
+The repository workflow `.github/workflows/build.yml` was inspected on both `main` and `feature/sofia-ui-redesign`; the file is identical (blob `fa561c53b21201adbdf453df93f08462f598b068`).
+
+### Triggers and source checkout
+
+- Automatic runs occur on pushes to `main` and pull requests targeting `main`.
+- The workflow also declares `workflow_dispatch` with an optional version string.
+- The checked-out SOFIA-Pure source is placed in the runner's `main/` directory. Thus a PR build checks out the PR source, not an unrelated local Visual Studio configuration.
+- A push directly to `feature/sofia-ui-redesign` does not match the automatic push trigger. To build this branch, it needs a PR targeting `main` or a manually dispatched run selecting the branch.
+
+### Windows build profile — decisive result
+
+Both Windows jobs use MSBuild with `/p:Configuration=ReleaseGLCORE`:
+- Win64: `/p:Platform=x64`
+- Win32: `/p:Platform=Win32`
+- Windows ARM64: `/p:Platform=ARM64`, also applying ARM64 project substitutions.
+
+Therefore the principal Windows CI target is **ReleaseGLCORE**, not standard Release/GL2. This resolves the earlier uncertainty for the Windows artifacts produced by this workflow.
+
+### Other CI targets
+
+- Linux x64: `make linux-release -j4 ZL_VIDEO_OPENGL_CORE=1` (GL Core).
+- Linux ARM64: regular CI build uses `ZL_VIDEO_OPENGL_ES2=1`; release/versioned build additionally produces GL Core and GLES2 artifacts.
+- macOS x64 and ARM64: `make macos-release` without an explicit GL override in the workflow.
+
+### Dependency reproducibility note
+
+Each job clones `dosbox-pure` and `ZillaLib` from the owner's `main` branch at run time with `--depth 1`. Those dependency revisions are not pinned to immutable SHAs by this workflow. The workflow references the public `dosbox-pure` repository; the separately available private `dosbox-unleashed` repository is not named in these clone commands. This distinction should be preserved until the intended source relationship is verified.
+
+### What this changes for the UI spike
+
+Use **Windows x64 ReleaseGLCORE** as the first CI compatibility target for the ImGui renderer adapter, then validate Win32 and ARM64. Linux x64 GL Core is a useful second target. Keep the adapter frontend-only and optional; do not change the DOSBox core or dependency checkout policy as part of the first UI prototype.
+
+No workflow or application code was changed. This was a read-only audit; no workflow run was started and no build has been executed by this audit.
