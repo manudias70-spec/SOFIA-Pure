@@ -7,10 +7,13 @@
 namespace SofiaUI
 {
 	static bool initialized = false;
+	static bool initializationAttempted = false;
 
 	static bool Initialize()
 	{
 		if (initialized) return true;
+		if (initializationAttempted) return false;
+		initializationAttempted = true;
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -79,5 +82,6 @@ namespace SofiaUI
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui::DestroyContext();
 		initialized = false;
+		initializationAttempted = false;
 	}
 }
