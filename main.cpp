@@ -26,6 +26,7 @@
 #include <ZL_Thread.h>
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
+#include "SofiaUI.h"
 
 #include <vector>
 
@@ -1934,6 +1935,8 @@ static void OnDraw()
 
 	static bool introdone;
 	if (!introdone) introdone = DrawIntro();
+
+	SofiaUI::Draw();
 }
 
 static void OnLoad(int argc, char *argv[])
@@ -2107,6 +2110,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 	virtual void OnQuit()
 	{
+		SofiaUI::Shutdown();
 		SynchronizeSettings(true);
 		retro_unload_game();
 	}
