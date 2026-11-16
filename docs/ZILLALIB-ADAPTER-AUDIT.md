@@ -79,3 +79,10 @@ Treat Windows Visual Studio Debug/Release as the first integration target unless
 ### Remaining gate
 
 Locate the implementation of `ZL_GL_ResetFrameBuffer()`, inspect its state reset semantics, and confirm the effective Windows project configuration selected for the user's build. Then prototype a diagnostic overlay behind a build flag and verify it does not disturb the game/OSD renderer or keyboard/mouse/gamepad input.
+
+
+## Unresolved framebuffer-reset symbol
+
+A targeted scan of the inspected ZillaLib public headers and implementation files did not find a definition of `ZL_GL_ResetFrameBuffer()`. In SOFIA-Pure's tracked `main.cpp`, it appears only as a local `extern` declaration immediately before the call in `OnDraw()`. The Visual Studio project and Makefile both reference the DOSBox Pure core as an external sibling directory (`../dosbox-pure` / `$(DBPDir)`), and that core source is not present in the tracked SOFIA-Pure repository snapshot inspected here.
+
+This means the reset function's implementation and GL-state contract cannot yet be verified from the currently accessible SOFIA-Pure and ZillaLib source. Do not infer that it restores all GL state or use it as an ImGui state boundary. The next source needed is the exact DOSBox Pure core revision used in the user's local build, especially the file defining `ZL_GL_ResetFrameBuffer()`. Once located, inspect its framebuffer binding, viewport, shader/program, texture units, buffers/VAO and blend/depth state behavior before selecting the overlay insertion point.
