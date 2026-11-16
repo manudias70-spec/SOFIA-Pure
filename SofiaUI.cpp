@@ -9,7 +9,7 @@ namespace SofiaUI
 {
 	static bool initialized = false;
 	static bool initializationAttempted = false;
-	static bool visible = false;
+	static bool visible = true; // Show SOFIA as the default home screen.
 	static int activePage = 0;
 
 	static bool Initialize()
@@ -29,7 +29,7 @@ namespace SofiaUI
 
 		ImGui::StyleColorsDark();
 		ImGuiStyle& style = ImGui::GetStyle();
-		style.WindowRounding = 8.0f;
+		style.WindowRounding = 0.0f;
 		style.ChildRounding = 6.0f;
 		style.FrameRounding = 4.0f;
 		style.WindowPadding = ImVec2(14.0f, 14.0f);
@@ -95,13 +95,14 @@ namespace SofiaUI
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
 
-		const float windowWidth = (io.DisplaySize.x > 800.0f ? 760.0f : io.DisplaySize.x - 36.0f);
-		const float windowHeight = (io.DisplaySize.y > 500.0f ? 440.0f : io.DisplaySize.y - 36.0f);
-		ImGui::SetNextWindowPos(ImVec2(18.0f, 18.0f), ImGuiCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight), ImGuiCond_Always);
+		// SOFIA is the application home screen, not a floating diagnostic panel.
+		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
 
 		if (ImGui::Begin("SOFIA-Pure  |  MODERN RETRO DOS", NULL,
-			ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+			ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoSavedSettings))
 		{
 			ImGui::BeginChild("Navigation", ImVec2(164.0f, 0.0f), true);
 			ImGui::TextColored(ImVec4(0.18f, 0.82f, 0.96f, 1.0f), "SOFIA");
