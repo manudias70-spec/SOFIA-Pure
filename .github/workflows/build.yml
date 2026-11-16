@@ -31,6 +31,8 @@ jobs:
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/sofia-direct-content.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply SOFIA direct-content patch" }
+        git -C main apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/sofia-input-focus.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply SOFIA input-focus patch" }
         if (-not (Select-String -Path dosbox-pure/core_options.h -Pattern 'SoundBlaster AWE32' -Quiet)) { throw "AWE32 core option was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'AWE32_OpenROMBesideExe' -Quiet)) { throw "AWE32 ROM loader was not added" }
@@ -70,6 +72,8 @@ jobs:
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/sofia-direct-content.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply SOFIA direct-content patch" }
+        git -C main apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/sofia-input-focus.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply SOFIA input-focus patch" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
