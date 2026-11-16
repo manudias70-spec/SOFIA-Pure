@@ -11,6 +11,9 @@ namespace SofiaUI
 	// Show the SOFIA home screen after a game exits.
 	void Show();
 
+	// Report whether the SOFIA interface currently owns the screen.
+	bool IsVisible();
+
 	// Release ImGui renderer resources while the host OpenGL context is still alive.
 	void Shutdown();
 }
