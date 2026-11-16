@@ -3,6 +3,7 @@
 #include "third_party/imgui/imgui.h"
 #include "third_party/imgui/backends/imgui_impl_opengl3.h"
 #include <ZL_Display.h>
+#include <ZL_Input.h>
 
 namespace SofiaUI
 {
@@ -80,6 +81,16 @@ namespace SofiaUI
 		io.DisplaySize = ImVec2((float)ZL_Display::Width, (float)ZL_Display::Height);
 		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 		io.DeltaTime = 1.0f / 60.0f;
+
+		// Feed ImGui from the same ZillaLib input layer used by the standalone host.
+		// ZillaLib's pointer uses a bottom-left origin; ImGui uses a top-left origin.
+		const ZL_Vector pointer = ZL_Input::Pointer();
+		io.AddMousePosEvent(pointer.x, (float)ZL_Display::Height - pointer.y);
+		io.AddMouseButtonEvent(0, ZL_Input::Held(ZL_BUTTON_LEFT));
+		io.AddMouseButtonEvent(1, ZL_Input::Held(ZL_BUTTON_RIGHT));
+		io.AddMouseButtonEvent(2, ZL_Input::Held(ZL_BUTTON_MIDDLE));
+		const float wheel = (float)ZL_Input::MouseWheel();
+		if (wheel != 0.0f) io.AddMouseWheelEvent(0.0f, wheel);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui::NewFrame();
