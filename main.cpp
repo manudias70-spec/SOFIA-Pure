@@ -1405,6 +1405,7 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 
 static void OnKeyDown(ZL_KeyboardEvent& e)
 {
+	if (e.key == ZLK_F12 && (e.mod & ZLKMOD_ALT)) { if (e.is_down && !e.is_repeat) SofiaUI::Toggle(); return; }
 	if (IntroActive && e.is_down) { IntroDismissRequested = true; return; }
 	if (OnKeyUseHotKey(e)) return;
 	unsigned rk = (unsigned)ZLKtoRETROKEY[e.key];
@@ -1423,6 +1424,7 @@ static void OnKeyDown(ZL_KeyboardEvent& e)
 
 static void OnKeyUp(ZL_KeyboardEvent& e)
 {
+	if (e.key == ZLK_F12 && (e.mod & ZLKMOD_ALT)) return;
 	if (OnKeyUseHotKey(e)) return;
 	unsigned rk = (unsigned)ZLKtoRETROKEY[e.key];
 	if (rk == RETROK_UNKNOWN || !RETROKDown[rk]) return;
