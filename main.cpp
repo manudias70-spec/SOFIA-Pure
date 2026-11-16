@@ -1817,7 +1817,7 @@ static void OnDraw()
 
 	bool showOSD = DBPS_IsShowingOSD();
 	static bool doPointerLock, doHideCursor, lastHiddenCursor;
-	if (PointerLock && !showOSD && !ThrottlePaused)
+	if (PointerLock && !showOSD && !ThrottlePaused && !SofiaUI::IsVisible())
 	{
 		if (!doPointerLock) { ZL_Display::SetPointerLock((doPointerLock = true)); PointerLockPos = ZL_Input::Pointer(); }
 		PointerLockPos = (showOSD ? osd_rec : core_rec).Clamp(PointerLockPos + ZL_Input::MouseDelta());
@@ -1826,12 +1826,23 @@ static void OnDraw()
 	{
 		bool showCursorAgain = (doPointerLock && !showOSD && doHideCursor && lastHiddenCursor); // show when pausing or disabling pointer lock
 		if (doPointerLock) ZL_Display::SetPointerLock((doPointerLock = false));
-		if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
-		if ((doHideCursor && lastHiddenCursor != ((showOSD ? osd_rec : core_rec) + 10).Contains(ZL_Input::Pointer())) || showCursorAgain)
+		if (SofiaUI::IsVisible())
 		{
-			SDL_ShowCursor((int)lastHiddenCursor);
-			lastHiddenCursor ^= true;
-			if (showCursorAgain) doHideCursor = false;
+			// The SOFIA desktop always owns a visible OS cursor; do not let Pure's
+			// in-game pointer-hiding logic capture it while the UI is on screen.
+			if (lastHiddenCursor) SDL_ShowCursor(1);
+			lastHiddenCursor = false;
+			doHideCursor = false;
+		}
+		else
+		{
+			if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
+			if ((doHideCursor && lastHiddenCursor != ((showOSD ? osd_rec : core_rec) + 10).Contains(ZL_Input::Pointer())) || showCursorAgain)
+			{
+				SDL_ShowCursor((int)lastHiddenCursor);
+				lastHiddenCursor ^= true;
+				if (showCursorAgain) doHideCursor = false;
+			}
 		}
 	}
 
