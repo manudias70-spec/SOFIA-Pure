@@ -4,6 +4,7 @@
 #include "third_party/imgui/backends/imgui_impl_opengl3.h"
 #include <ZL_Display.h>
 #include <ZL_Input.h>
+#include <ZL_Application.h>
 #include <algorithm>
 #include <cctype>
 #include <string>
@@ -234,6 +235,8 @@ namespace SofiaUI
 			ImGui::TextDisabled("ALT + F12  |  Acceso rapido");
 			if (ImGui::Button("Volver al explorador", ImVec2(-1.0f, 34.0f)))
 				visible = false;
+			if (ImGui::Button("Salir al escritorio", ImVec2(-1.0f, 34.0f)))
+				ImGui::OpenPopup("Confirmar salida");
 			ImGui::EndChild();
 
 			ImGui::SameLine();
@@ -330,6 +333,18 @@ namespace SofiaUI
 			ImGui::EndChild();
 		}
 		ImGui::End();
+
+		if (ImGui::BeginPopupModal("Confirmar salida", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("¿Querés cerrar SOFIA-Pure y volver al escritorio?");
+			ImGui::Spacing();
+			if (ImGui::Button("Cancelar", ImVec2(110.0f, 32.0f)))
+				ImGui::CloseCurrentPopup();
+			ImGui::SameLine();
+			if (ImGui::Button("Salir", ImVec2(110.0f, 32.0f)))
+				ZL_Application::Quit();
+			ImGui::EndPopup();
+		}
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
