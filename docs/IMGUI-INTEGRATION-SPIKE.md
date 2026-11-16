@@ -264,3 +264,33 @@ Inspected the current `main.cpp` input callbacks and pointer-lock logic at the b
 ### Still not proven
 
 Exact pointer coordinate units/scaling, text-input event payload details, signal ordering, and the correct focus-loss callback wiring still require a targeted read of the ZillaLib event definitions and dispatch implementation. No implementation should assume these details. No code or build files have been changed, and no build/runtime test has been performed.
+
+
+## Follow-up audit: ZillaLib event semantics and coordinate conversion
+
+Inspected the public event structures, the SDL-to-ZillaLib translation, and `ZL_Display_Process_Event()` in the current ZillaLib `main` branch.
+
+### Pointer coordinates
+
+- SDL desktop pointer coordinates enter ZillaLib in top-left-origin window coordinates and are DPI-scaled.
+- If input scaling is enabled, ZillaLib applies viewport offset and input scaling before publishing pointer events.
+- Immediately before public pointer signals, ZillaLib flips Y to a bottom-left origin using `Height - 1 - y`; relative Y is also inverted.
+- The public absolute coordinates therefore use ZillaLib's logical display coordinate space, not raw SDL pixels. The adapter must convert to ImGui's top-left-origin coordinates (including the Y inversion) and supply the correct display/framebuffer scale.
+- Pointer motion provides both absolute `x/y` and relative `xrel/yrel`; button events provide absolute coordinates and down/up state.
+- Mouse-wheel values are multiplied by 120 in the SDL translation. Normalize them to the unit convention expected by ImGui rather than passing the raw ZillaLib values unchanged.
+
+### Keyboard and text input
+
+- ZillaLib exposes key-down/up with scancode-like `ZL_Key`, repeat state, and modifier bits.
+- Text input arrives separately as UTF-8 text through `sigTextInput`. The SDL platform layer also synthesizes text events for Tab, Enter, keypad Enter and Backspace; the adapter must account for that behavior and avoid generating duplicate characters from physical key events.
+- ZillaLib processes Alt+Enter and Alt+F4 before publishing key-down signals unless the corresponding prevent flags are set. SOFIA-Pure initializes the display with both `ZL_DISPLAY_PREVENTALTENTER` and `ZL_DISPLAY_PREVENTALTF4`, so these two shortcuts are not intercepted ahead of the frontend's event handlers in the current application configuration.
+
+### Focus and resize
+
+- `sigActivated` carries keyboard focus, mouse focus, minimized and maximized flags. Use loss of keyboard focus to release any keys routed to the emulated machine and reset ImGui's transient input state.
+- `sigResized` is emitted after ZillaLib updates its display dimensions and GL viewport. The adapter should refresh ImGui display size and framebuffer scale from the post-resize values.
+- The signals are dispatched synchronously from ZillaLib's event processing. They are suitable inputs to an adapter, but they do not provide a generic event-consumed return value; frontend-side routing remains necessary.
+
+### Consequence for the adapter
+
+The adapter can use ZillaLib's public signals without SDL handles or a second event loop. It must explicitly handle coordinate-origin conversion, DPI/input scaling, wheel normalization, UTF-8 text, focus loss, and per-key routing. This audit is source-based; no runtime coordinate test has been performed. No application, ZillaLib, or build code has been modified.
