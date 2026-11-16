@@ -103,6 +103,19 @@ namespace SofiaUI
 		browserDirty = true;
 	}
 
+	static void BrowserOpenFile(const std::string& name)
+	{
+		std::string fullPath = DBPS_BrowsePath;
+		if (!fullPath.empty() && fullPath.back() != 92 && fullPath.back() != '/')
+			fullPath += (char)92;
+		fullPath += name;
+
+		// DOSBox Pure queues the content load on its emulation thread.
+		// Hide the SOFIA desktop so the launched content is visible immediately.
+		DBPS_OpenContent(fullPath.c_str());
+		visible = false;
+	}
+
 	static bool Initialize()
 	{
 		if (initialized) return true;
@@ -278,16 +291,21 @@ namespace SofiaUI
 					{
 						const BrowserEntry& entry = browserEntries[i];
 						const std::string label = (entry.isDirectory ? "[DIR]  " : "[FILE] ") + entry.name;
-						if (ImGui::Selectable(label.c_str(), false, 0, ImVec2(0.0f, 27.0f)) && entry.isDirectory)
+						if (ImGui::Selectable(label.c_str(), false, 0, ImVec2(0.0f, 27.0f)))
 						{
-							BrowserEnterDirectory(entry.name);
-							RefreshBrowser();
+							if (entry.isDirectory)
+							{
+								BrowserEnterDirectory(entry.name);
+								RefreshBrowser();
+							}
+							else
+								BrowserOpenFile(entry.name);
 							break;
 						}
 					}
 				}
 				ImGui::EndChild();
-				ImGui::TextDisabled("%u elementos  |  Apertura de archivos: siguiente etapa", (unsigned)browserEntries.size());
+				ImGui::TextDisabled("%u elementos  |  Seleccioná un archivo para iniciarlo con DOSBox Pure", (unsigned)browserEntries.size());
 			}
 			else if (activePage == 2)
 			{
