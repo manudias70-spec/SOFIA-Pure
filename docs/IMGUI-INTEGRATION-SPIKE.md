@@ -209,3 +209,25 @@ Each job clones `dosbox-pure` and `ZillaLib` from the owner's `main` branch at r
 Use **Windows x64 ReleaseGLCORE** as the first CI compatibility target for the ImGui renderer adapter, then validate Win32 and ARM64. Linux x64 GL Core is a useful second target. Keep the adapter frontend-only and optional; do not change the DOSBox core or dependency checkout policy as part of the first UI prototype.
 
 No workflow or application code was changed. This was a read-only audit; no workflow run was started and no build has been executed by this audit.
+
+
+## Pinned renderer candidate: Dear ImGui v1.91.9b
+
+Inspected the exact upstream tag `v1.91.9b` rather than relying on the moving default branch.
+
+- Tag: `v1.91.9b`
+- Tag commit: `7d0b53621960d4f86f54077f7fdc8dda88bbece7` (renderer source blob)
+- Renderer source: `backends/imgui_impl_opengl3.cpp`
+- The backend contains its own small OpenGL loader in `imgui_impl_opengl3_loader.h`; it does not require ZillaLib's private SDL window/context handles and does not require the frontend to expose ZillaLib's function-pointer globals.
+- The loader is deliberately isolated to the renderer translation unit. Keep ImGui's renderer backend in its own .cpp compilation unit; do not amalgamate it with ZillaLib GL headers or sources.
+- The backend supports desktop OpenGL 3.1. Its own GLSL compatibility table maps GL 3.1 to GLSL 1.40, so initialize it explicitly with `ImGui_ImplOpenGL3_Init("#version 140")` for the ReleaseGLCORE target.
+- OpenGL 3.1 support includes the primitive-restart state path. The backend only enables its base-vertex draw path on GL 3.2+, so the 3.1 target does not assume that later core feature.
+- Its render path backs up and restores the GL state it changes. This remains preferable to trying to use `ZL_GL_ResetFrameBuffer()` as a restore operation; that ZillaLib function establishes a baseline and does not restore arbitrary prior state.
+
+### Decision for the first CI prototype
+
+Use Dear ImGui v1.91.9b, the OpenGL3 renderer backend only, and GLSL `#version 140` for the first Windows x64 `ReleaseGLCORE` diagnostic-overlay experiment. Feed ImGui through a SOFIA-Pure adapter using ZillaLib's public signals and frame timing. Do not use the stock SDL2 platform backend, do not create another GL context or SDL event loop, and do not modify ZillaLib or the DOSBox Pure core.
+
+This is a source-level compatibility decision only. The tag has not been vendored, linked, compiled, or run in SOFIA-Pure. Input capture, mouse coordinate scaling, frame ordering, and actual CI validation remain open gates.
+
+No application or build source has been modified; this update records the chosen integration candidate and its rationale.
