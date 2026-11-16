@@ -62,3 +62,40 @@ Before adding ImGui source files, document the exact ZillaLib APIs or SDL handle
 - frame timing and resize.
 
 Only proceed to the diagnostic overlay once those are verified.
+
+
+## Source audit: stock Dear ImGui backends
+
+Audited the upstream `backends/imgui_impl_opengl3.cpp` and `backends/imgui_impl_sdl2.cpp` sources on 2026-11-16. This is a source review, not a build or runtime test; the project has not selected or pinned an ImGui revision yet.
+
+### OpenGL renderer findings
+
+The current OpenGL3 renderer explicitly backs up and restores the state it changes, including:
+- active texture unit, program, texture binding on texture unit 0, and sampler binding where supported;
+- array/element buffer and VAO state (or the relevant vertex attribute state on paths without VAOs);
+- viewport and scissor rectangle;
+- blend factors/equations and enable flags for blend, cull, depth, stencil, and scissor;
+- polygon mode and primitive-restart enable state where supported.
+
+It configures blend, cull, depth, stencil, scissor, viewport, shader, buffers/vertex attributes and texture bindings for its draw. It does not bind a different framebuffer, and the inspected render path does not modify depth function or depth write mask. Those facts are important because `ZL_GL_ResetFrameBuffer()` sets the framebuffer, viewport, blend, depth/cull baseline, and depth mask before the app draws its frame.
+
+This makes the upstream OpenGL3 renderer a promising candidate: it has a deliberate state backup/restore path rather than relying on `ZL_GL_ResetFrameBuffer()` afterward. However, the state contract must be rechecked against the exact pinned ImGui revision and the exact ZillaLib GL profile. Do not assume it preserves arbitrary GL state it does not modify.
+
+### SDL platform backend findings
+
+`ImGui_ImplSDL2_ProcessEvent()` consumes an SDL event supplied by the caller; the backend does not require a second SDL event-polling loop. Its OpenGL initialization still requires an `SDL_Window*` and `SDL_GLContext`. ZillaLib's inspected public API does not expose those handles, and ZillaLib owns SDL event dispatch.
+
+Therefore the preferred first experiment is:
+- use the Dear ImGui OpenGL renderer backend only, if its GL requirements match the actual context;
+- implement a narrow SOFIA-Pure platform/input adapter fed by ZillaLib's public keyboard, text, mouse, wheel, focus, resize and timing signals;
+- do not access SDL internals, create another event loop, or modify ZillaLib merely to obtain SDL handles.
+
+### Remaining compatibility checks
+
+1. Verify the exact desktop GL version/profile and available entry points for the user's actual Visual Studio configuration. The `ZL_VIDEO_OPENGL2` and `ZL_VIDEO_OPENGL_CORE` build paths must not be conflated.
+2. Pin a specific Dear ImGui revision and inspect its OpenGL renderer code at that revision.
+3. Verify how ZillaLib reports mouse coordinates, logical/display dimensions, focus and text input so the adapter can supply correct ImGui IO values.
+4. Verify event ordering and capture arbitration so UI-consumed keyboard/mouse input does not reach the emulated machine.
+5. Only then add a compile-time optional diagnostic panel and build it on the user's target configuration.
+
+No application, build, ZillaLib, or emulation-core code has been modified. This update is documentation only.
