@@ -61,3 +61,21 @@ Prefer a narrow adapter driven by ZillaLib's public input signals and a renderer
 2. Inspect the application's frame composition and ZillaLib's GL reset/state setup to identify the safest overlay insertion point.
 3. Verify resize and input coordinate scaling for the app's actual viewport.
 4. Only then implement a compile-time optional diagnostic overlay, leaving the engine and default behavior unchanged.
+
+
+## SOFIA-Pure build-profile and frame-composition findings
+
+Inspection of the SOFIA-Pure project files adds an important platform distinction:
+
+- The Visual Studio project declares the ordinary `Debug|x64` and `Release|x64` configurations and imports `ZillaApp-vs.props`. The imported props add `ZL_VIDEO_OPENGL_CORE` only for the dedicated `DebugGLCore` / `ReleaseGLCORE` configurations. The ordinary Windows Debug/Release configurations therefore do not explicitly select Core and inherit ZillaLib's desktop OpenGL2 default.
+- The Makefile selects exactly one GL context macro and defaults ordinary desktop builds to `ZL_VIDEO_OPENGL_CORE` (with platform exceptions for ARM/mobile-like targets). Therefore Makefile desktop builds and ordinary Visual Studio builds have different default GL profiles.
+- In SOFIA-Pure's `OnDraw()`, `retro_run()` and save/load/interface work happen first; the app then calls `ZL_GL_ResetFrameBuffer()`, clears and draws the core image, OSD and the remaining overlays/diagnostics. `AfterFrame()` calls `OnDraw()` and then network polling. The end of `OnDraw()` is the natural place to evaluate an optional SOFIA overlay, after the existing game/OSD composition and before the frame is swapped.
+- The symbol `ZL_GL_ResetFrameBuffer()` is declared as an external function at the call site in `main.cpp`; it was not found in the inspected public ZillaLib display/GLSL source files. Its definition and exact GL-state guarantees remain to be located before relying on it as a state boundary.
+
+### Revised build strategy
+
+Treat Windows Visual Studio Debug/Release as the first integration target unless the user chooses another build. Keep Makefile/OpenGL-Core support as a separate compatibility target. Do not silently force one GL profile across both build systems. The first experiment should be compile-time optional and should target the exact profile used by the Windows configuration, with no changes to the emulation core.
+
+### Remaining gate
+
+Locate the implementation of `ZL_GL_ResetFrameBuffer()`, inspect its state reset semantics, and confirm the effective Windows project configuration selected for the user's build. Then prototype a diagnostic overlay behind a build flag and verify it does not disturb the game/OSD renderer or keyboard/mouse/gamepad input.
