@@ -111,8 +111,8 @@ namespace SofiaUI
 			fullPath += (char)92;
 		fullPath += name;
 
-		// DOSBox Pure queues the content load on its emulation thread.
-		// Hide the SOFIA desktop so the launched content is visible immediately.
+		// DOSBox Pure reloads the selected content directly on its emulation thread.
+		// Keep the SOFIA desktop hidden while the new DOS content starts.
 		DBPS_OpenContent(fullPath.c_str());
 		visible = false;
 	}
