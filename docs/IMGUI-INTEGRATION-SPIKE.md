@@ -216,7 +216,7 @@ No workflow or application code was changed. This was a read-only audit; no work
 Inspected the exact upstream tag `v1.91.9b` rather than relying on the moving default branch.
 
 - Tag: `v1.91.9b`
-- Tag commit: `7d0b53621960d4f86f54077f7fdc8dda88bbece7` (renderer source blob)
+- Renderer source blob: `7d0b53621960d4f86f54077f7fdc8dda88bbece7` (the tag's Git commit SHA was not independently resolved in this audit)
 - Renderer source: `backends/imgui_impl_opengl3.cpp`
 - The backend contains its own small OpenGL loader in `imgui_impl_opengl3_loader.h`; it does not require ZillaLib's private SDL window/context handles and does not require the frontend to expose ZillaLib's function-pointer globals.
 - The loader is deliberately isolated to the renderer translation unit. Keep ImGui's renderer backend in its own .cpp compilation unit; do not amalgamate it with ZillaLib GL headers or sources.
