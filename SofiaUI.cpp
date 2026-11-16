@@ -4,6 +4,14 @@
 #include "third_party/imgui/backends/imgui_impl_opengl3.h"
 #include <ZL_Display.h>
 #include <ZL_Input.h>
+#include <algorithm>
+#include <cctype>
+#include <string>
+#include <vector>
+#include <dosbox_pure_sta.h>
+#include <include/cross.h>
+#include "vfs_implementation.h"
+#include <libretro-common/include/libretro.h>
 
 namespace SofiaUI
 {
@@ -11,6 +19,89 @@ namespace SofiaUI
 	static bool initializationAttempted = false;
 	static bool visible = true; // Show SOFIA as the default home screen.
 	static int activePage = 0;
+
+	struct BrowserEntry
+	{
+		std::string name;
+		bool isDirectory;
+	};
+
+	static std::vector<BrowserEntry> browserEntries;
+	static std::string browserCachedPath;
+	static bool browserDirty = true;
+	static bool browserReadError = false;
+
+	static bool IsSupportedContentFile(const char* name, const char* validExtensions)
+	{
+		if (!name || !validExtensions) return false;
+		const char* dot = strrchr(name, '.');
+		if (!dot || !dot[1]) return false;
+		std::string extension(dot + 1);
+		std::transform(extension.begin(), extension.end(), extension.begin(),
+			[](unsigned char ch) { return (char)std::tolower(ch); });
+		std::string extensions(validExtensions);
+		std::transform(extensions.begin(), extensions.end(), extensions.begin(),
+			[](unsigned char ch) { return (char)std::tolower(ch); });
+		const std::string token = "|" + extension + "|";
+		return ("|" + extensions + "|").find(token) != std::string::npos;
+	}
+
+	static void RefreshBrowser()
+	{
+		browserEntries.clear();
+		if (DBPS_BrowsePath.empty()) Cross::MakePathAbsolute(DBPS_BrowsePath);
+		else Cross::NormalizePath(DBPS_BrowsePath);
+
+		retro_system_info info = {};
+		retro_get_system_info(&info);
+		libretro_vfs_implementation_dir* dir = retro_vfs_opendir_impl(DBPS_BrowsePath.c_str(), false);
+		browserReadError = (dir == NULL);
+		if (dir)
+		{
+			while (retro_vfs_readdir_impl(dir))
+			{
+				const char* entryName = retro_vfs_dirent_get_name_impl(dir);
+				if (!entryName || !strcmp(entryName, ".")) continue;
+				const bool isDirectory = retro_vfs_dirent_is_dir_impl(dir);
+				if (isDirectory || IsSupportedContentFile(entryName, info.valid_extensions))
+					browserEntries.push_back({ entryName, isDirectory });
+			}
+			retro_vfs_closedir_impl(dir);
+		}
+
+		std::sort(browserEntries.begin(), browserEntries.end(),
+			[](const BrowserEntry& a, const BrowserEntry& b)
+			{
+				if (a.isDirectory != b.isDirectory) return a.isDirectory;
+				std::string an = a.name, bn = b.name;
+				std::transform(an.begin(), an.end(), an.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
+				std::transform(bn.begin(), bn.end(), bn.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
+				return an < bn;
+			});
+		browserCachedPath = DBPS_BrowsePath;
+		browserDirty = false;
+	}
+
+	static void BrowserGoUp()
+	{
+		std::string& path = DBPS_BrowsePath;
+		while (path.size() > 3 && (path.back() == '\\\\' || path.back() == '/')) path.pop_back();
+		const size_t slash = path.find_last_of("\\\\/");
+		if (slash == std::string::npos) path.clear();
+		else if (slash == 2 && path.size() >= 3 && path[1] == ':') path.resize(3);
+		else if (slash == 0) path.resize(1);
+		else if (slash + 1 < path.size()) path.resize(slash);
+		browserDirty = true;
+	}
+
+	static void BrowserEnterDirectory(const std::string& name)
+	{
+		if (name == "..") { BrowserGoUp(); return; }
+		if (!DBPS_BrowsePath.empty() && DBPS_BrowsePath.back() != '\\\\' && DBPS_BrowsePath.back() != '/')
+			DBPS_BrowsePath += '\\\\';
+		DBPS_BrowsePath += name;
+		browserDirty = true;
+	}
 
 	static bool Initialize()
 	{
@@ -154,15 +245,44 @@ namespace SofiaUI
 			}
 			else if (activePage == 1)
 			{
+				if (browserDirty || browserCachedPath != DBPS_BrowsePath) RefreshBrowser();
 				ImGui::TextColored(ImVec4(0.18f, 0.82f, 0.96f, 1.0f), "BIBLIOTECA");
 				ImGui::Separator();
 				ImGui::Spacing();
-				ImGui::Text("Explorador de juegos y archivos");
-				ImGui::TextDisabled("Proxima etapa: navegador de doble panel inspirado en Norton Commander.");
+				ImGui::Text("Explorador de contenido");
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Actualizar")) { browserDirty = true; RefreshBrowser(); }
+				ImGui::TextDisabled("%s", DBPS_BrowsePath.c_str());
 				ImGui::Spacing();
-				ImGui::BeginChild("LibraryPreview", ImVec2(0.0f, 150.0f), true);
-				ImGui::TextDisabled("Aun no hay elementos para mostrar.");
+				if (ImGui::Button("Subir un nivel", ImVec2(130.0f, 30.0f)))
+				{
+					BrowserGoUp();
+					RefreshBrowser();
+				}
+				ImGui::SameLine();
+				ImGui::TextDisabled("Carpetas y formatos reconocidos por DOSBox Pure");
+				ImGui::Separator();
+				ImGui::BeginChild("BrowserList", ImVec2(0.0f, 0.0f), true);
+				if (browserReadError)
+					ImGui::TextDisabled("No se pudo leer este directorio.");
+				else if (browserEntries.empty())
+					ImGui::TextDisabled("No hay carpetas ni archivos compatibles en esta ubicacion.");
+				else
+				{
+					for (size_t i = 0; i < browserEntries.size(); ++i)
+					{
+						const BrowserEntry& entry = browserEntries[i];
+						const std::string label = (entry.isDirectory ? "[DIR]  " : "[FILE] ") + entry.name;
+						if (ImGui::Selectable(label.c_str(), false, 0, ImVec2(0.0f, 27.0f)) && entry.isDirectory)
+						{
+							BrowserEnterDirectory(entry.name);
+							RefreshBrowser();
+							break;
+						}
+					}
+				}
 				ImGui::EndChild();
+				ImGui::TextDisabled("%u elementos  |  Apertura de archivos: siguiente etapa", (unsigned)browserEntries.size());
 			}
 			else if (activePage == 2)
 			{
