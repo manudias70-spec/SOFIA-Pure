@@ -81,8 +81,38 @@ Treat Windows Visual Studio Debug/Release as the first integration target unless
 Locate the implementation of `ZL_GL_ResetFrameBuffer()`, inspect its state reset semantics, and confirm the effective Windows project configuration selected for the user's build. Then prototype a diagnostic overlay behind a build flag and verify it does not disturb the game/OSD renderer or keyboard/mouse/gamepad input.
 
 
-## Unresolved framebuffer-reset symbol
+## Resolved: ZL_GL_ResetFrameBuffer()
 
-A targeted scan of the inspected ZillaLib public headers and implementation files did not find a definition of `ZL_GL_ResetFrameBuffer()`. In SOFIA-Pure's tracked `main.cpp`, it appears only as a local `extern` declaration immediately before the call in `OnDraw()`. The Visual Studio project and Makefile both reference the DOSBox Pure core as an external sibling directory (`../dosbox-pure` / `$(DBPDir)`), and that core source is not present in the tracked SOFIA-Pure repository snapshot inspected here.
+The earlier unresolved-symbol note is superseded by this source-level verification. A GitHub code search located the definition in ZillaLib's `Source/ZL_Texture_Impl.cpp`; the same implementation is present in the user's repository `manudias70-spec/ZillaLib` on its `main` branch.
 
-This means the reset function's implementation and GL-state contract cannot yet be verified from the currently accessible SOFIA-Pure and ZillaLib source. Do not infer that it restores all GL state or use it as an ImGui state boundary. The next source needed is the exact DOSBox Pure core revision used in the user's local build, especially the file defining `ZL_GL_ResetFrameBuffer()`. Once located, inspect its framebuffer binding, viewport, shader/program, texture units, buffers/VAO and blend/depth state behavior before selecting the overlay insertion point.
+The function:
+1. Chooses the active ZillaLib framebuffer (the active texture framebuffer, or the window framebuffer when none is active).
+2. Binds that framebuffer and sets its corresponding viewport.
+3. Calls `ZLGLSL::DisableProgram()` to disable ZillaLib's active shader program.
+4. Enables blending and sets `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)`.
+5. Disables depth testing and sets `glDepthFunc(GL_LEQUAL)`.
+6. Disables face culling and sets `glDepthMask(GL_FALSE)`.
+
+### Important limitation
+
+This is a **known baseline reset, not a complete OpenGL state save/restore**. It does not capture and restore arbitrary previous state. The inspected function does not explicitly reset or preserve texture-unit/binding state, array or element buffer bindings, VAO state, vertex attribute enables/pointers, scissor state, color mask, stencil state, polygon mode, or every other state a third-party renderer may change.
+
+Consequently:
+- Do not use `ZL_GL_ResetFrameBuffer()` as if it were a complete ImGui state boundary.
+- The overlay renderer must preserve/restore every GL state it changes, or use a carefully scoped renderer whose state contract is fully audited for the exact GL profile.
+- The exact minimum state set must be determined from the selected ImGui renderer backend and ZillaLib draw path, not guessed.
+- This function does not justify modifying the emulation core or OSD path.
+
+### Revised integration direction
+
+Keep ZillaLib as the window, context, event, and frame-loop owner. Feed UI input from ZillaLib signals, and render the optional overlay at the end of the existing `OnDraw()` composition. First target ordinary Windows Visual Studio Debug/Release unless the user selects another build. Keep Makefile/OpenGL-Core support as a separate compatibility target. Before implementation, audit the chosen ImGui renderer backend's state changes and verify the actual build's GL entry points and context profile.
+
+## Remaining validation gate
+
+1. Confirm the exact Windows project configuration the user builds and its effective GL defines.
+2. Audit the selected ImGui renderer backend's complete GL state footprint and decide how to preserve/restore it.
+3. Verify resize and input coordinate scaling for the app's actual viewport, plus keyboard/mouse/gamepad input arbitration.
+4. Only then implement a compile-time optional diagnostic overlay. Do not add ImGui source files or alter build files until these checks are complete.
+5. Do not change the default branch until a real build and runtime test pass.
+
+No application, build, or emulation-core code has been modified; this audit is documentation only.
