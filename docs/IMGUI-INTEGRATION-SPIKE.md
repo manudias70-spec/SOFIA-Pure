@@ -99,3 +99,37 @@ Therefore the preferred first experiment is:
 5. Only then add a compile-time optional diagnostic panel and build it on the user's target configuration.
 
 No application, build, ZillaLib, or emulation-core code has been modified. This update is documentation only.
+
+
+## Windows Visual Studio configuration and input API audit
+
+Inspected the actual `DOSBoxPure-vs.vcxproj`, its imported `ZillaApp-vs.props`, and ZillaLib public headers.
+
+### GL profile selection
+
+- The SOFIA-Pure Visual Studio project imports `$(ZillaLibDir)/ZillaApp-vs.props`.
+- The standard Visual Studio `Debug` and `Release` configurations do not add `ZL_VIDEO_OPENGL_CORE`; on desktop they therefore use ZillaLib's default `ZL_VIDEO_OPENGL2` path.
+- The optional `DebugGLCORE` / `ReleaseGLCORE` configurations add `ZL_VIDEO_OPENGL_CORE`.
+- The imported props file has a case variation in the spelling of the Debug GLCORE condition (`DebugGLCORE` vs `DebugGLCore`); MSBuild condition string comparisons are case-insensitive, but this should be cleaned up only if a future build-system change is actually needed. No change is proposed now.
+
+The repository alone cannot tell us which configuration the user currently builds or runs. The first prototype must target the actual selected configuration, not assume the Core profile. For the lowest-risk first pass, use the existing standard Windows Debug configuration unless the user's normal workflow is known to use another one.
+
+### Public input and display interface
+
+ZillaLib publicly exposes:
+- `ZL_Display::sigKeyDown` / `sigKeyUp`;
+- `sigTextInput`;
+- `sigPointerMove`, `sigPointerDown`, `sigPointerUp`;
+- `sigMouseWheel`;
+- `sigActivated` and `sigResized`;
+- current pointer coordinates, key/button state, display width/height and focus queries.
+
+This is sufficient in principle to build a platform adapter without polling SDL independently. Exact event field semantics, coordinate scaling, key mapping and input-capture ordering still need inspection before implementation.
+
+### Render placement and input routing constraints
+
+The existing `OnDraw()` calls `retro_run()`, applies save/load and geometry/interface changes, calls `ZL_GL_ResetFrameBuffer()`, then composes the game image and OSD. The ImGui draw call should be evaluated after all existing game/OSD/notification/diagnostic drawing and before the frame returns to ZillaLib for presentation.
+
+Input must be arbitrated before it reaches existing DOSBox hotkey and emulated-input handlers: when the SOFIA UI owns keyboard or pointer interaction, consumed events must not leak into the emulated machine. The current code also uses pointer lock and direct SDL cursor calls in the host, so overlay mode must deliberately suspend or coordinate pointer lock rather than fighting it.
+
+No source, project, build, or engine code was changed. This remains a documentation-only audit. No compilation or runtime test has been performed.
