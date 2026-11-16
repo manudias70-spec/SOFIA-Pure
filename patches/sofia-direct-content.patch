@@ -1,0 +1,27 @@
+diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
+--- a/dosbox_pure_osd.h
++++ b/dosbox_pure_osd.h
+@@ -2688,17 +2688,11 @@ void DBPS_OpenContent(const char* path)
+ {
+ 	DBPS_BrowsePath.assign(path);
+ 	struct Local { static void Do()
+ 	{
+-		const char *path = DBPS_BrowsePath.c_str(), *path_fs = strrchr(path, '/'), *path_bs = strrchr(path, '\\'), *path_s = (path_bs > path_fs ? path_bs : path_fs);
+-		if (!path_s) return;
+-		std::string fname = DBPS_BrowsePath.substr((size_t)(path_s + 1 - path));
+-		DBPS_BrowsePath.erase((size_t)(path_s - path));
+-		if (fname.size() > 5 && !strncasecmp(&fname[fname.size()-5], ".dosc", 5)) fname[fname.size()-1] = 'Z' | (fname[fname.size()-1] & 0x20);
+-		if (DBP_OSD.ptr._all) { DBP_OSD.SetMode(DBPOSD_MAIN, NULL); } else { DBP_StartOSD(DBPOSD_MAIN); }
+-		if (DBP_OSD.ptr.main->GoToSubMenu(DBP_PureMenuState::IT_FILEBROWSE, DBP_PureMenuState::IT_FILEBROWSE, -1, &fname))
+-			DBP_OSD.ptr.main->DoInput(DBP_MenuState::RES_OK, DBP_PureMenuState::IT_FILEBROWSE, 0);
+-		else
+-			emuthread_notify(0, LOG_WARN, "Unsupported file type %s", fname.c_str());
++		// A standalone frontend already selected the exact file. Reuse the same
++		// BIOS-reboot path as Pure's file browser, but don't reopen its OSD menu:
++		// that menu asks for confirmation and leaves the frontend hidden behind it.
++		dbp_content_path.assign(DBPS_BrowsePath);
++		dbp_wasloaded = false;
++		DBP_OnBIOSReboot();
+ 	}};
+ 	dbps_emu_thread_func = Local::Do;
+ }
