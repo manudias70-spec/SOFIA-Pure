@@ -2054,7 +2054,7 @@ static struct sDOSBoxPure : public ZL_Application
 			useCustomPathSystem &= !invalidPathSystem;
 		}
 
-		bool screen_fullscreen = !ZL_Application::SettingsHas("screen_fullscreen") || (((*ZL_Application::SettingsGet("screen_fullscreen").c_str())|0x20) == 't'); // default to fullscreen on first launch
+		bool screen_fullscreen = true; // SOFIA-Pure always starts fullscreen; Alt+Enter can change it for the current session.
 		bool screen_maximized = (((*ZL_Application::SettingsGet("screen_maximized").c_str())|0x20) == 't'); // 't'rue
 		int screen_width = atoi(ZL_Application::SettingsGet("screen_width").c_str());
 		int screen_height = atoi(ZL_Application::SettingsGet("screen_height").c_str());
