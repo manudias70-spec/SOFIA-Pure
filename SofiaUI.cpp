@@ -373,7 +373,7 @@ namespace SofiaUI
 						if (!(mounted & (1u << drive))) continue;
 						std::string label(1, (char)('A' + drive)); label += ":";
 						ImGui::SameLine();
-						if (ImGui::SmallButton(label) && drive != dosDrive)
+						if (ImGui::SmallButton(label.c_str()) && drive != dosDrive)
 						{
 							dosDrive = drive;
 							dosPath.clear();
