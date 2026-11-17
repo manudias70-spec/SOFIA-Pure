@@ -28,7 +28,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
 diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 --- a/dosbox_pure_osd.h
 +++ b/dosbox_pure_osd.h
-@@ -2275,7 +2275,164 @@
+@@ -2275,8 +2275,165 @@
  static void DBP_CloseOSD()
  {
  	DBP_OSD.SetMode(_DBPOSD_CLOSE);
