@@ -189,8 +189,8 @@ replace_once("file-browser scrollbar colors",
     "\t\t\tbuf.AlphaBlendFillRect(scrx, menuu, 8, menuh, buf.BGCOL_SCROLL | blend);\n\t\t\tbuf.AlphaBlendFillRect(scrx, menuu + scrollu, 8, scrolld - scrollu, buf.BGCOL_SELECTION | blend);",
     "\t\t\tbuf.AlphaBlendFillRect(scrx, menuu, 8, menuh, (nc_explorer ? 0xFF000080 : buf.BGCOL_SCROLL) | blend);\n\t\t\tbuf.AlphaBlendFillRect(scrx, menuu + scrollu, 8, scrolld - scrollu, (nc_explorer ? 0xFF00FFFF : buf.BGCOL_SELECTION) | blend);")
 replace_once("file-browser header palette",
-    "\t\tbuf.DrawBox(panel_x + panel_w/10, 5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + 8, lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);",
-    "\t\tconst Bit32u nc_header_bg = (is_nc_explorer ? 0xFF000080 : buf.BGCOL_HEADER);\n\t\tconst Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + panel_w/10, 5, panel_w-panel_w/5, lh+3, nc_header_bg | blend, nc_border);\n\t\tbuf.DrawBox(panel_x + 8, lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);")
+    "\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);",
+    "\t\tconst Bit32u nc_header_bg = (is_nc_explorer ? 0xFF000080 : buf.BGCOL_HEADER);\n\t\tconst Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, nc_header_bg | blend, nc_border);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);")
 replace_once("file-browser path palette",
     "buf.Print(lh, panel_x + 8, 7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);",
     "buf.Print(lh, panel_x + 8, 7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);")
