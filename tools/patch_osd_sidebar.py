@@ -99,9 +99,12 @@ for old_text, new_text in translations.items():
 # destroys the active Settings state, so switching inside DoInput would be unsafe.
 navigation_patch = r'''
 settings_struct = source.index("struct DBP_SettingsMenuState final")
-settings_do = source.index("virtual void DoInput(Result res, Bit8u ok_type, int x_change)", settings_struct)
-cancel_line = source.index("if (res == RES_CANCEL) ok_type = IT_CANCEL;", settings_do)
-source = source[:cancel_line] + "if (res == RES_CANCEL) { DBPS_ReturnToExplorer = true; return; }\n\t\t" + source[cancel_line:]
+settings_do = source.index("DoInput(Result res, Bit8u ok_type, int x_change)", settings_struct)
+cancel_line = source.index("RES_CANCEL) ok_type = IT_CANCEL;", settings_do)
+if settings_do < settings_struct or cancel_line < settings_do:
+    raise SystemExit("Navigation patch aborted: Settings cancel handler not found")
+cancel_end = cancel_line + len("RES_CANCEL) ok_type = IT_CANCEL;")
+source = source[:cancel_line] + "RES_CANCEL) { DBPS_ReturnToExplorer = true; return; }\n\t\tif (res == " + source[cancel_line:cancel_end] + source[cancel_end:]
 
 flag_anchor = "struct DBP_SettingsMenuState final : DBP_MenuState"
 if source.count(flag_anchor) != 1:
@@ -142,6 +145,8 @@ if source.count(gfx_tail) != 1:
 source = source.replace(gfx_tail, gfx_tail_replacement, 1)
 print("Applied Escape and close-button navigation to Explorer")
 '''
+exec(navigation_patch)
+
 exec(navigation_patch)
 
 exec(navigation_patch)
