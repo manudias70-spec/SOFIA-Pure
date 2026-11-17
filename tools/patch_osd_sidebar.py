@@ -217,6 +217,11 @@ def browser_replace(label, old_text, new_text):
     source = source.replace(old_text, new_text, 1)
 
 browser_replace(
+    "open file explorer on SOFIA-Pure startup",
+    "\t\telse if (DBP_Run::patch.show_variants) RefreshList(IT_VARIANTLIST);\n\t\topen_ticks = DBP_GetTicks();",
+    "\t\telse if (DBP_Run::patch.show_variants) RefreshList(IT_VARIANTLIST);\n\t\t#ifdef DBP_STANDALONE\n\t\tif (DBP_Run::autoboot.startup.mode == DBP_Run::RUN_NONE && !DBP_Run::patch.show_variants) RefreshList(IT_FILEBROWSE);\n\t\t#endif\n\t\topen_ticks = DBP_GetTicks();")
+
+browser_replace(
     "file-browser metadata members",
     "\tint exe_count, fs_rows, windowlinelength;\n\tbool multidrive;\n\tBit8u popupsel;\n\tItemType listmode;",
     """\tstruct BrowserFileInfo { char size[12], date[12], time[6]; };
