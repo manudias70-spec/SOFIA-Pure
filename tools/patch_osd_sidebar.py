@@ -168,15 +168,16 @@ exec(navigation_patch)
 
 
 # Norton Commander palette, restricted to the standalone file-browser list only.
-replace_once("file-browser mode parameter",
-    "\tint DrawMenuBase(DBP_BufferDrawing& buf, Bit32u blend, const int lh, const int rows, const DBP_MenuMouse& m, bool mouseMoved, int menul, int menur, int menuu, bool centerv = false)",
-    "\tint DrawMenuBase(DBP_BufferDrawing& buf, Bit32u blend, const int lh, const int rows, const DBP_MenuMouse& m, bool mouseMoved, int menul, int menur, int menuu, bool centerv = false, bool nc_filebrowse = false)");
 def replace_once(label, old_text, new_text):
     global source
     count = source.count(old_text)
     if count != 1:
         raise SystemExit(f"Norton palette patch aborted: {label!r} expected one source match, found {count}")
     source = source.replace(old_text, new_text, 1)
+
+replace_once("file-browser mode parameter",
+    "\tint DrawMenuBase(DBP_BufferDrawing& buf, Bit32u blend, const int lh, const int rows, const DBP_MenuMouse& m, bool mouseMoved, int menul, int menur, int menuu, bool centerv = false)",
+    "\tint DrawMenuBase(DBP_BufferDrawing& buf, Bit32u blend, const int lh, const int rows, const DBP_MenuMouse& m, bool mouseMoved, int menul, int menur, int menuu, bool centerv = false, bool nc_filebrowse = false)")
 
 replace_once("file-browser panel colors",
     "\t\tbuf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);",
