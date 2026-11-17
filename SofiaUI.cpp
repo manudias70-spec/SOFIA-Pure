@@ -34,7 +34,7 @@ namespace SofiaUI
 	static bool browserReadError = false;
 	static bool dosBrowserActive = false;
 	static bool dosScanWaiting = false;
-	static unsigned dosDrive = 2;
+	static unsigned dosDrive = 3;
 	static std::string dosPath;
 	static std::vector<BrowserEntry> dosBrowserEntries;
 
@@ -367,6 +367,17 @@ namespace SofiaUI
 				{
 					const unsigned mounted = DBPS_GetMountedDriveMask();
 					ImGui::Text("Unidades detectadas por DOSBox Pure");
+					if (!(mounted & (1u << dosDrive)))
+					{
+						for (unsigned drive = 0; drive < 26; ++drive)
+							if (mounted & (1u << drive))
+							{
+								dosDrive = drive;
+								dosPath.clear();
+								dosScanWaiting = false;
+								break;
+							}
+					}
 					bool selectedDriveStillMounted = (mounted & (1u << dosDrive)) != 0;
 					for (unsigned drive = 0; drive < 26; ++drive)
 					{
