@@ -5,13 +5,8 @@
 #include <ZL_Display.h>
 #include <ZL_Input.h>
 #include <ZL_Application.h>
-#include <algorithm>
-#include <cctype>
 #include <string>
 #include <vector>
-#include <libretro-common/include/libretro.h>
-#include <include/cross.h>
-#include "vfs_implementation.h"
 #include <dosbox_pure_sta.h>
 
 namespace SofiaUI
@@ -21,103 +16,18 @@ namespace SofiaUI
 	static bool visible = true; // Show SOFIA as the default home screen.
 	static int activePage = 0;
 
-	struct BrowserEntry
-	{
-		std::string name;
-		bool isDirectory;
-		unsigned size = 0;
-	};
+	static std::vector<DBPS_FileBrowserItem> browserEntries;
+	static std::string browserPath;
+	static unsigned browserRevision = 0;
+	static int browserSelection = 0;
+	static bool browserActive = false;
+	static bool browserWasActive = false;
 
-	static std::vector<BrowserEntry> browserEntries;
-	static std::string browserCachedPath;
-	static bool browserDirty = true;
-	static bool browserReadError = false;
-
-	static bool IsSupportedContentFile(const char* name, const char* validExtensions)
+	static void RefreshBrowserSnapshot()
 	{
-		if (!name || !validExtensions) return false;
-		const char* dot = strrchr(name, '.');
-		if (!dot || !dot[1]) return false;
-		std::string extension(dot + 1);
-		std::transform(extension.begin(), extension.end(), extension.begin(),
-			[](unsigned char ch) { return (char)std::tolower(ch); });
-		std::string extensions(validExtensions);
-		std::transform(extensions.begin(), extensions.end(), extensions.begin(),
-			[](unsigned char ch) { return (char)std::tolower(ch); });
-		const std::string token = "|" + extension + "|";
-		return ("|" + extensions + "|").find(token) != std::string::npos;
+		browserActive = DBPS_GetFileBrowserSnapshot(browserEntries, browserPath, browserSelection, browserRevision);
 	}
-
-	static void RefreshBrowser()
-	{
-		browserEntries.clear();
-		if (DBPS_BrowsePath.empty()) Cross::MakePathAbsolute(DBPS_BrowsePath);
-		else Cross::NormalizePath(DBPS_BrowsePath);
-
-		retro_system_info info = {};
-		retro_get_system_info(&info);
-		libretro_vfs_implementation_dir* dir = retro_vfs_opendir_impl(DBPS_BrowsePath.c_str(), false);
-		browserReadError = (dir == NULL);
-		if (dir)
-		{
-			while (retro_vfs_readdir_impl(dir))
-			{
-				const char* entryName = retro_vfs_dirent_get_name_impl(dir);
-				if (!entryName || !strcmp(entryName, ".")) continue;
-				const bool isDirectory = retro_vfs_dirent_is_dir_impl(dir);
-				if (isDirectory || IsSupportedContentFile(entryName, info.valid_extensions))
-					browserEntries.push_back({ entryName, isDirectory });
-			}
-			retro_vfs_closedir_impl(dir);
-		}
-
-		std::sort(browserEntries.begin(), browserEntries.end(),
-			[](const BrowserEntry& a, const BrowserEntry& b)
-			{
-				if (a.isDirectory != b.isDirectory) return a.isDirectory;
-				std::string an = a.name, bn = b.name;
-				std::transform(an.begin(), an.end(), an.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
-				std::transform(bn.begin(), bn.end(), bn.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
-				return an < bn;
-			});
-		browserCachedPath = DBPS_BrowsePath;
-		browserDirty = false;
-	}
-
-	static void BrowserGoUp()
-	{
-		std::string& path = DBPS_BrowsePath;
-		while (path.size() > 3 && (path.back() == 92 || path.back() == '/')) path.pop_back();
-		const size_t slash = path.find_last_of(std::string(1, (char)92) + "/");
-		if (slash == std::string::npos) path.clear();
-		else if (slash == 2 && path.size() >= 3 && path[1] == ':') path.resize(3);
-		else if (slash == 0) path.resize(1);
-		else if (slash + 1 < path.size()) path.resize(slash);
-		browserDirty = true;
-	}
-
-	static void BrowserEnterDirectory(const std::string& name)
-	{
-		if (name == "..") { BrowserGoUp(); return; }
-		if (!DBPS_BrowsePath.empty() && DBPS_BrowsePath.back() != 92 && DBPS_BrowsePath.back() != '/')
-			DBPS_BrowsePath += (char)92;
-		DBPS_BrowsePath += name;
-		browserDirty = true;
-	}
-
-	static void BrowserOpenFile(const std::string& name)
-	{
-		std::string fullPath = DBPS_BrowsePath;
-		if (!fullPath.empty() && fullPath.back() != 92 && fullPath.back() != '/')
-			fullPath += (char)92;
-		fullPath += name;
-
-		// DOSBox Pure reloads the selected content directly on its emulation thread.
-		// Keep the SOFIA desktop hidden while the new DOS content starts.
-		DBPS_OpenContent(fullPath.c_str());
-		visible = false;
-	}
-
+ 
 	static bool Initialize()
 	{
 		if (initialized) return true;
@@ -169,7 +79,10 @@ namespace SofiaUI
 		if (activePage == page)
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.04f, 0.31f, 0.42f, 1.0f));
 		if (ImGui::Button(label, ImVec2(-1.0f, 38.0f)))
+		{
 			activePage = page;
+			if (page == 1) DBPS_RequestFileBrowser();
+		}
 		if (activePage == page)
 			ImGui::PopStyleColor();
 	}
@@ -256,7 +169,10 @@ namespace SofiaUI
 				ImGui::Spacing();
 				ImGui::Text("Acceso rapido");
 				if (ImGui::Button("Abrir biblioteca", ImVec2(180.0f, 38.0f)))
+				{
 					activePage = 1;
+					DBPS_RequestFileBrowser();
+				}
 				ImGui::SameLine();
 				if (ImGui::Button("Ver configuracion", ImVec2(180.0f, 38.0f)))
 					activePage = 2;
@@ -268,32 +184,40 @@ namespace SofiaUI
 				ImGui::TextColored(ImVec4(0.18f, 0.82f, 0.96f, 1.0f), "BIBLIOTECA");
 				ImGui::Separator();
 				ImGui::Spacing();
-				if (browserDirty || browserCachedPath != DBPS_BrowsePath) RefreshBrowser();
-				ImGui::Text("Explorador de contenido");
+				RefreshBrowserSnapshot();
+				if (browserWasActive && !browserActive) visible = false;
+				browserWasActive = browserActive;
+				ImGui::Text("Explorador de DOSBox Pure");
 				ImGui::SameLine();
-				if (ImGui::SmallButton("Actualizar##host")) { browserDirty = true; RefreshBrowser(); }
-				ImGui::TextDisabled("%s", DBPS_BrowsePath.c_str());
-				if (ImGui::Button("Subir un nivel##host", ImVec2(130.0f, 30.0f)))
-				{
-					BrowserGoUp();
-					RefreshBrowser();
-				}
+				if (ImGui::SmallButton("Actualizar##pure")) DBPS_RequestFileBrowser();
+				ImGui::TextDisabled("%s", browserPath.c_str());
 				ImGui::BeginChild("BrowserList", ImVec2(0.0f, 0.0f), true);
-				if (browserReadError) ImGui::TextDisabled("No se pudo leer este directorio.");
-				else if (browserEntries.empty()) ImGui::TextDisabled("No hay carpetas ni archivos compatibles en esta ubicacion.");
+				if (!browserActive)
+				{
+					ImGui::TextDisabled("El explorador de Pure no esta activo.");
+					if (ImGui::Button("Abrir explorador", ImVec2(180.0f, 34.0f)))
+						DBPS_RequestFileBrowser();
+				}
+				else if (browserEntries.empty())
+					ImGui::TextDisabled("Pure no devolvio elementos para esta ubicacion.");
 				else for (size_t i = 0; i < browserEntries.size(); ++i)
 				{
-					const BrowserEntry& entry = browserEntries[i];
-					const std::string label = (entry.isDirectory ? "[DIR]  " : "[FILE] ") + entry.name;
-					if (ImGui::Selectable(label.c_str(), false, 0, ImVec2(0.0f, 27.0f)))
+					const DBPS_FileBrowserItem& entry = browserEntries[i];
+					if (entry.type == 0)
 					{
-						if (entry.isDirectory) { BrowserEnterDirectory(entry.name); RefreshBrowser(); }
-						else BrowserOpenFile(entry.name);
-						break;
+						if (entry.text.empty()) ImGui::Spacing();
+						else if (entry.info == 10) ImGui::TextColored(ImVec4(0.35f, 0.82f, 0.96f, 1.0f), "%s", entry.text.c_str());
+						else if (entry.info == 12) ImGui::TextDisabled("%s", entry.text.c_str());
+						else ImGui::TextWrapped("%s", entry.text.c_str());
+						continue;
 					}
+					ImGui::PushID((int)i);
+					if (ImGui::Selectable(entry.text.c_str(), (int)i == browserSelection, 0, ImVec2(0.0f, 27.0f)))
+						DBPS_RequestFileBrowserSelection((unsigned)i, browserRevision);
+					ImGui::PopID();
 				}
 				ImGui::EndChild();
-				ImGui::TextDisabled("%u elementos  |  Solo formatos compatibles con DOSBox Pure", (unsigned)browserEntries.size());
+				ImGui::TextDisabled("%u elementos  |  Lista y acciones administradas por DOSBox Pure", (unsigned)browserEntries.size());
 			}
 			else if (activePage == 2)
 			{
