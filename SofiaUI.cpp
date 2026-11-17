@@ -28,6 +28,7 @@ namespace SofiaUI
 	static void RefreshBrowserSnapshot()
 	{
 		browserActive = DBPS_GetFileBrowserSnapshot(browserEntries, browserPath, browserSelection, browserRevision, browserStatus);
+		if (browserActive) browserWasActive = true;
 	}
  
 	static bool Initialize()
@@ -194,8 +195,11 @@ namespace SofiaUI
 				ImGui::BeginChild("BrowserList", ImVec2(0.0f, 0.0f), true);
 				if (!browserActive)
 				{
-					ImGui::TextDisabled("El explorador de Pure no esta activo.");
-					if (ImGui::Button("Abrir explorador", ImVec2(180.0f, 34.0f)))
+					if (browserWasActive)
+						ImGui::TextDisabled("Pure salio del explorador. Puede estar cargando contenido o mostrando otro menu.");
+					else
+						ImGui::TextDisabled("El explorador de Pure todavia no esta activo.");
+					if (ImGui::Button(browserWasActive ? "Volver al explorador" : "Abrir explorador", ImVec2(180.0f, 34.0f)))
 						DBPS_RequestFileBrowser();
 				}
 				else if (browserEntries.empty())
