@@ -229,14 +229,14 @@ browser_replace(
 \tstatic BrowserFileInfo GetBrowserFileInfo(const std::string& name, bool is_dir)
 \t{
 \t\tBrowserFileInfo result = {};
-\t\t#ifdef WIN32
+\t\t#if defined(WIN32) && defined(DBP_STANDALONE)
 \t\tif (name == "[ Go Up ]" || DBPS_BrowsePath == "$") return result;
 \t\tstd::string path = (DBPS_BrowsePath.empty() ? "." : DBPS_BrowsePath);
 \t\tif (path.back() != '\\\\' && path.back() != '/') path += '\\\\';
 \t\tpath += name;
 \t\tint wide_len = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, NULL, 0);
 \t\tif (wide_len <= 0) return result;
-\t\tstd::wstring wide_path((size_t)wide_len, L'\\\\0');
+\t\tstd::wstring wide_path((size_t)wide_len, L'\\0');
 \t\tif (!MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wide_path[0], wide_len)) return result;
 \t\tWIN32_FILE_ATTRIBUTE_DATA data;
 \t\tif (!GetFileAttributesExW(wide_path.c_str(), GetFileExInfoStandard, &data)) return result;
@@ -260,7 +260,8 @@ browser_replace("clear file-browser metadata",
 browser_replace(
     "collect file-browser metadata",
     "\t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;",
-    """\t\tif (mode == IT_FILEBROWSE)
+    """\t\t#ifdef DBP_STANDALONE
+\t\tif (mode == IT_FILEBROWSE)
 \t\t{
 \t\t\tbrowser_info.resize(list.size());
 \t\t\tfor (size_t i = 0; i < list.size(); i++)
@@ -270,6 +271,7 @@ browser_replace(
 \t\t\t\t\tbrowser_info[i] = GetBrowserFileInfo(item.str, item.info != 3);
 \t\t\t}
 \t\t}
+\t\t#endif
 \t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;""")
 browser_replace(
     "reserve a header row for file-browser columns",
