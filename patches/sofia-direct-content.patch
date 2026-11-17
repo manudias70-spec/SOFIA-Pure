@@ -25,7 +25,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
  void DBPS_OnContentLoad(const char* name, const char* dir, size_t dirlen);
  void DBPS_OnReset();
  void DBPS_SubmitOSDFrame(const void *data, unsigned width, unsigned height);
-@@ -2264,6 +2272,113 @@
+@@ -2275,4 +2275,111 @@
  static void DBP_CloseOSD()
  {
  	DBP_OSD.SetMode(_DBPOSD_CLOSE);
@@ -171,7 +171,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
 diff --git a/dosbox_pure_libretro.cpp b/dosbox_pure_libretro.cpp
 --- a/dosbox_pure_libretro.cpp
 +++ b/dosbox_pure_libretro.cpp
-@@ -1839,10 +1839,11 @@
+@@ -1911,10 +1911,11 @@
  		if (dbps_emu_thread_func)
  		{
  			dbps_emu_thread_func();
