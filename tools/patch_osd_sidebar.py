@@ -138,13 +138,14 @@ if source.count(input_tail) != 1:
     raise SystemExit("Navigation patch aborted: OSD input tail anchor not found exactly once")
 source = source.replace(input_tail, input_tail_replacement, 1)
 
-gfx_tail = "\t\t}\n\n\t\tmouse.Draw(buf, isOSK);"
-gfx_tail_replacement = "\t\t}\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\n\t\tmouse.Draw(buf, isOSK);"
-if source.count(gfx_tail) != 1:
-    raise SystemExit("Navigation patch aborted: OSD draw tail anchor not found exactly once")
-source = source.replace(gfx_tail, gfx_tail_replacement, 1)
+mouse_draw_anchor = "\n\t\tmouse.Draw(buf, isOSK);"
+if source.count(mouse_draw_anchor) != 1:
+    raise SystemExit("Navigation patch aborted: OSD mouse draw anchor not unique")
+source = source.replace(mouse_draw_anchor, "\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tmouse.Draw(buf, isOSK);", 1)
 print("Applied Escape and close-button navigation to Explorer")
 '''
+exec(navigation_patch)
+
 exec(navigation_patch)
 
 exec(navigation_patch)
