@@ -255,8 +255,8 @@ browser_replace(
 \t\treturn result;
 \t}""")
 browser_replace("clear file-browser metadata",
-    "\t\tlist.clear();",
-    "\t\tlist.clear();\n\t\tbrowser_info.clear();")
+    "\t\tlistmode = mode;\n\t\tlist.clear();",
+    "\t\tlistmode = mode;\n\t\tlist.clear();\n\t\tbrowser_info.clear();")
 browser_replace(
     "collect file-browser metadata",
     "\t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;",
