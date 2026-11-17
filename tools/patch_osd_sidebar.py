@@ -192,8 +192,8 @@ replace_once("file-browser header palette",
     "\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);",
     "\t\tconst Bit32u nc_header_bg = (is_nc_explorer ? 0xFF000080 : buf.BGCOL_HEADER);\n\t\tconst Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, nc_header_bg | blend, nc_border);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);")
 replace_once("file-browser path palette",
-    "buf.Print(lh, panel_x + 8, 7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);",
-    "buf.Print(lh, panel_x + 8, 7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);")
+    "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);",
+    "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);")
 row_color_old = "(i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL)"
 row_color_new = "(i == se ? (is_nc_explorer ? 0xFF000055 : buf.COL_HIGHLIGHT) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))"
 if source.count(row_color_old) < 1:
