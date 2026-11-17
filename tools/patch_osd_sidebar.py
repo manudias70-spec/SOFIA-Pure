@@ -190,9 +190,11 @@ replace_once("file-browser header palette",
 replace_once("file-browser path palette",
     "buf.Print(lh, panel_x + 8, 7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);",
     "buf.Print(lh, panel_x + 8, 7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);")
-replace_once("file-browser row text palette",
-    "(i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL)",
-    "(i == se ? (is_filebrowse ? 0xFF003B66 : buf.COL_HIGHLIGHT) : (is_filebrowse ? 0xFFFFFFFF : buf.COL_NORMAL))")
+row_color_old = "(i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL)"
+row_color_new = "(i == se ? (is_filebrowse ? 0xFF003B66 : buf.COL_HIGHLIGHT) : (is_filebrowse ? 0xFFFFFFFF : buf.COL_NORMAL))"
+if source.count(row_color_old) < 1:
+    raise SystemExit("Norton palette patch aborted: file-browser row color anchor not found")
+source = source.replace(row_color_old, row_color_new)
 replace_once("file-browser generic row text palette",
     "(item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)",
     "(item.info == INFO_DIM ? (is_filebrowse ? 0xFFB8E9FF : buf.COL_DIM) : (is_filebrowse ? 0xFFFFFFFF : buf.COL_NORMAL))")
