@@ -25,6 +25,9 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
  void DBPS_OnContentLoad(const char* name, const char* dir, size_t dirlen);
  void DBPS_OnReset();
  void DBPS_SubmitOSDFrame(const void *data, unsigned width, unsigned height);
+diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
+--- a/dosbox_pure_osd.h
++++ b/dosbox_pure_osd.h
 @@ -2275,4 +2275,111 @@
  static void DBP_CloseOSD()
  {
