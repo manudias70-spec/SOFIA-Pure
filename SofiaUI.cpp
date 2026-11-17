@@ -371,7 +371,7 @@ namespace SofiaUI
 					for (unsigned drive = 0; drive < 26; ++drive)
 					{
 						if (!(mounted & (1u << drive))) continue;
-						char label[16]; snprintf(label, sizeof(label), "%c:", 'A' + drive);
+						std::string label(1, (char)('A' + drive)); label += ":";
 						ImGui::SameLine();
 						if (ImGui::SmallButton(label) && drive != dosDrive)
 						{
