@@ -172,7 +172,7 @@ diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 +						std::to_string((int)DBP_OSD.mode) + ", menu=" +
 +						(DBP_OSD.ptr.main ? std::to_string((int)DBP_OSD.ptr.main->listmode) : std::string("sin menu")) + ".";
 +				}
-
+ 
 +				// Pure returns to its main menu after mounting. Re-enter its browser
 +				// at the same path so SOFIA continues to display Pure's own list.
 +				if (item_type == DBP_PureMenuState::IT_FILEBROWSE && item_info == 5 &&
