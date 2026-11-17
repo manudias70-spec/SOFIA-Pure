@@ -36,6 +36,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
 +bool DBPS_IsDriveDirectoryScanPending();
 +size_t DBPS_GetDriveDirectoryCount();
 +bool DBPS_GetDriveDirectoryEntry(size_t index, DBPS_DriveDirectoryEntry& out);
++unsigned DBPS_GetMountedDriveMask();
  std::string DBPS_GetConfigOverrideJSON();
  retro_time_t dbp_cpu_features_get_time_usec(void);
 diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
@@ -94,6 +95,14 @@ diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 +	if (index >= dbps_drive_directory.size()) return false;
 +	out = dbps_drive_directory[index];
 +	return true;
++}
+
++unsigned DBPS_GetMountedDriveMask()
++{
++	unsigned mask = 0;
++	for (unsigned drive = 0; drive < DOS_DRIVES && drive < 32; ++drive)
++		if (Drives[drive]) mask |= (1u << drive);
++	return mask;
 +}
 +
  void DBPS_AddDisc(const char* path)
