@@ -21,6 +21,75 @@ for label, old_text, new_text in patches:
     source = source.replace(old_text, new_text, 1)
 
 
+
+# First visual pass for the Video settings page. Keep the original item list,
+# selection, mouse hit-testing and option handling; only change its drawing.
+settings_struct = source.index("struct DBP_SettingsMenuState final")
+draw_start = source.index("\tvoid DrawMenu(DBP_BufferDrawing& buf", settings_struct)
+draw_end = source.index("\n\t}\n};\n#endif", draw_start) + len("\n\t}")
+settings_draw = r'''\tvoid DrawMenu(DBP_BufferDrawing& buf, Bit32u blend, int lh, int w, int h, int ftr, bool mouseMoved, const DBP_MenuMouse& m)
+\t{
+\t\tUpdateHeld();
+\t\tif (curmenu == IT_CATEGORY)
+\t\t{
+\t\t\tBit16s topinfo = list[0].info;
+\t\t\tconst Item *plist = &list[0], *plistend = plist + list.size();
+\t\t\tconst retro_core_option_v2_category& oc = option_cats[topinfo];
+\t\t\tfor (const retro_core_option_v2_definition& od : option_defs)
+\t\t\t{
+\t\t\t\tif (od.category_key && (od.category_key != oc.key || DBP_Option::GetHidden(od))) continue;
+\t\t\t\twhile (plist != plistend && plist->type != IT_OPTION) plist++;
+\t\t\t\tif (od.category_key ? (plist != plistend && plist->info == (Bit16s)(&od - option_defs)) : plist == plistend) { plist++; continue; }
+\t\t\t\tmenu(IT_CATEGORY);
+\t\t\t\tbreak;
+\t\t\t}
+\t\t}
+
+\t\tconst bool is_video = (curmenu == IT_CATEGORY && strcmp(option_cats[list[0].info].key, "video") == 0);
+\t\tint hdr = lh*2, rows = (h - hdr - ftr) / lh, count = (int)list.size();
+\t\tint l = (is_video && DBP_FullscreenOSD ? 360 : 30), r = w-24;
+\t\tif (l < 0 || l >= r-160) { l = 30; r = w-30; }
+
+\t\tif (is_video && DBP_FullscreenOSD)
+\t\t{
+\t\t\tbuf.DrawBox(l-10, hdr-12, r-l+20, h-hdr-ftr+4, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);
+\t\t\tbuf.DrawBox(l, hdr-8, r-l, lh+5, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
+\t\t\tbuf.PrintCenteredOutlined(lh, l, r-l, hdr-6, "CONFIGURACION DE VIDEO", buf.COL_MENUTITLE);
+\t\t}
+\t\telse
+\t\t{
+\t\t\tbuf.DrawBox(l + 60, hdr-6-lh, r-l-120, lh+4, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
+\t\t\tbuf.PrintCenteredOutlined(lh, l, r-l, hdr-lh-4, "DOSBox Pure Settings Menu", buf.COL_MENUTITLE);
+\t\t}
+
+\t\tDrawMenuBase(buf, blend, lh, rows, m, mouseMoved, l, r, hdr);
+\t\tfor (int i = scroll, maxw = r-l-27; i != count && i != (scroll + rows); i++)
+\t\t{
+\t\t\tBit8u itype = list[i].type;
+\t\t\tif (itype == IT_OPTION)
+\t\t\t{
+\t\t\t\tconst retro_core_option_v2_definition& od = option_defs[list[i].info];
+\t\t\t\tconst char* var_value = retro_get_variable(od.key, od.default_value);
+\t\t\t\tfor (const retro_core_option_value& ov : od.values)
+\t\t\t\t{
+\t\t\t\t\tif (!ov.value) break;
+\t\t\t\t\tif (strcmp(var_value, ov.value)) continue;
+\t\t\t\t\tbuf.Print(lh, l+16 + maxw-130, hdr + (i - scroll)*lh, "\x1D", buf.COL_HEADER, 120);
+\t\t\t\t\tbuf.Print(lh, l+16 + maxw-120, hdr + (i - scroll)*lh, ov.label, buf.COL_NORMAL, 120);
+\t\t\t\t\tbreak;
+\t\t\t\t}
+\t\t\t\tbuf.Print(lh, l+16, hdr + (i - scroll)*lh, list[i].str.c_str(), buf.COL_NORMAL, maxw - 140);
+\t\t\t}
+\t\t\telse
+\t\t\t\tbuf.Print(lh, l+16, hdr + (i - scroll)*lh, list[i].str.c_str(), (itype != IT_NONE ? buf.COL_NORMAL : buf.COL_HEADER), maxw);
+\t\t}
+\t}'''
+# Convert the patch text's escaped tabs/newlines into actual source formatting.
+settings_draw = settings_draw.replace("\\t", "\t").replace("\\n", "\n")
+source = source[:draw_start] + settings_draw + source[draw_end:]
+print("Applied Video settings visual layout")
+
+
 translations = json.loads(r'''{"[ ] Set Setting Override For Loaded Game":"[ ] Guardar ajustes para este juego","Unable to write config override %c:\\\\%s":"No se pudo guardar la configuración en %c:\\\\%s","Gamepad Mapper is disabled":"El asignador de controles está desactivado","for this controller port":"para este puerto de control","Set 'Use Gamepad Mapper'":"Activa 'Usar asignador de controles'","in the Controls menu":"en el menú Controles","Preset: ":"Perfil: ","[Create Binding]":"[Crear asignación]","Function: ":"Función: ","Wheel Options: ":"Opciones de la rueda: ","Add Option":"Añadir opción","Warning:":"Advertencia:","Wheel is inaccessible because no":"La rueda no está disponible porque ningún","button was bound to Action Wheel":"botón está asignado a la acción Rueda","options have been defined here":"se definieron opciones aquí","Close Mapper":"Cerrar asignador","Select Preset":"Seleccionar perfil","Fill Unbound with Generic Keys":"Completar controles libres con teclas genéricas","[Reset Mapping]":"[Restablecer asignaciones]","[Additional Binding]":"[Asignación adicional]","[Remove Binding]":"[Quitar asignación]","[ Change Controller Input ]":"[ Cambiar entrada del control ]","[ Assign Controller Input ]":"[ Asignar entrada del control ]","Assign New Input":"Asignar nueva entrada","Press an input on the controller":"Pulsa un botón o mueve un control","Gamepad Mapper":"Asignador de controles","Controller Port %d":"Puerto del control %d","DOSBOX PURE START MENU":"MENÚ INICIAL DE DOSBOX PURE","- No Content Loaded -":"- Sin contenido cargado -","EJECT":"EXPULSAR","INSERT":"INSERTAR","* [SET AUTO START]":"* [CONFIGURAR INICIO AUTOMÁTICO]","Skip showing the text console":"Omitir la consola de texto","Skip showing first %d frames":"Omitir los primeros %d fotogramas","SHIFT/L2/R2 + Restart to come back":"SHIFT/L2/R2 + Reiniciar para volver","Auto Start is Enabled":"El inicio automático está activado","Run":"Ejecutar","Set Auto Start":"Configurar inicio automático","Scroll":"Desplazar","Reset DOS to":"¿Reiniciar DOS para","Are you sure you want to reset DOS":"¿Seguro que quieres reiniciar DOS","exit DOSBox?":"¿y salir de DOSBox?","and shut down DOSBox Pure?":"y cerrar DOSBox Pure?","start this?":"¿iniciar esto?","to start the selected application?":"para iniciar la aplicación seleccionada?","CANCEL":"CANCELAR","DOS Crashed":"DOS se ha bloqueado","Reset":"Reiniciar","[ Boot from Disk Image ]":"[ Arrancar desde imagen de disco ]","[ Run Installed Operating System ]":"[ Iniciar sistema operativo instalado ]","[ Run System Shell ]":"[ Iniciar intérprete de comandos ]","[ Boot and Install New Operating System ]":"[ Arrancar e instalar un sistema operativo ]","[ Load Content ]":"[ Cargar contenido ]","[ Saving & Loading ]":"[ Guardar y cargar ]","Active Configuration: ":"Configuración activa: ","Default":"Predeterminada","[ Select Game Configuration ]":"[ Seleccionar configuración del juego ]","No executable file found":"No se encontró ningún archivo ejecutable","Go to Command Line":"Ir a la línea de comandos","Close Menu":"Cerrar menú","Exit DOSBox Pure":"Salir de DOSBox Pure","Select Boot System Mode":"Seleccionar modo de arranque","Hard Disk Size For Install":"Tamaño del disco duro para la instalación","Create a new dynamic hard disk image in the following location:":"Crear una nueva imagen dinámica de disco duro en la siguiente ubicación:","%3d %cB Hard Disk":"Disco duro de %3d %cB","Hard disk images over 2GB will be formatted with FAT32":"Las imágenes de disco de más de 2 GB se formatearán con FAT32","NOTE: FAT32 is only supported in Windows 95C and newer":"NOTA: FAT32 solo es compatible con Windows 95C y posteriores","[ Boot Only Without Creating Hard Disk Image ]":"[ Arrancar sin crear una imagen de disco duro ]","Select Operating System Disk Image":"Seleccionar imagen de disco del sistema operativo","[ Refresh List ]":"[ Actualizar lista ]","Changes made to the C: drive will be discarded":"Se descartarán los cambios realizados en la unidad C:","Changes made to the C: drive will be stored in the following location:":"Los cambios realizados en la unidad C: se guardarán en la siguiente ubicación:","discard":"descartar","hide":"ocultar","D: will be based on the loaded .IMG file":"La unidad D: se basará en el archivo .IMG cargado","Changes made to the D: drive will be stored in the following location:":"Los cambios realizados en la unidad D: se guardarán en la siguiente ubicación:","Changes made to the D: drive will be discarded":"Se descartarán los cambios realizados en la unidad D:","D: hard drive was disabled, use only mounted CDs":"El disco D: está desactivado; solo se usarán los CD montados","Select System Shell":"Seleccionar intérprete de comandos","Select Game Configuration":"Seleccionar configuración del juego","Run Game":"Ejecutar juego","The configuration can be switched with the On-Screen Menu":"La configuración se puede cambiar desde el menú en pantalla","or by holding shift or L2/R2 when restarting the core":"o manteniendo SHIFT o L2/R2 al reiniciar el núcleo","Run Other Program":"Ejecutar otro programa","[ Load this folder as content ]":"[ Cargar esta carpeta como contenido ]","No files":"No hay archivos","Saving and Loading":"Guardar y cargar","Save Name: ":"Nombre de la partida: ","Save Slot: ":"Ranura de guardado: ","Save":"Guardar","Load":"Cargar","Back":"Volver","[ Mount as CD/DISK Image ]":"[ Montar como imagen de CD/disco ]","[ Load as Content ]":"[ Cargar como contenido ]","The selected configuration can't be applied because the settings in the files below have been customized:":"No se puede aplicar la configuración seleccionada porque se modificaron los ajustes de los siguientes archivos:","To use the configuration as intended the files need to be reset, but any changes made to them by you will be lost.":"Para usar esta configuración hay que restablecer esos archivos, pero se perderán los cambios que hayas realizado.","[ Yes, reset these files ]":"[ Sí, restablecer estos archivos ]","[ No, keep my custom files as is ]":"[ No, conservar mis archivos ]","[ Cancel ]":"[ Cancelar ]","Detected keyboard and joypad being pressed at the same time.\\n":"Se detectó que se está usando el teclado y el control al mismo tiempo.\\n","To freely use the keyboard without hotkeys enable 'Game Focus' (Scroll Lock key by default) if available.":"Para usar el teclado sin activar atajos, habilita 'Enfoque de juego' (Scroll Lock por defecto), si está disponible.","START MENU":"MENÚ INICIAL","KEYBOARD":"TECLADO","ON-SCREEN KEYBOARD":"TECLADO EN PANTALLA","CONTROLS":"CONTROLES","CONTROLLER MAPPER":"ASIGNADOR DE CONTROLES","SETTINGS":"OPCIONES","* GAME ENDED - EXITING IN %u SECONDS - PRESS ANY KEY TO CONTINUE *":"* JUEGO FINALIZADO - SALIENDO EN %u SEGUNDOS - PULSA UNA TECLA PARA CONTINUAR *","* PRESS ANY KEY TO RETURN TO START MENU *":"* PULSA UNA TECLA PARA VOLVER AL MENÚ INICIAL *","Use setting General > Advanced > Start Menu to enable exiting automatically":"Activa la salida automática en General > Avanzado > Menú inicial","Unsupported file type %s":"Tipo de archivo no compatible: %s"}''')
 for old_text, new_text in translations.items():
     source = source.replace('"' + old_text + '"', '"' + new_text + '"')
