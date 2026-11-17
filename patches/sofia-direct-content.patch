@@ -44,7 +44,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
 diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 --- a/dosbox_pure_osd.h
 +++ b/dosbox_pure_osd.h
-@@ -2705,3 +2705,48 @@ void DBPS_OpenContent(const char* path)
+@@ -2705,4 +2705,56 @@ void DBPS_OpenContent(const char* path)
  }
  
 +// Read-only bridge to Pure's mounted DOS filesystems. The request is dispatched
