@@ -133,11 +133,14 @@ settings_draw_replacement = """case DBPOSD_SETTINGS:
 \t\t\t}"""
 source = source[:settings_case] + settings_draw_replacement + source[case_end:]
 
-input_tail = "\t\t\t#endif\n\t\t}\n\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"
-input_tail_replacement = "\t\t\t#endif\n\t\t}\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"
-if source.count(input_tail) != 1:
-    raise SystemExit("Navigation patch aborted: OSD input tail anchor not found exactly once")
-source = source.replace(input_tail, input_tail_replacement, 1)
+evnt_start = source.index("virtual bool evnt(DBP_Event_Type type, int val, int val2) override", source.index("struct DBP_OnScreenDisplay"))
+tab_cycle = source.index("if (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))", evnt_start)
+source = source[:tab_cycle] + """if (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)
+\t\t{
+\t\t\tDBPS_ReturnToExplorer = false;
+\t\t\tSetMode(DBPOSD_MAIN);
+\t\t}
+\t\t""" + source[tab_cycle:]
 
 mouse_draw_anchor = "\n\t\tmouse.Draw(buf, isOSK);"
 if source.count(mouse_draw_anchor) != 1:
@@ -145,6 +148,8 @@ if source.count(mouse_draw_anchor) != 1:
 source = source.replace(mouse_draw_anchor, "\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tmouse.Draw(buf, isOSK);", 1)
 print("Applied Escape and close-button navigation to Explorer")
 '''
+exec(navigation_patch)
+
 exec(navigation_patch)
 
 exec(navigation_patch)
