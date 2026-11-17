@@ -111,8 +111,11 @@ if source.count(flag_anchor) != 1:
     raise SystemExit("Navigation patch aborted: Settings struct anchor not unique")
 source = source.replace(flag_anchor, "static bool DBPS_ReturnToExplorer = false;\n\n" + flag_anchor, 1)
 
-settings_draw_case = "\t\t\tcase DBPOSD_SETTINGS: ptr.settings->DrawMenu(buf, menublend, lh, w, h, ftr, mouseMoved, mouse); break;"
-settings_draw_replacement = """\t\t\tcase DBPOSD_SETTINGS:
+gfx_start = source.index("virtual void gfx(DBP_Buffer& _buf)", source.index("struct DBP_OnScreenDisplay"))
+mode_switch = source.index("switch (mode)", gfx_start)
+settings_case = source.index("case DBPOSD_SETTINGS:", mode_switch)
+case_end = source.index("\n", settings_case)
+settings_draw_replacement = """case DBPOSD_SETTINGS:
 \t\t\t{
 \t\t\t\tconst int close_x = w - 42, close_y = 8, close_w = 32, close_h = lh + 6;
 \t\t\t\tif (DBP_FullscreenOSD && mouse.click && mouse.x >= close_x && mouse.x < close_x + close_w && mouse.y >= close_y && mouse.y < close_y + close_h)
@@ -128,9 +131,7 @@ settings_draw_replacement = """\t\t\tcase DBPOSD_SETTINGS:
 \t\t\t\t}
 \t\t\t\tbreak;
 \t\t\t}"""
-if source.count(settings_draw_case) != 1:
-    raise SystemExit("Navigation patch aborted: Settings draw switch anchor not found exactly once")
-source = source.replace(settings_draw_case, settings_draw_replacement, 1)
+source = source[:settings_case] + settings_draw_replacement + source[case_end:]
 
 input_tail = "\t\t\t#endif\n\t\t}\n\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"
 input_tail_replacement = "\t\t\t#endif\n\t\t}\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"
@@ -144,6 +145,8 @@ if source.count(mouse_draw_anchor) != 1:
 source = source.replace(mouse_draw_anchor, "\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tmouse.Draw(buf, isOSK);", 1)
 print("Applied Escape and close-button navigation to Explorer")
 '''
+exec(navigation_patch)
+
 exec(navigation_patch)
 
 exec(navigation_patch)
