@@ -19,7 +19,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
  enum { DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480 };
  extern int DBPS_SaveSlotIndex;
  extern std::string DBPS_BrowsePath;
-+bool DBPS_GetFileBrowserSnapshot(std::vector<DBPS_FileBrowserItem>& items, std::string& path, int& selected, unsigned& revision);
++bool DBPS_GetFileBrowserSnapshot(std::vector<DBPS_FileBrowserItem>& items, std::string& path, int& selected, unsigned& revision, std::string& status);
 +void DBPS_RequestFileBrowser();
 +void DBPS_RequestFileBrowserSelection(unsigned index, unsigned revision);
  void DBPS_OnContentLoad(const char* name, const char* dir, size_t dirlen);
@@ -28,7 +28,7 @@ diff --git a/dosbox_pure_sta.h b/dosbox_pure_sta.h
 diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 --- a/dosbox_pure_osd.h
 +++ b/dosbox_pure_osd.h
-@@ -2275,4 +2275,111 @@
+@@ -2275,4 +2275,125 @@
  static void DBP_CloseOSD()
  {
  	DBP_OSD.SetMode(_DBPOSD_CLOSE);
@@ -42,6 +42,7 @@ diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 +static unsigned DBPS_SofiaBrowserRevision = 1;
 +static int DBPS_SofiaBrowserSelection = 0;
 +static bool DBPS_SofiaBrowserActive = false;
++static std::string DBPS_SofiaBrowserStatus = "Esperando una accion de SOFIA.";
 +static bool DBPS_SofiaOpenRequested = false;
 +static bool DBPS_SofiaSelectionRequested = false;
 +static unsigned DBPS_SofiaRequestedIndex = 0;
@@ -88,13 +89,14 @@ diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 +	DBPS_SofiaBrowserActive = active;
 +}
 +
-+bool DBPS_GetFileBrowserSnapshot(std::vector<DBPS_FileBrowserItem>& items, std::string& path, int& selected, unsigned& revision)
++bool DBPS_GetFileBrowserSnapshot(std::vector<DBPS_FileBrowserItem>& items, std::string& path, int& selected, unsigned& revision, std::string& status)
 +{
 +	std::lock_guard<std::mutex> lock(DBPS_SofiaBrowserMutex);
 +	items = DBPS_SofiaBrowserItems;
 +	path = DBPS_SofiaBrowserPath;
 +	selected = DBPS_SofiaBrowserSelection;
 +	revision = DBPS_SofiaBrowserRevision;
++	status = DBPS_SofiaBrowserStatus;
 +	return DBPS_SofiaBrowserActive;
 +}
 +
@@ -111,6 +113,7 @@ diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 +	{
 +		DBPS_SofiaRequestedIndex = index;
 +		DBPS_SofiaRequestedRevision = revision;
++		DBPS_SofiaBrowserStatus = "Seleccion enviada al puente de Pure.";
 +		DBPS_SofiaSelectionRequested = true;
 +	}
 +}
@@ -157,13 +160,33 @@ diff --git a/dosbox_pure_osd.h b/dosbox_pure_osd.h
 +			Bit16s item_info = menu->list[requested_index].info;
 +			if (item_type != DBP_MenuState::IT_NONE)
 +			{
++				{
++					std::lock_guard<std::mutex> lock(DBPS_SofiaBrowserMutex);
++					DBPS_SofiaBrowserStatus = "Ejecutando indice " + std::to_string(requested_index) +
++						", tipo " + std::to_string(item_type) + ", info " + std::to_string(item_info) + ".";
++				}
 +				menu->DoInput(DBP_MenuState::RES_OK, item_type, 0);
++				{
++					std::lock_guard<std::mutex> lock(DBPS_SofiaBrowserMutex);
++					DBPS_SofiaBrowserStatus = "Pure proceso la orden. OSD=" +
++						std::to_string((int)DBP_OSD.mode) + ", menu=" +
++						(DBP_OSD.ptr.main ? std::to_string((int)DBP_OSD.ptr.main->listmode) : std::string("sin menu")) + ".";
++				}
+
 +				// Pure returns to its main menu after mounting. Re-enter its browser
 +				// at the same path so SOFIA continues to display Pure's own list.
 +				if (item_type == DBP_PureMenuState::IT_FILEBROWSE && item_info == 5 &&
 +					DBP_OSD.mode == DBPOSD_MAIN && DBP_OSD.ptr.main)
 +					DBP_OSD.ptr.main->GoToSubMenu(DBP_PureMenuState::IT_FILEBROWSE, DBP_PureMenuState::IT_FILEBROWSE, -1, NULL);
 +			}
++		}
++		else
++		{
++			std::lock_guard<std::mutex> lock(DBPS_SofiaBrowserMutex);
++			DBPS_SofiaBrowserStatus = "Orden rechazada: activo=" + std::to_string(browser_active) +
++				", revision solicitada=" + std::to_string(requested_revision) +
++				", actual=" + std::to_string(current_revision) +
++				", indice=" + std::to_string(requested_index) + ".";
 +		}
 +	}
 +	DBPS_SofiaUpdateBrowserSnapshot();
