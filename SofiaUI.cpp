@@ -19,6 +19,7 @@ namespace SofiaUI
 
 	static std::vector<DBPS_FileBrowserItem> browserEntries;
 	static std::string browserPath;
+	static std::string browserStatus;
 	static unsigned browserRevision = 0;
 	static int browserSelection = 0;
 	static bool browserActive = false;
@@ -26,7 +27,7 @@ namespace SofiaUI
 
 	static void RefreshBrowserSnapshot()
 	{
-		browserActive = DBPS_GetFileBrowserSnapshot(browserEntries, browserPath, browserSelection, browserRevision);
+		browserActive = DBPS_GetFileBrowserSnapshot(browserEntries, browserPath, browserSelection, browserRevision, browserStatus);
 	}
  
 	static bool Initialize()
@@ -217,6 +218,7 @@ namespace SofiaUI
 				}
 				ImGui::EndChild();
 				ImGui::TextDisabled("%u elementos  |  Lista y acciones administradas por DOSBox Pure", (unsigned)browserEntries.size());
+				ImGui::TextWrapped("Diagnostico: %s", browserStatus.c_str());
 			}
 			else if (activePage == 2)
 			{
