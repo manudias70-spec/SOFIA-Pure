@@ -39,6 +39,8 @@
 int DBPS_SaveSlotIndex;
 std::string DBPS_BrowsePath;
 
+void DBPS_QuitApplication() { ZL_Application::Quit(); }
+
 enum EHotkeyFKeys
 {
 	HOTKEY_F_PAUSE       =  1,
@@ -1358,6 +1360,22 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 			if ((e.is_down && !onlyAlt) || pressedAltReturn == e.is_down) return false;
 			pressedAltReturn = e.is_down;
 			if (e.is_down) ZL_Display::ToggleFullscreen();
+			return true;
+		}
+	}
+	static bool pressedAltF12;
+	if (e.key == ZLK_F12)
+	{
+		const bool altF12 = (e.mod & ZLKMOD_ALT) && !(e.mod & (ZLKMOD_CTRL|ZLKMOD_SHIFT|ZLKMOD_META|ZLKMOD_MODE));
+		if (altF12 || pressedAltF12)
+		{
+			if (e.is_down && !pressedAltF12)
+			{
+				pressedAltF12 = true;
+				if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING) ThrottlePaused = false;
+				else DBPS_ToggleOSD();
+			}
+			else if (!e.is_down) pressedAltF12 = false;
 			return true;
 		}
 	}
