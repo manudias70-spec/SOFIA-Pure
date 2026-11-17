@@ -98,23 +98,17 @@ for old_text, new_text in translations.items():
 # Defer the mode switch until the current Settings callback has returned; SetMode
 # destroys the active Settings state, so switching inside DoInput would be unsafe.
 navigation_patch = r'''
-source = source.replace(
-    "struct DBP_SettingsMenuState final : DBP_MenuState",
-    "static bool DBPS_ReturnToExplorer = false;\n\nstruct DBP_SettingsMenuState final : DBP_MenuState",
-    1
-)
-settings_input = """\tvirtual void DoInput(Result res, Bit8u ok_type, int x_change)
-\t{
-\t\tif (res == RES_CANCEL) ok_type = IT_CANCEL;"""
-settings_input_replacement = """\tvirtual void DoInput(Result res, Bit8u ok_type, int x_change)
-\t{
-\t\tif (res == RES_CANCEL) { DBPS_ReturnToExplorer = true; return; }
-\t\tif (res == RES_CANCEL) ok_type = IT_CANCEL;"""
-if source.count(settings_input) != 1:
-    raise SystemExit("Navigation patch aborted: Settings DoInput anchor not found exactly once")
-source = source.replace(settings_input, settings_input_replacement, 1)
+settings_struct = source.index("struct DBP_SettingsMenuState final")
+settings_do = source.index("virtual void DoInput(Result res, Bit8u ok_type, int x_change)", settings_struct)
+cancel_line = source.index("if (res == RES_CANCEL) ok_type = IT_CANCEL;", settings_do)
+source = source[:cancel_line] + "if (res == RES_CANCEL) { DBPS_ReturnToExplorer = true; return; }\n\t\t" + source[cancel_line:]
 
-settings_draw_case = """\t\t\tcase DBPOSD_SETTINGS: ptr.settings->DrawMenu(buf, menublend, lh, w, h, ftr, mouseMoved, mouse); break;"""
+flag_anchor = "struct DBP_SettingsMenuState final : DBP_MenuState"
+if source.count(flag_anchor) != 1:
+    raise SystemExit("Navigation patch aborted: Settings struct anchor not unique")
+source = source.replace(flag_anchor, "static bool DBPS_ReturnToExplorer = false;\n\n" + flag_anchor, 1)
+
+settings_draw_case = "\t\t\tcase DBPOSD_SETTINGS: ptr.settings->DrawMenu(buf, menublend, lh, w, h, ftr, mouseMoved, mouse); break;"
 settings_draw_replacement = """\t\t\tcase DBPOSD_SETTINGS:
 \t\t\t{
 \t\t\t\tconst int close_x = w - 42, close_y = 8, close_w = 32, close_h = lh + 6;
@@ -135,44 +129,21 @@ if source.count(settings_draw_case) != 1:
     raise SystemExit("Navigation patch aborted: Settings draw switch anchor not found exactly once")
 source = source.replace(settings_draw_case, settings_draw_replacement, 1)
 
-settings_input_case = """\t\t\tcase DBPOSD_SETTINGS: ptr.settings->Input(type, val, val2); break;"""
-settings_input_replacement = """\t\t\tcase DBPOSD_SETTINGS: ptr.settings->Input(type, val, val2); break;"""
-if source.count(settings_input_case) != 1:
-    raise SystemExit("Navigation patch aborted: Settings input switch anchor not found exactly once")
-# The common post-switch point is after the mode-specific Input call and before
-# the tab/grave cycling shortcut. This guarantees the Settings object is no
-# longer executing when SetMode deletes it.
-input_tail = """\t\t\t#endif
-\t\t}
-\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"""
-input_tail_replacement = """\t\t\t#endif
-\t\t}
-\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)
-\t\t{
-\t\t\tDBPS_ReturnToExplorer = false;
-\t\t\tSetMode(DBPOSD_MAIN);
-\t\t}
-\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"""
+input_tail = "\t\t\t#endif\n\t\t}\n\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"
+input_tail_replacement = "\t\t\t#endif\n\t\t}\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tif (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))"
 if source.count(input_tail) != 1:
     raise SystemExit("Navigation patch aborted: OSD input tail anchor not found exactly once")
 source = source.replace(input_tail, input_tail_replacement, 1)
 
-gfx_tail = """\t\t}
-
-\t\tmouse.Draw(buf, isOSK);"""
-gfx_tail_replacement = """\t\t}
-\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)
-\t\t{
-\t\t\tDBPS_ReturnToExplorer = false;
-\t\t\tSetMode(DBPOSD_MAIN);
-\t\t}
-
-\t\tmouse.Draw(buf, isOSK);"""
+gfx_tail = "\t\t}\n\n\t\tmouse.Draw(buf, isOSK);"
+gfx_tail_replacement = "\t\t}\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\n\t\tmouse.Draw(buf, isOSK);"
 if source.count(gfx_tail) != 1:
     raise SystemExit("Navigation patch aborted: OSD draw tail anchor not found exactly once")
 source = source.replace(gfx_tail, gfx_tail_replacement, 1)
 print("Applied Escape and close-button navigation to Explorer")
 '''
+exec(navigation_patch)
+
 exec(navigation_patch)
 
 target.write_text(source, encoding="utf-8")
