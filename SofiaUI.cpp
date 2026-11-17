@@ -7,6 +7,7 @@
 #include <ZL_Application.h>
 #include <string>
 #include <vector>
+#include <libretro-common/include/libretro.h>
 #include <dosbox_pure_sta.h>
 
 namespace SofiaUI
