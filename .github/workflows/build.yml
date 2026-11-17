@@ -25,6 +25,8 @@ jobs:
       run: |
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
+        perl -0pi -e 's/DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480/DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540/' dosbox-pure/dosbox_pure_sta.h
+        if (-not (Select-String -Path dosbox-pure/dosbox_pure_sta.h -Pattern 'DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540' -Quiet)) { throw "16:9 OSD canvas was not configured" }
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         perl -0pi -e 's/"sb16", "gb"/"sb16", "awe32", "gb"/; s/Type of Soundblaster to emulate\. gb is Gameblaster\./Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster./' dosbox-pure/src/dosbox.cpp
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
@@ -63,6 +65,8 @@ jobs:
       run: |
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
+        perl -0pi -e 's/DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480/DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540/' dosbox-pure/dosbox_pure_sta.h
+        if (-not (Select-String -Path dosbox-pure/dosbox_pure_sta.h -Pattern 'DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540' -Quiet)) { throw "16:9 OSD canvas was not configured" }
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         perl -0pi -e 's/"sb16", "gb"/"sb16", "awe32", "gb"/; s/Type of Soundblaster to emulate\. gb is Gameblaster\./Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster./' dosbox-pure/src/dosbox.cpp
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
