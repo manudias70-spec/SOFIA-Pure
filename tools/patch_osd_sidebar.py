@@ -206,6 +206,107 @@ replace_once("file-browser footer palette",
     "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);",
     "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
 
+
+# Add a compact Norton-style metadata row to the standalone file browser.
+# Metadata is collected once per RefreshList, not queried every rendered frame.
+def browser_replace(label, old_text, new_text):
+    global source
+    count = source.count(old_text)
+    if count != 1:
+        raise SystemExit(f"File-browser columns patch aborted: {label!r} expected one source match, found {count}")
+    source = source.replace(old_text, new_text, 1)
+
+browser_replace(
+    "file-browser metadata members",
+    "\tint exe_count, fs_rows, windowlinelength;\n\tbool multidrive;\n\tBit8u popupsel;\n\tItemType listmode;",
+    """\tstruct BrowserFileInfo { char size[12], date[12], time[6]; };
+\tstd::vector<BrowserFileInfo> browser_info;
+\tint exe_count, fs_rows, windowlinelength;
+\tbool multidrive;
+\tBit8u popupsel;
+\tItemType listmode;
+
+\tstatic BrowserFileInfo GetBrowserFileInfo(const std::string& name, bool is_dir)
+\t{
+\t\tBrowserFileInfo result = {};
+\t\t#ifdef WIN32
+\t\tif (name == "[ Go Up ]" || DBPS_BrowsePath == "$") return result;
+\t\tstd::string path = (DBPS_BrowsePath.empty() ? "." : DBPS_BrowsePath);
+\t\tif (path.back() != '\\\\' && path.back() != '/') path += '\\\\';
+\t\tpath += name;
+\t\tint wide_len = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, NULL, 0);
+\t\tif (wide_len <= 0) return result;
+\t\tstd::wstring wide_path((size_t)wide_len, L'\\\\0');
+\t\tif (!MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wide_path[0], wide_len)) return result;
+\t\tWIN32_FILE_ATTRIBUTE_DATA data;
+\t\tif (!GetFileAttributesExW(wide_path.c_str(), GetFileExInfoStandard, &data)) return result;
+\t\tunsigned long long bytes = ((unsigned long long)data.nFileSizeHigh << 32) | data.nFileSizeLow;
+\t\tif (is_dir) snprintf(result.size, sizeof(result.size), "<DIR>");
+\t\telse if (bytes >= 1024) snprintf(result.size, sizeof(result.size), "%llu KB", (bytes + 1023) / 1024);
+\t\telse snprintf(result.size, sizeof(result.size), "%llu B", bytes);
+\t\tFILETIME local_time;
+\t\tSYSTEMTIME modified;
+\t\tif (FileTimeToLocalFileTime(&data.ftLastWriteTime, &local_time) && FileTimeToSystemTime(&local_time, &modified))
+\t\t{
+\t\t\tsnprintf(result.date, sizeof(result.date), "%02u-%02u-%04u", modified.wDay, modified.wMonth, modified.wYear);
+\t\t\tsnprintf(result.time, sizeof(result.time), "%02u:%02u", modified.wHour, modified.wMinute);
+\t\t}
+\t\t#endif
+\t\treturn result;
+\t}""")
+browser_replace("clear file-browser metadata",
+    "\t\tlist.clear();",
+    "\t\tlist.clear();\n\t\tbrowser_info.clear();")
+browser_replace(
+    "collect file-browser metadata",
+    "\t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;",
+    """\t\tif (mode == IT_FILEBROWSE)
+\t\t{
+\t\t\tbrowser_info.resize(list.size());
+\t\t\tfor (size_t i = 0; i < list.size(); i++)
+\t\t\t{
+\t\t\t\tconst Item& item = list[i];
+\t\t\t\tif (item.type == IT_FILEBROWSE && item.info >= 1 && item.info <= 3)
+\t\t\t\t\tbrowser_info[i] = GetBrowserFileInfo(item.str, item.info != 3);
+\t\t\t}
+\t\t}
+\t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;""")
+browser_replace(
+    "reserve a header row for file-browser columns",
+    "int inforow = (panel_w > 319), hdr = lh*2+12, rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);",
+    "int inforow = (panel_w > 319), hdr = lh*2+12;\n\t\tif (is_filebrowse) hdr += lh+2;\n\t\tint rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);")
+browser_replace(
+    "draw file-browser column headings",
+    "\t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)",
+    """\t\tconst int file_name_chars = (panel_w - 16) / buf.CW - (8 + 10 + 5 + 6);
+\t\tconst int file_col_name = panel_x + 8;
+\t\tconst int file_col_size = file_col_name + (file_name_chars + 2) * buf.CW;
+\t\tconst int file_col_date = file_col_size + 10 * buf.CW;
+\t\tconst int file_col_time = file_col_date + 12 * buf.CW;
+\t\tif (is_filebrowse)
+\t\t{
+\t\t\tconst int hy = listu - lh;
+\t\t\tbuf.Print(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);
+\t\t\tbuf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFF55FFFF, 10 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_time, hy, "HORA", 0xFF55FFFF, 5 * buf.CW);
+\t\t}
+\t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)""")
+browser_replace(
+    "render file-browser metadata columns",
+    "\t\t\tif (item.type == IT_MOUNT) // mountable file system",
+    """\t\t\tif (is_filebrowse && item.type == IT_FILEBROWSE && item.info >= 1 && item.info <= 3)
+\t\t\t{
+\t\t\t\tconst Bit32u rowcol = (i == se ? (is_nc_explorer ? 0xFF000055 : buf.COL_HIGHLIGHT) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL));
+\t\t\t\tconst BrowserFileInfo empty_info = {};
+\t\t\t\tconst BrowserFileInfo& meta = (i < browser_info.size() ? browser_info[i] : empty_info);
+\t\t\t\tbuf.Print(lh, file_col_name, y, item.str.c_str(), rowcol, file_name_chars * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_size, y, meta.size, rowcol, 8 * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_date, y, meta.date, rowcol, 10 * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_time, y, meta.time, rowcol, 5 * buf.CW);
+\t\t\t}
+\t\t\telse if (item.type == IT_MOUNT) // mountable file system""")
+
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
 
