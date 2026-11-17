@@ -181,7 +181,7 @@ replace_once("file-browser mode parameter",
 
 replace_once("file-browser panel colors",
     "\t\tbuf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);",
-    "\t\tif (nc_explorer)\n\t\t{\n\t\t\tbuf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\tbuf.DrawBox(menul + 3, menuu, menur - menul - 6, menuh, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t}\n\t\telse buf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, buf.BGCOL_MENU | blend, buf.COL_LINEBOX));")
+    "\t\tif (nc_explorer)\n\t\t{\n\t\t\tbuf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\tbuf.DrawBox(menul + 3, menuu, menur - menul - 6, menuh, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t}\n\t\telse buf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);")
 replace_once("file-browser selection colors",
     "\t\t\tbuf.AlphaBlendFillRect(menul+3, listu + (sel - scroll)*lh, menur - menul - 6 - (scrollbar ? 10 : 0), lh + xtra, buf.BGCOL_SELECTION | blend);",
     "\t\t\tbuf.AlphaBlendFillRect(menul+3, listu + (sel - scroll)*lh, menur - menul - 6 - (scrollbar ? 10 : 0), lh + xtra, (nc_explorer ? 0xFFFFFFFF : buf.BGCOL_SELECTION) | blend);")
