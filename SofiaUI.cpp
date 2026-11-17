@@ -186,8 +186,6 @@ namespace SofiaUI
 				ImGui::Separator();
 				ImGui::Spacing();
 				RefreshBrowserSnapshot();
-				if (browserWasActive && !browserActive) visible = false;
-				browserWasActive = browserActive;
 				ImGui::Text("Explorador de DOSBox Pure");
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Actualizar##pure")) DBPS_RequestFileBrowser();
