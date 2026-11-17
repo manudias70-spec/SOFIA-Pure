@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14" ]
+    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -34,6 +34,7 @@ jobs:
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'AWE32_OpenROMBesideExe' -Quiet)) { throw "AWE32 ROM loader was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
+        python main/tools/patch_osd_sidebar.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -69,6 +70,7 @@ jobs:
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/embed_splash.py
+        python main/tools/patch_osd_sidebar.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
