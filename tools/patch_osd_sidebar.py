@@ -150,15 +150,15 @@ print("Applied Escape and close-button navigation to Explorer")
 '''
 exec(navigation_patch)
 
-exec(navigation_patch)
 
-exec(navigation_patch)
 
-exec(navigation_patch)
 
-exec(navigation_patch)
 
-exec(navigation_patch)
+
+
+
+
+
 
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
