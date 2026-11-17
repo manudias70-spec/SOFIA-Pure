@@ -25,12 +25,18 @@ namespace SofiaUI
 	{
 		std::string name;
 		bool isDirectory;
+		unsigned size = 0;
 	};
 
 	static std::vector<BrowserEntry> browserEntries;
 	static std::string browserCachedPath;
 	static bool browserDirty = true;
 	static bool browserReadError = false;
+	static bool dosBrowserActive = false;
+	static bool dosScanWaiting = false;
+	static unsigned dosDrive = 2;
+	static std::string dosPath;
+	static std::vector<BrowserEntry> dosBrowserEntries;
 
 	static bool IsSupportedContentFile(const char* name, const char* validExtensions)
 	{
@@ -115,6 +121,53 @@ namespace SofiaUI
 		// Keep the SOFIA desktop hidden while the new DOS content starts.
 		DBPS_OpenContent(fullPath.c_str());
 		visible = false;
+	}
+
+	static void RequestDOSDirectory()
+	{
+		if (!dosScanWaiting && !DBPS_IsDriveDirectoryScanPending())
+			dosScanWaiting = DBPS_RequestDriveDirectory(dosDrive, dosPath.c_str());
+	}
+
+	static void RefreshDOSDirectoryCache()
+	{
+		if (!dosScanWaiting || DBPS_IsDriveDirectoryScanPending()) return;
+		dosBrowserEntries.clear();
+		const size_t count = DBPS_GetDriveDirectoryCount();
+		for (size_t i = 0; i < count; ++i)
+		{
+			DBPS_DriveDirectoryEntry entry;
+			if (DBPS_GetDriveDirectoryEntry(i, entry))
+				dosBrowserEntries.push_back({ entry.name, entry.isDirectory, entry.size });
+		}
+		std::sort(dosBrowserEntries.begin(), dosBrowserEntries.end(),
+			[](const BrowserEntry& a, const BrowserEntry& b)
+			{
+				if (a.isDirectory != b.isDirectory) return a.isDirectory;
+				std::string an = a.name, bn = b.name;
+				std::transform(an.begin(), an.end(), an.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
+				std::transform(bn.begin(), bn.end(), bn.begin(), [](unsigned char ch) { return (char)std::tolower(ch); });
+				return an < bn;
+			});
+		dosScanWaiting = false;
+	}
+
+	static void DOSGoUp()
+	{
+		while (!dosPath.empty() && (dosPath.back() == '\\\\' || dosPath.back() == '/')) dosPath.pop_back();
+		const size_t slash = dosPath.find_last_of("\\\\/");
+		if (slash == std::string::npos) dosPath.clear();
+		else dosPath.resize(slash);
+		dosScanWaiting = false;
+		RequestDOSDirectory();
+	}
+
+	static void DOSEnterDirectory(const std::string& name)
+	{
+		if (!dosPath.empty() && dosPath.back() != '\\\\' && dosPath.back() != '/') dosPath += '\\\\';
+		dosPath += name;
+		dosScanWaiting = false;
+		RequestDOSDirectory();
 	}
 
 	static bool Initialize()
@@ -264,49 +317,98 @@ namespace SofiaUI
 			}
 			else if (activePage == 1)
 			{
-				if (browserDirty || browserCachedPath != DBPS_BrowsePath) RefreshBrowser();
 				ImGui::TextColored(ImVec4(0.18f, 0.82f, 0.96f, 1.0f), "BIBLIOTECA");
 				ImGui::Separator();
 				ImGui::Spacing();
-				ImGui::Text("Explorador de contenido");
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Actualizar")) { browserDirty = true; RefreshBrowser(); }
-				ImGui::TextDisabled("%s", DBPS_BrowsePath.c_str());
-				ImGui::Spacing();
-				if (ImGui::Button("Subir un nivel", ImVec2(130.0f, 30.0f)))
+				if (ImGui::Button("Archivos del equipo"))
 				{
-					BrowserGoUp();
-					RefreshBrowser();
+					dosBrowserActive = false;
+					browserDirty = true;
 				}
 				ImGui::SameLine();
-				ImGui::TextDisabled("Carpetas y formatos reconocidos por DOSBox Pure");
-				ImGui::Separator();
-				ImGui::BeginChild("BrowserList", ImVec2(0.0f, 0.0f), true);
-				if (browserReadError)
-					ImGui::TextDisabled("No se pudo leer este directorio.");
-				else if (browserEntries.empty())
-					ImGui::TextDisabled("No hay carpetas ni archivos compatibles en esta ubicacion.");
-				else
+				if (ImGui::Button("Unidades DOS montadas"))
 				{
-					for (size_t i = 0; i < browserEntries.size(); ++i)
+					dosBrowserActive = true;
+					dosPath.clear();
+					dosScanWaiting = false;
+				}
+				ImGui::Separator();
+
+				if (!dosBrowserActive)
+				{
+					if (browserDirty || browserCachedPath != DBPS_BrowsePath) RefreshBrowser();
+					ImGui::Text("Explorador del equipo");
+					ImGui::SameLine();
+					if (ImGui::SmallButton("Actualizar##host")) { browserDirty = true; RefreshBrowser(); }
+					ImGui::TextDisabled("%s", DBPS_BrowsePath.c_str());
+					if (ImGui::Button("Subir un nivel##host", ImVec2(130.0f, 30.0f)))
+					{
+						BrowserGoUp();
+						RefreshBrowser();
+					}
+					ImGui::BeginChild("BrowserList", ImVec2(0.0f, 0.0f), true);
+					if (browserReadError) ImGui::TextDisabled("No se pudo leer este directorio.");
+					else if (browserEntries.empty()) ImGui::TextDisabled("No hay carpetas ni archivos compatibles en esta ubicacion.");
+					else for (size_t i = 0; i < browserEntries.size(); ++i)
 					{
 						const BrowserEntry& entry = browserEntries[i];
 						const std::string label = (entry.isDirectory ? "[DIR]  " : "[FILE] ") + entry.name;
 						if (ImGui::Selectable(label.c_str(), false, 0, ImVec2(0.0f, 27.0f)))
 						{
-							if (entry.isDirectory)
-							{
-								BrowserEnterDirectory(entry.name);
-								RefreshBrowser();
-							}
-							else
-								BrowserOpenFile(entry.name);
+							if (entry.isDirectory) { BrowserEnterDirectory(entry.name); RefreshBrowser(); }
+							else BrowserOpenFile(entry.name);
 							break;
 						}
 					}
+					ImGui::EndChild();
+					ImGui::TextDisabled("%u elementos  |  Seleccioná una ISO o ZIP para iniciarlo", (unsigned)browserEntries.size());
 				}
-				ImGui::EndChild();
-				ImGui::TextDisabled("%u elementos  |  Seleccioná un archivo para iniciarlo con DOSBox Pure", (unsigned)browserEntries.size());
+				else
+				{
+					const unsigned mounted = DBPS_GetMountedDriveMask();
+					ImGui::Text("Unidades detectadas por DOSBox Pure");
+					bool selectedDriveStillMounted = (mounted & (1u << dosDrive)) != 0;
+					for (unsigned drive = 0; drive < 26; ++drive)
+					{
+						if (!(mounted & (1u << drive))) continue;
+						char label[16]; snprintf(label, sizeof(label), "%c:", 'A' + drive);
+						ImGui::SameLine();
+						if (ImGui::SmallButton(label) && drive != dosDrive)
+						{
+							dosDrive = drive;
+							dosPath.clear();
+							dosScanWaiting = false;
+						}
+					}
+					if (!selectedDriveStillMounted)
+					{
+						ImGui::TextDisabled("No hay una unidad DOS seleccionada.");
+					}
+					else
+					{
+						ImGui::TextDisabled("%c:\\%s", 'A' + dosDrive, dosPath.c_str());
+						if (ImGui::Button("Subir un nivel##dos", ImVec2(130.0f, 30.0f))) DOSGoUp();
+						ImGui::SameLine();
+						if (ImGui::SmallButton("Actualizar##dos")) { dosScanWaiting = false; RequestDOSDirectory(); }
+						RequestDOSDirectory();
+						RefreshDOSDirectoryCache();
+						ImGui::Separator();
+						ImGui::BeginChild("DOSBrowserList", ImVec2(0.0f, 0.0f), true);
+						if (dosScanWaiting || DBPS_IsDriveDirectoryScanPending())
+							ImGui::TextDisabled("Leyendo la unidad DOS...");
+						else if (dosBrowserEntries.empty())
+							ImGui::TextDisabled("Esta carpeta esta vacia o Pure no devolvio entradas.");
+						else for (size_t i = 0; i < dosBrowserEntries.size(); ++i)
+						{
+							const BrowserEntry& entry = dosBrowserEntries[i];
+							const std::string label = (entry.isDirectory ? "[DIR]  " : "[FILE] ") + entry.name;
+							if (ImGui::Selectable(label.c_str(), false, 0, ImVec2(0.0f, 27.0f)) && entry.isDirectory)
+								DOSEnterDirectory(entry.name);
+						}
+						ImGui::EndChild();
+						ImGui::TextDisabled("%u elementos  |  Vista de solo lectura del contenido montado", (unsigned)dosBrowserEntries.size());
+					}
+				}
 			}
 			else if (activePage == 2)
 			{
