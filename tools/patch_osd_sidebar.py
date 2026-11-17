@@ -46,23 +46,29 @@ settings_draw = r'''\tvoid DrawMenu(DBP_BufferDrawing& buf, Bit32u blend, int lh
 \t\t}
 
 \t\tconst bool is_video = (curmenu == IT_CATEGORY && strcmp(option_cats[list[0].info].key, "video") == 0);
-\t\tint hdr = lh*2, rows = (h - hdr - ftr) / lh, count = (int)list.size();
-\t\tint l = (is_video && DBP_FullscreenOSD ? 360 : 30), r = w-24;
+\t\tconst int menu_lh = (DBP_FullscreenOSD ? 8 : lh);
+\t\tconst int panel_x = (DBP_FullscreenOSD ? 216 : 0);
+\t\tconst int panel_y = (DBP_FullscreenOSD ? 36 : 0);
+\t\tconst int panel_right = (DBP_FullscreenOSD ? w-24 : w-30);
+\t\tconst int panel_bottom = (DBP_FullscreenOSD ? h-32 : h-ftr);
+\t\tint hdr = panel_y + menu_lh*2, rows = (panel_bottom - hdr) / menu_lh, count = (int)list.size();
+\t\tint l = panel_x + (DBP_FullscreenOSD ? 24 : 30), r = panel_right;
 \t\tif (l < 0 || l >= r-160) { l = 30; r = w-30; }
 
-\t\tif (is_video && DBP_FullscreenOSD)
+\t\tif (DBP_FullscreenOSD)
 \t\t{
-\t\t\tbuf.DrawBox(l-10, hdr-12, r-l+20, h-hdr-ftr+4, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);
-\t\t\tbuf.DrawBox(l, hdr-8, r-l, lh+5, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
-\t\t\tbuf.PrintCenteredOutlined(lh, l, r-l, hdr-6, "CONFIGURACION DE VIDEO", buf.COL_MENUTITLE);
+\t\t\tbuf.DrawBox(l-12, panel_y-10, r-l+24, panel_bottom-panel_y+18, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);
+\t\t\tbuf.DrawBox(l, hdr-menu_lh, r-l, menu_lh+5, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
+\t\t\tbuf.PrintCenteredOutlined(menu_lh, l, r-l, hdr-menu_lh+2,
+\t\t\t\t(is_video ? "CONFIGURACION DE VIDEO" : "OPCIONES"), buf.COL_MENUTITLE);
 \t\t}
 \t\telse
 \t\t{
-\t\t\tbuf.DrawBox(l + 60, hdr-6-lh, r-l-120, lh+4, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
-\t\t\tbuf.PrintCenteredOutlined(lh, l, r-l, hdr-lh-4, "DOSBox Pure Settings Menu", buf.COL_MENUTITLE);
+\t\t\tbuf.DrawBox(l + 60, hdr-6-menu_lh, r-l-120, menu_lh+4, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
+\t\t\tbuf.PrintCenteredOutlined(menu_lh, l, r-l, hdr-menu_lh-4, "DOSBox Pure Settings Menu", buf.COL_MENUTITLE);
 \t\t}
 
-\t\tDrawMenuBase(buf, blend, lh, rows, m, mouseMoved, l, r, hdr);
+\t\tDrawMenuBase(buf, blend, menu_lh, rows, m, mouseMoved, l, r, hdr);
 \t\tfor (int i = scroll, maxw = r-l-27; i != count && i != (scroll + rows); i++)
 \t\t{
 \t\t\tBit8u itype = list[i].type;
@@ -74,14 +80,14 @@ settings_draw = r'''\tvoid DrawMenu(DBP_BufferDrawing& buf, Bit32u blend, int lh
 \t\t\t\t{
 \t\t\t\t\tif (!ov.value) break;
 \t\t\t\t\tif (strcmp(var_value, ov.value)) continue;
-\t\t\t\t\tbuf.Print(lh, l+16 + maxw-130, hdr + (i - scroll)*lh, "\x1D", buf.COL_HEADER, 120);
-\t\t\t\t\tbuf.Print(lh, l+16 + maxw-120, hdr + (i - scroll)*lh, ov.label, buf.COL_NORMAL, 120);
+\t\t\t\t\tbuf.Print(menu_lh, l+16 + maxw-130, hdr + (i - scroll)*menu_lh, "\x1D", buf.COL_HEADER, 120);
+\t\t\t\t\tbuf.Print(menu_lh, l+16 + maxw-120, hdr + (i - scroll)*menu_lh, ov.label, buf.COL_NORMAL, 120);
 \t\t\t\t\tbreak;
 \t\t\t\t}
-\t\t\t\tbuf.Print(lh, l+16, hdr + (i - scroll)*lh, list[i].str.c_str(), buf.COL_NORMAL, maxw - 140);
+\t\t\t\tbuf.Print(menu_lh, l+16, hdr + (i - scroll)*menu_lh, list[i].str.c_str(), buf.COL_NORMAL, maxw - 140);
 \t\t\t}
 \t\t\telse
-\t\t\t\tbuf.Print(lh, l+16, hdr + (i - scroll)*lh, list[i].str.c_str(), (itype != IT_NONE ? buf.COL_NORMAL : buf.COL_HEADER), maxw);
+\t\t\t\tbuf.Print(menu_lh, l+16, hdr + (i - scroll)*menu_lh, list[i].str.c_str(), (itype != IT_NONE ? buf.COL_NORMAL : buf.COL_HEADER), maxw);
 \t\t}
 \t}'''
 # Convert the patch text's escaped tabs/newlines into actual source formatting.
