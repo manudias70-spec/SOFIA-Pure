@@ -373,7 +373,7 @@ direct_title = """
 source = source.replace(header_anchor, header_anchor + direct_title, 1)
 
 # Draw the Commander footer text directly, without relying on the legacy wording.
-footer_box = "\\t\\t\\t\\tbuf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);"
+footer_box = "\\t\\t\\t\\tbuf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);
 if source.count(footer_box) != 1:
     raise SystemExit("Commander footer patch aborted: footer geometry not unique")
 footer_start = source.index(footer_box)
