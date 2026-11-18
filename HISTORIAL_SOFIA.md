@@ -30,6 +30,11 @@ Este repositorio constituye la base de referencia anterior a las modificaciones 
 - Nuevos cambios en la pantalla de inicio Splash SOFIA.
 - Mantiene los desarrollos anteriores: xBRZ 4x y AWE32.
 
+### Builds posteriores a la 77 y anteriores a la 119 — Intentos de UI externa
+- Se realizaron distintos intentos de incorporar una interfaz de usuario externa.
+- Los intentos fueron fallidos: la UI externa no quedó implementada de forma funcional.
+- Esta etapa se registra como trabajo experimental fallido, no como una característica incorporada.
+
 ## 3. Estado de verificación
 
 Este documento registra los cambios identificados durante la reconstrucción histórica.
