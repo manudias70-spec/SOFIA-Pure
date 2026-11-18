@@ -295,10 +295,10 @@ browser_replace(
 \t\tif (is_filebrowse)
 \t\t{
 \t\t\tconst int hy = listu - lh;
-\t\t\tbuf.Print(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);
-\t\t\tbuf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);
-\t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFF55FFFF, 10 * buf.CW);
-\t\t\tbuf.Print(lh, file_col_time, hy, "HORA", 0xFF55FFFF, 5 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_name, hy, "NOMBRE", 0xFFFFFFFF, file_name_chars * buf.CW);
+\t\t\tbuf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFFFFFFFF, 8 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFFFFFFFF, 10 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_time, hy, "HORA", 0xFFFFFFFF, 5 * buf.CW);
 \t\t}
 \t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)""")
 browser_replace(
