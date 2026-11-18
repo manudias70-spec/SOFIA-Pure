@@ -329,12 +329,7 @@ replace_once("Commander right footer border only",
 replace_once("Commander left header border",
     "const Bit32u left_border = 0xFF00FFFF;",
     "const Bit32u left_border = 0xFFFFFFFF;")
-replace_once("Commander left title bold",
-    'buf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);',
-    'buf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, left_panel_x + 1, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);')
-replace_once("Commander left subtitle bold",
-    'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);',
-    'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, left_panel_x + 9, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);')
+# Left Commander headers intentionally remain standard-weight buf.Print calls.
 
 replace_once("Commander right footer bold",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);",
