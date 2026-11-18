@@ -1,6 +1,6 @@
 # HISTORIAL DE DESARROLLO — SOFIA-PURE
 
-**Versión del registro:** 0.1  
+**Versión del registro:** 0.2  
 **Fecha de reconstrucción:** 18 de noviembre de 2026
 
 ## 1. Proyecto de origen
@@ -39,9 +39,16 @@ Este repositorio constituye la base de referencia anterior a las modificaciones 
 - Se retoma el desarrollo tomando esta build como nueva base de trabajo.
 - Se considera probable que sea una copia de la Build 77; esta relación aún no fue comprobada mediante comparación de fuentes o commits.
 
-### Build 137 — Reorganización de la UI
-- Primera serie de cambios orientados a reorganizar la interfaz de usuario.
-- El alcance técnico concreto de la reorganización queda pendiente de documentar.
+### Builds 119–138 — Primera reorganización de la UI
+- Creación de una barra lateral con opciones, todavía en inglés y visibles por defecto.
+- Reubicación del explorador de SOFIA-Pure hacia el sector derecho.
+- Incorporación del botón **Salir**.
+- Incorporación del atajo **Alt + F12** para acceder a DOSBox.
+- **No existía todavía un menú flotante** en esta etapa.
+
+### Build 146 — Traducción y compatibilidad UTF-8
+- Traducción de la interfaz al español.
+- Pequeños ajustes en el manejo de fuentes UTF-8 para mejorar la compatibilidad.
 
 ## 3. Estado de verificación
 
