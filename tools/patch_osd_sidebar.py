@@ -326,7 +326,7 @@ if not options_file.is_file():
 options_source = options_file.read_text(encoding="utf-8")
 option_translations = {
 "General":"General",
-"Input":"Entrada","Performance":"Rendimiento","Video":"Vídeo","System":"Sistema","Audio":"Audio",
+"Input":"Entrada","Performance":"Rendimiento","System":"Sistema","Audio":"Audio",
 "General settings (save states, start menu, fixed FPS).":"Ajustes generales (estados guardados, menú inicial y FPS fijos).",
 "General settings (hotkeys, start menu, fixed FPS).":"Ajustes generales (atajos, menú inicial y FPS fijos).",
 "Keyboard, mouse and joystick settings.":"Ajustes de teclado, ratón y joystick.",
