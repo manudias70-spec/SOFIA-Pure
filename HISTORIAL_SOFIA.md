@@ -35,6 +35,14 @@ Este repositorio constituye la base de referencia anterior a las modificaciones 
 - Los intentos fueron fallidos: la UI externa no quedó implementada de forma funcional.
 - Esta etapa se registra como trabajo experimental fallido, no como una característica incorporada.
 
+### Build 119 — Base de retomada
+- Se retoma el desarrollo tomando esta build como nueva base de trabajo.
+- Se considera probable que sea una copia de la Build 77; esta relación aún no fue comprobada mediante comparación de fuentes o commits.
+
+### Build 137 — Reorganización de la UI
+- Primera serie de cambios orientados a reorganizar la interfaz de usuario.
+- El alcance técnico concreto de la reorganización queda pendiente de documentar.
+
 ## 3. Estado de verificación
 
 Este documento registra los cambios identificados durante la reconstrucción histórica.
