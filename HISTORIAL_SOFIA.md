@@ -1,6 +1,6 @@
 # HISTORIAL DE DESARROLLO — SOFIA-PURE
 
-**Versión del registro:** 0.3  
+**Versión del registro:** 0.4  
 **Fecha de reconstrucción:** 18 de noviembre de 2026
 
 ## 1. Proyecto de origen
@@ -57,6 +57,12 @@ Este repositorio constituye la base de referencia anterior a las modificaciones 
 
 ### Build 158 — Ajuste tipográfico del panel
 - Modificación del tamaño de fuente del panel flotante.
+
+### Build 165 — Inicio oficial de SOFI Commander
+- A partir de esta build, el desarrollo pasa a concentrarse oficialmente en **SOFI Commander**.
+- Se establece el esquema visual del explorador: **letras blancas sobre fondo azul**.
+- El esquema se aplica tanto al explorador interno como al explorador mostrado por defecto en la UI.
+- En este explorador no existe selección de elementos.
 
 ## 3. Estado de verificación
 
