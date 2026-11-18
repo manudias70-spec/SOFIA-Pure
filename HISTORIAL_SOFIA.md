@@ -1,6 +1,6 @@
 # HISTORIAL DE DESARROLLO — SOFIA-PURE
 
-**Versión del registro:** 0.2  
+**Versión del registro:** 0.3  
 **Fecha de reconstrucción:** 18 de noviembre de 2026
 
 ## 1. Proyecto de origen
@@ -49,6 +49,14 @@ Este repositorio constituye la base de referencia anterior a las modificaciones 
 ### Build 146 — Traducción y compatibilidad UTF-8
 - Traducción de la interfaz al español.
 - Pequeños ajustes en el manejo de fuentes UTF-8 para mejorar la compatibilidad.
+
+### Build 157 — Panel flotante de opciones
+- Implementación del panel flotante de opciones.
+- Incorporación de un botón de salida representado por una **X**.
+- Inclusión de una leyenda en la parte inferior que indica **Alt + F12** para volver al explorador.
+
+### Build 158 — Ajuste tipográfico del panel
+- Modificación del tamaño de fuente del panel flotante.
 
 ## 3. Estado de verificación
 
