@@ -190,8 +190,8 @@ replace_once("file-browser header palette",
 # Shared outer frame: drawn first so the existing two pane frames, headers,
 # footer boxes and all their colors remain untouched and visible above it.
 replace_once("Commander shared outer frame",
-    "\\t\\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);",
-    "\\t\\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);\\n\\t\\tif (DBP_FullscreenOSD && is_filebrowse)\\n\\t\\t{\\n\\t\\t\\tconst int frame_hdr = lh*2+12;\\n\\t\\t\\tconst int frame_info = (panel_w > 319);\\n\\t\\t\\tconst int frame_rows = (h - frame_hdr - ftr) / lh - frame_info;\\n\\t\\t\\tconst int frame_bot = frame_hdr + frame_rows*lh + 3 - (lh == 8 ? 1 : 0);\\n\\t\\t\\tconst int frame_x = content_x + 4;\\n\\t\\t\\tconst int frame_y = frame_hdr - 7;\\n\\t\\t\\tconst int frame_w = content_w - 8;\\n\\t\\t\\tconst int frame_h = (frame_bot + lh + 7) - frame_y;\\n\\t\\t\\tbuf.DrawBox(frame_x, frame_y, frame_w, frame_h, 0xFF0000AA | blend, 0xFFFFFFFF);\\n\\t\\t\\tbuf.DrawBox(frame_x + 3, frame_y + 3, frame_w - 6, frame_h - 6, 0xFF0000AA | blend, 0xFFFFFFFF);\\n\\t\\t}");
+    "\t\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);",
+    "\t\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);\n\t\tif (DBP_FullscreenOSD && is_filebrowse)\n\t\t{\n\t\t\tconst int frame_hdr = lh*2+12;\n\t\t\tconst int frame_info = (panel_w > 319);\n\t\t\tconst int frame_rows = (h - frame_hdr - ftr) / lh - frame_info;\n\t\t\tconst int frame_bot = frame_hdr + frame_rows*lh + 3 - (lh == 8 ? 1 : 0);\n\t\t\tconst int frame_x = content_x + 4;\n\t\t\tconst int frame_y = frame_hdr - 7;\n\t\t\tconst int frame_w = content_w - 8;\n\t\t\tconst int frame_h = (frame_bot + lh + 7) - frame_y;\n\t\t\tbuf.DrawBox(frame_x, frame_y, frame_w, frame_h, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\tbuf.DrawBox(frame_x + 3, frame_y + 3, frame_w - 6, frame_h - 6, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t}")
 
 replace_once("file-browser path palette",
     "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);",
