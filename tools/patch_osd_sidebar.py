@@ -318,11 +318,11 @@ browser_replace(
 
 
 
-# Commander header/footer polish. Restrict every replacement to the existing
-# Commander drawing calls; do not alter either file pane or its geometry.
+# Commander header/footer polish. Only the small header/footer boxes are changed;
+# the left and right file-pane bodies, their geometry and explorer behavior stay untouched.
 replace_once("Commander right header border",
-    "buf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\\n\\t\\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);",
-    "buf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, 0xFF000080 | blend, 0xFFFFFFFF);\\n\\t\\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, 0xFF000080 | blend, 0xFFFFFFFF);")
+    "const Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);",
+    "const Bit32u nc_border = (is_nc_explorer ? 0xFFFFFFFF : buf.COL_LINEBOX);")
 replace_once("Commander right title bold",
     'buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));',
     'buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\\n\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));')
@@ -330,7 +330,7 @@ replace_once("Commander right path color and bold",
     'buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);',
     'buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);\\n\\t\\t\\tbuf.Print(lh, panel_x + 9, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-17);')
 replace_once("Commander right footer border and text",
-    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", buf.COL_BTNTEXT);',
+    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);',
     'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);')
 replace_once("Commander left header border",
     "const Bit32u left_border = 0xFF00FFFF;",
@@ -341,6 +341,7 @@ replace_once("Commander left title bold",
 replace_once("Commander left subtitle bold",
     'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);',
     'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, left_panel_x + 9, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);')
+
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
 
