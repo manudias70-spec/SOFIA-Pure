@@ -363,7 +363,7 @@ direct_title = """
 		if (is_filebrowse)
 		{
 			const char* panel_title = "EXPLORADOR DE ARCHIVOS";
-			buf.Print(lh, panel_x + (panel_w - UTF8Length(panel_title) * (int)buf.CW) / 2, panel_y+7, panel_title, 0xFFFFFFFF, panel_w - 16);
+			buf.Print(lh, panel_x + (panel_w - 22 * (int)buf.CW) / 2, panel_y+7, panel_title, 0xFFFFFFFF, panel_w - 16);
 		}
 		else
 		{
