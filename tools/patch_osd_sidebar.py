@@ -373,17 +373,17 @@ direct_title = """
 source = source.replace(header_anchor, header_anchor + direct_title, 1)
 
 # Draw the Commander footer text directly, without relying on the legacy wording.
-footer_box = "\\t\\t\\t\\tbuf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);
+footer_box = "\t\t\t\tbuf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);"
 if source.count(footer_box) != 1:
     raise SystemExit("Commander footer patch aborted: footer geometry not unique")
 footer_start = source.index(footer_box)
-footer_end = source.index("\\n\\t\\t\\telse", footer_start)
+footer_end = source.index("\n\t\t\telse", footer_start)
 footer_region = source[footer_start:footer_end]
 footer_lines = [line for line in footer_region.splitlines(keepends=True)
                 if "buf.PrintCenteredOutlined(lh, panel_x" not in line]
 if len(footer_lines) == len(footer_region.splitlines(keepends=True)):
     raise SystemExit("Commander footer patch aborted: positioned legacy footer text not found")
-direct_footer = "\\n\\t\\t\\t\\tconst char* footer_text = \"Enter: Abrir   Esc: Atrás\";\\n\\t\\t\\t\\tbuf.Print(lh, panel_x + 8 + (panel_w - 16 - 25 * (int)buf.CW) / 2, bot+2, footer_text, 0xFFFFFFFF, panel_w - 16);"
+direct_footer = "\n\t\t\t\tconst char* footer_text = \"Enter: Abrir   Esc: Atrás\";\n\t\t\t\tbuf.Print(lh, panel_x + 8 + (panel_w - 16 - 25 * (int)buf.CW) / 2, bot+2, footer_text, 0xFFFFFFFF, panel_w - 16);"
 footer_region = "".join(footer_lines)
 footer_region = footer_region.replace(footer_box, footer_box + direct_footer, 1)
 source = source[:footer_start] + footer_region + source[footer_end:]
