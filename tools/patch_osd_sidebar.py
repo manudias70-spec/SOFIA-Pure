@@ -345,7 +345,21 @@ replace_once("Commander right footer bold",
 header_anchor = "\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);"
 if source.count(header_anchor) != 1:
     raise SystemExit("Commander title patch aborted: right header geometry not unique")
-source = source.replace(header_anchor, header_anchor + """
+
+# Remove the upstream right-header title calls by their drawing position, not
+# by matching the old title string.
+title_region_start = source.index(header_anchor) + len(header_anchor)
+title_region_end = source.index("#ifdef DBP_STANDALONE", title_region_start)
+title_region = source[title_region_start:title_region_end]
+title_lines = [line for line in title_region.splitlines(keepends=True)
+               if "buf.PrintCenteredOutlined(lh, panel_x" not in line]
+if len(title_lines) == len(title_region.splitlines(keepends=True)):
+    raise SystemExit("Commander title patch aborted: positioned title calls were not found")
+source = source[:title_region_start] + "".join(title_lines) + source[title_region_end:]
+
+# Draw the intended title directly. The Explorer uses the panel's standard
+# bitmap font and size; other Commander modes retain their normal title.
+direct_title = """
 		if (is_filebrowse)
 		{
 			const char* panel_title = "EXPLORADOR DE ARCHIVOS";
@@ -355,18 +369,8 @@ source = source.replace(header_anchor, header_anchor + """
 		{
 			buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, "DOSBOX PURE START MENU", buf.COL_MENUTITLE);
 			buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, "DOSBOX PURE START MENU", buf.COL_MENUTITLE);
-		}""", 1)
-
-# Remove the upstream right-header title calls by their drawing position, not
-# by matching the old title string. The direct title above is now authoritative.
-title_region_start = source.index(header_anchor)
-title_region_end = source.index("#ifdef DBP_STANDALONE", title_region_start)
-title_region = source[title_region_start:title_region_end]
-title_lines = [line for line in title_region.splitlines(keepends=True)
-               if "buf.PrintCenteredOutlined(lh, panel_x" not in line]
-if len(title_lines) == len(title_region.splitlines(keepends=True)):
-    raise SystemExit("Commander title patch aborted: expected positioned title calls were not found")
-source = source[:title_region_start] + "".join(title_lines) + source[title_region_end:]
+		}"""
+source = source.replace(header_anchor, header_anchor + direct_title, 1)
 
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
