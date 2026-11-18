@@ -340,6 +340,10 @@ replace_once("Commander right footer bold",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
 
+replace_once("Commander right title Spanish standard font",
+    "\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? \"FILE EXPLORER\" : \"DOSBOX PURE START MENU\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\n\t\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? \"FILE EXPLORER\" : \"DOSBOX PURE START MENU\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));",
+    "\t\tif (is_filebrowse)\n\t\t{\n\t\t\tconst char* panel_title = \"EXPLORADOR DE ARCHIVOS\";\n\t\t\tbuf.Print(lh, panel_x + (panel_w - UTF8Length(panel_title) * (int)buf.CW) / 2, panel_y+7, panel_title, 0xFFFFFFFF, panel_w - 16);\n\t\t}\n\t\telse\n\t\t{\n\t\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, \"DOSBOX PURE START MENU\", buf.COL_MENUTITLE);\n\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, \"DOSBOX PURE START MENU\", buf.COL_MENUTITLE);\n\t\t}")
+
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
 
