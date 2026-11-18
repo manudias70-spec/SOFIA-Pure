@@ -325,22 +325,22 @@ replace_once("Commander right header border",
     "const Bit32u nc_border = (is_nc_explorer ? 0xFFFFFFFF : buf.COL_LINEBOX);")
 replace_once("Commander right title bold",
     'buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));',
-    'buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\\n\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));')
+    'buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\n\t\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? "FILE EXPLORER" : "DOSBOX PURE START MENU"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));')
 replace_once("Commander right path color and bold",
     'buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);',
-    'buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);\\n\\t\\t\\tbuf.Print(lh, panel_x + 9, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-17);')
+    'buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);\n\t\t\tbuf.Print(lh, panel_x + 9, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-17);')
 replace_once("Commander right footer border and text",
-    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);',
-    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);')
+    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);',
+    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", 0xFFFFFFFF);')
 replace_once("Commander left header border",
     "const Bit32u left_border = 0xFF00FFFF;",
     "const Bit32u left_border = 0xFFFFFFFF;")
 replace_once("Commander left title bold",
     'buf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);',
-    'buf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, left_panel_x + 1, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);')
+    'buf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, left_panel_x + 1, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);')
 replace_once("Commander left subtitle bold",
     'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);',
-    'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);\\n\\t\\t\\t\\tbuf.PrintCenteredOutlined(lh, left_panel_x + 9, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);')
+    'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, left_panel_x + 9, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);')
 
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
