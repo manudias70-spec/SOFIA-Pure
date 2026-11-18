@@ -185,7 +185,7 @@ replace_once("file-browser scrollbar colors",
     "\t\t\tbuf.AlphaBlendFillRect(scrx, menuu, 8, menuh, (nc_explorer ? 0xFF000080 : buf.BGCOL_SCROLL) | blend);\n\t\t\tbuf.AlphaBlendFillRect(scrx, menuu + scrollu, 8, scrolld - scrollu, (nc_explorer ? 0xFF00FFFF : buf.BGCOL_SELECTION) | blend);")
 replace_once("file-browser header palette",
     "\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);",
-    "\t\tconst Bit32u nc_header_bg = (is_filebrowse ? 0xFF0000AA : (is_nc_explorer ? 0xFF000080 : buf.BGCOL_HEADER));\n\t\tconst Bit32u nc_border = (is_nc_explorer ? 0xFFFFFFFF : buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, nc_header_bg | blend, nc_border);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);")
+    "\t\tconst Bit32u nc_header_bg = (is_filebrowse ? 0xFF0000AA : (is_nc_explorer ? 0xFF000080 : buf.BGCOL_HEADER));\n\t\tconst Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, nc_header_bg | blend, nc_border);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);")
 
 # Shared outer frame: drawn first so the existing two pane frames, headers,
 # footer boxes and all their colors remain untouched and visible above it.
@@ -206,7 +206,7 @@ replace_once("file-browser generic row text palette",
     "(item.info == INFO_DIM ? (is_nc_explorer ? 0xFF55FFFF : buf.COL_DIM) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))")
 replace_once("file-browser footer palette",
     "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);",
-    "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
+    "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
 
 
 # Add a compact Norton-style metadata row to the standalone file browser.
@@ -325,7 +325,7 @@ replace_once("Commander right header border",
     "const Bit32u nc_border = (is_nc_explorer ? 0xFFFFFFFF : buf.COL_LINEBOX);")
 replace_once("Commander right footer border only",
     'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);',
-    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFFFFFFFF);')
+    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);')
 replace_once("Commander left header border",
     "const Bit32u left_border = 0xFF00FFFF;",
     "const Bit32u left_border = 0xFFFFFFFF;")
