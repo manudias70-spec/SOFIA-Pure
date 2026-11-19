@@ -4,6 +4,7 @@
     <ProjectName>DOSBoxPure</ProjectName>
     <ZillaLibDir>../ZillaLib</ZillaLibDir>
     <DBPDir>../dosbox-pure/</DBPDir>
+    <ImguiDir>../imgui/</ImguiDir>
     <ProjectGuid>{4BD8F2DE-13A1-D8E3-52DC-B32FF52F7483}</ProjectGuid>
     <DBPOptimize Condition="'$(Configuration)'=='Debug' or '$(Configuration)'=='DebugGLCORE'">No</DBPOptimize>
     <DBPOptimize Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='ReleaseGLCORE'">Yes</DBPOptimize>
@@ -47,7 +48,7 @@
     <ClCompile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PreprocessorDefinitions>__LIBRETRO__;DBP_STANDALONE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(DBPDir);$(DBPDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(DBPDir);$(DBPDir)include;$(ImguiDir);$(ImguiDir)backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WholeProgramOptimization Condition="'$(DBPOptimize)'=='Yes'">true</WholeProgramOptimization>
       <FavorSizeOrSpeed Condition="'$(DBPOptimize)'=='Yes'">Speed</FavorSizeOrSpeed>
     </ClCompile>
@@ -66,6 +67,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="$(ImguiDir)imgui.cpp" />
+    <ClCompile Include="$(ImguiDir)imgui_draw.cpp" />
+    <ClCompile Include="$(ImguiDir)imgui_tables.cpp" />
+    <ClCompile Include="$(ImguiDir)imgui_widgets.cpp" />
+    <ClCompile Include="$(ImguiDir)backends/imgui_impl_opengl3.cpp" />
     <ClCompile Include="vfs_implementation.cpp" />
     <ResourceCompile Include="DOSBoxPure.rc" />
     <ClCompile Include="$(DBPDir)dosbox_pure_libretro.cpp">
