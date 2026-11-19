@@ -282,7 +282,7 @@ browser_replace(
 \t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;""")
 browser_replace(
     "reserve a header row for file-browser columns",
-    "int inforow = (panel_w > 319), hdr = lh*2+12 + commander_y_offset, rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);",
+    "int inforow = (panel_w > 319), hdr = panel_y + lh*2+12;\n\t\tif (is_filebrowse) hdr += lh+2;\n\t\tint rows = (panel_h - (hdr - panel_y) - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);",
     "int inforow = (panel_w > 319), hdr = panel_y + lh*2+12;\n\t\tif (is_filebrowse) hdr += lh+2;\n\t\tint rows = (panel_h - (hdr - panel_y) - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);")
 browser_replace(
     "draw file-browser column headings",
