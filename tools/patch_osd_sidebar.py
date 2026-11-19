@@ -201,7 +201,7 @@ row_color_new = "(i == se ? (is_nc_explorer ? 0xFF000055 : buf.COL_HIGHLIGHT) : 
 filebrowse_row_start = source.find("else if (is_filebrowse) buf.PrintCompact(")
 if filebrowse_row_start < 0:
     raise SystemExit("Norton palette patch aborted: file-browser compact row not found")
-filebrowse_row_end = source.find("\\n", filebrowse_row_start)
+filebrowse_row_end = source.find("\n", filebrowse_row_start)
 if filebrowse_row_end < 0:
     raise SystemExit("Norton palette patch aborted: file-browser compact row end not found")
 filebrowse_row = source[filebrowse_row_start:filebrowse_row_end]
