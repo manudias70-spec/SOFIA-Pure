@@ -154,38 +154,28 @@ exec(navigation_patch)
 control_decl_anchor = "extern void DBPS_QuitApplication();"
 if source.count(control_decl_anchor) != 1:
     raise SystemExit("SOFI-Pure window controls: quit callback declaration not unique")
-source = source.replace(control_decl_anchor, control_decl_anchor + "\\nextern void DBPS_ControlWindow(int action);", 1)
+source = source.replace(control_decl_anchor, control_decl_anchor + "\nextern void DBPS_ControlWindow(int action);", 1)
 
-control_mouse_anchor = "\\t\\tUpdateHeld();\\n\\n\\t\\t#ifdef DBP_STANDALONE\\n\\t\\tconst bool is_filebrowse"
+control_mouse_anchor = "\t\tUpdateHeld();\n\n\t\t#ifdef DBP_STANDALONE\n\t\tconst bool is_filebrowse"
 if source.count(control_mouse_anchor) != 1:
     raise SystemExit("SOFI-Pure window controls: main menu input anchor not unique")
-control_mouse_replacement = """\\t\\tUpdateHeld();
-\\t\\tif (DBP_FullscreenOSD && m.click)
-\\t\\t{
-\\t\\t\\tconst int cy = 8, ch = lh + 3, cw = 20, cg = 3;
-\\t\\t\\tconst int cx = w - 8 - 3 * cw - 2 * cg;
-\\t\\t\\tconst int mx = (int)(m.x + 0.499f), my = (int)(m.y + 0.499f);
-\\t\\t\\tif (my >= cy && my < cy + ch)
-\\t\\t\\t{
-\\t\\t\\t\\tif (mx >= cx && mx < cx + cw) { DBPS_ControlWindow(0); return; }
-\\t\\t\\t\\tif (mx >= cx + cw + cg && mx < cx + 2 * cw + cg) { DBPS_ControlWindow(1); return; }
-\\t\\t\\t\\tif (mx >= cx + 2 * (cw + cg) && mx < cx + 3 * cw + 2 * cg) { DBPS_ControlWindow(2); return; }
-\\t\\t\\t}
-\\t\\t}
+control_mouse_replacement = """\t\tUpdateHeld();
+\t\tif (DBP_FullscreenOSD && m.click)
+\t\t{
+\t\t\tconst int cy = 8, ch = lh + 3, cw = 20, cg = 3;
+\t\t\tconst int cx = w - 8 - 3 * cw - 2 * cg;
+\t\t\tconst int mx = (int)(m.x + 0.499f), my = (int)(m.y + 0.499f);
+\t\t\tif (my >= cy && my < cy + ch)
+\t\t\t{
+\t\t\t\tif (mx >= cx && mx < cx + cw) { DBPS_ControlWindow(0); return; }
+\t\t\t\tif (mx >= cx + cw + cg && mx < cx + 2 * cw + cg) { DBPS_ControlWindow(1); return; }
+\t\t\t\tif (mx >= cx + 2 * (cw + cg) && mx < cx + 3 * cw + 2 * cg) { DBPS_ControlWindow(2); return; }
+\t\t\t}
+\t\t}
 
-\\t\\t#ifdef DBP_STANDALONE
-\\t\\tconst bool is_filebrowse"""
-source = source.replace(control_mouse_anchor, control_mouse_replacement.replace("\\t", "\\t"), 1)
-
-
-
-
-
-
-
-
-
-
+\t\t#ifdef DBP_STANDALONE
+\t\tconst bool is_filebrowse"""
+source = source.replace(control_mouse_anchor, control_mouse_replacement, 1)
 
 
 # Norton Commander palette for the standalone Explorer and its file picker.
