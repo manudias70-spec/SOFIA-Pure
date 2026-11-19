@@ -204,6 +204,7 @@ if filebrowse_row_start < 0:
 filebrowse_row_end = source.find("\n", filebrowse_row_start)
 if filebrowse_row_end < 0:
     raise SystemExit("Norton palette patch aborted: file-browser compact row end not found")
+# Restrict this palette change to the active right-pane file-browser row only.
 filebrowse_row = source[filebrowse_row_start:filebrowse_row_end]
 if filebrowse_row.count(row_color_old) != 1:
     raise SystemExit("Norton palette patch aborted: expected one selection color in compact file-browser row")
