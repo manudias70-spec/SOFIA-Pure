@@ -2142,9 +2142,11 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui::NewFrame();
 			ImDrawList* draw = ImGui::GetBackgroundDrawList();
-			const ImVec2 imageMin(16.0f, 16.0f), imageMax(496.0f, 286.0f);
-			draw->AddRectFilled(ImVec2(12.0f, 12.0f), ImVec2(500.0f, 290.0f), IM_COL32(0, 0, 0, 220), 4.0f);
-			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f));
+			// Crop the 960x540 OSD texture to the left SOFI Commander pane.
+			// These bounds mirror patch_osd_sidebar.py for the 16:9 OSD layout.
+			const ImVec2 imageMin(16.0f, 16.0f), imageMax(188.5f, 286.0f);
+			draw->AddRectFilled(ImVec2(12.0f, 12.0f), ImVec2(192.5f, 290.0f), IM_COL32(0, 0, 0, 220), 4.0f);
+			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(237.0f / 960.0f, 0.0f), ImVec2(582.0f / 960.0f, 1.0f));
 			draw->AddRect(imageMin, imageMax, IM_COL32(70, 190, 255, 255), 2.0f, 0, 2.0f);
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
