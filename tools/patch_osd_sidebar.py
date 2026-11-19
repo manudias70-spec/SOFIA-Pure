@@ -387,9 +387,12 @@ replace_once("right pane path font",
 replace_once("right pane secondary header font",
     "if (is_filebrowse) buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_CONTENT));",
     "if (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), 0xFFFFFFFF);");
-replace_once("right pane footer font",
-    "buf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);",
-    "buf.PrintCenteredOutlinedCompact(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);");
+footer_old = 'buf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", buf.COL_BTNTEXT);'
+footer_new = 'buf.PrintCenteredOutlinedCompact(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", buf.COL_BTNTEXT);'
+footer_count = source.count(footer_old)
+if footer_count != 2:
+    raise SystemExit(f"right pane footer font expected two source matches, found {footer_count}")
+source = source.replace(footer_old, footer_new)
 
 for old_text, new_text, label in [
     ('buf.Print(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);','buf.PrintCompact(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);',"right NAME heading"),
