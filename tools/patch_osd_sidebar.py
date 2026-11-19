@@ -212,7 +212,7 @@ source = source[:filebrowse_row_start] + filebrowse_row.replace(row_color_old, r
 generic_row_old = "(item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)"
 generic_row_new = "(item.info == INFO_DIM ? (is_nc_explorer ? 0xFF55FFFF : buf.COL_DIM) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))"
 filebrowse_row_start = source.find("else if (is_filebrowse) buf.PrintCompact(")
-filebrowse_row_end = source.find("\\n", filebrowse_row_start)
+filebrowse_row_end = source.find("\n", filebrowse_row_start)
 if filebrowse_row_start < 0 or filebrowse_row_end < 0:
     raise SystemExit("Norton palette patch aborted: compact file-browser row not found for dim-text palette")
 filebrowse_row = source[filebrowse_row_start:filebrowse_row_end]
