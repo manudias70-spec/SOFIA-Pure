@@ -396,14 +396,7 @@ if source.count(panel_y_old) != 1:
     raise SystemExit("Commander move aborted: panel_y anchor not unique")
 source = source.replace(panel_y_old, panel_y_new, 1)
 
-old_bounds = """		int inforow = (panel_w > 319), hdr = lh*2+12, rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);
-		int listu = DrawMenuBase(buf, blend, lh, rows, m, mouseMoved, panel_x + 8, panel_x + panel_w - 8, hdr, (list[0].type == IT_NONE), is_nc_explorer);"""
-new_bounds = """		int inforow = (panel_w > 319), hdr = panel_y + lh*2+12, rows = (panel_h - (lh*2+12) - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);
-		int listu = DrawMenuBase(buf, blend, lh, rows, m, mouseMoved, panel_x + 8, panel_x + panel_w - 8, hdr, (list[0].type == IT_NONE), is_nc_explorer);"""
-if source.count(old_bounds) != 1:
-    raise SystemExit("Commander move aborted: panel bounds anchor not unique")
-source = source.replace(old_bounds, new_bounds, 1)
-print("Moved the complete Commander layout origin and constrained its rows/footer to panel_h")
+print("Moved the complete Commander origin; existing panel_h row bounds retained")
 
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
