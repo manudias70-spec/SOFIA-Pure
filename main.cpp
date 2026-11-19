@@ -384,7 +384,7 @@ static std::vector<Bit8u> pktmem;
 
 extern "C" { unsigned int SDL_GetTicks(void); }
 extern "C" { int SDL_ShowCursor(int toggle); }
-extern "C" { struct SDL_Window* SDL_GetMouseFocus(void); void SDL_MinimizeWindow(struct SDL_Window*); void SDL_MaximizeWindow(struct SDL_Window*); void SDL_RestoreWindow(struct SDL_Window*); }
+
 extern "C" { void* SDL_GL_GetProcAddress(const char *proc); } 
 extern "C" { unsigned long SDL_GetThreadID(struct SDL_Thread* = NULL); }
 extern "C" { extern int SDL_GetLockModStates(void); }
@@ -392,23 +392,10 @@ extern "C" { extern int SDL_GetLockModStates(void); }
 static unsigned long MainThreadID = SDL_GetThreadID();
 #endif
 
-// SOFI-Pure decorative window controls. SDL receives actions on the main thread.
+// SOFI-Pure window control: only close remains functional.
 void DBPS_ControlWindow(int action)
 {
-	if (action == 2) { ZL_Application::Quit(); return; }
-	SDL_Window* window = SDL_GetMouseFocus();
-	if (!window) return;
-	if (action == 0)
-	{
-		// Bypass SDL's fullscreen transition path and minimize the active native app window directly.
-		HWND nativeWindow = GetActiveWindow();
-		if (nativeWindow) ShowWindow(nativeWindow, SW_MINIMIZE);
-	}
-	else if (action == 1)
-	{
-		if (ZL_Display::IsMaximized()) SDL_RestoreWindow(window);
-		else SDL_MaximizeWindow(window);
-	}
+	if (action == 2) ZL_Application::Quit();
 }
 
 struct SJoyBind
