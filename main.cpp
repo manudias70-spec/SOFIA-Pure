@@ -384,6 +384,7 @@ static std::vector<Bit8u> pktmem;
 
 extern "C" { unsigned int SDL_GetTicks(void); }
 extern "C" { int SDL_ShowCursor(int toggle); }
+extern "C" { struct SDL_Window* SDL_GetMouseFocus(void); }
 
 extern "C" { void* SDL_GL_GetProcAddress(const char *proc); } 
 extern "C" { unsigned long SDL_GetThreadID(struct SDL_Thread* = NULL); }
