@@ -287,17 +287,17 @@ browser_replace(
 browser_replace(
     "draw file-browser column headings",
     "\t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)",
-    """\t\tconst int file_name_chars = (panel_w - 32) / buf.CW - (8 + 10 + 5 + 6);
+    """\t\tconst int file_name_chars = (panel_w - 32) / buf.CW - (8 + 10 + 5 + 4);
 \t\tconst int file_col_name = panel_x + 16;
 \t\tconst int file_col_size = file_col_name + (file_name_chars + 2) * buf.CW;
 \t\tconst int file_col_date = file_col_size + 10 * buf.CW;
-\t\tconst int file_col_time = file_col_date + 12 * buf.CW;
+\t\tconst int file_col_time = file_col_date + 10 * buf.CW;
 \t\tif (is_filebrowse)
 \t\t{
 \t\t\tconst int hy = listu - lh;
 \t\t\tbuf.Print(lh, file_col_name, hy, "NOMBRE", 0xFFFFFFFF, file_name_chars * buf.CW);
 \t\t\tbuf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFFFFFFFF, 8 * buf.CW);
-\t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFFFFFFFF, 10 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFFFFFFFF, 8 * buf.CW);
 \t\t\tbuf.Print(lh, file_col_time, hy, "HORA", 0xFFFFFFFF, 5 * buf.CW);
 \t\t}
 \t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)""")
@@ -311,7 +311,7 @@ browser_replace(
 \t\t\t\tconst BrowserFileInfo& meta = (i < browser_info.size() ? browser_info[i] : empty_info);
 \t\t\t\tbuf.Print(lh, file_col_name, y, item.str.c_str(), rowcol, file_name_chars * buf.CW);
 \t\t\t\tbuf.Print(lh, file_col_size, y, meta.size, rowcol, 8 * buf.CW);
-\t\t\t\tbuf.Print(lh, file_col_date, y, meta.date, rowcol, 10 * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_date, y, meta.date, rowcol, 8 * buf.CW);
 \t\t\t\tbuf.Print(lh, file_col_time, y, meta.time, rowcol, 5 * buf.CW);
 \t\t\t}
 \t\t\telse if (item.type == IT_MOUNT) // mountable file system""")
