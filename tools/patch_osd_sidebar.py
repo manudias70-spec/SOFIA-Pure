@@ -255,7 +255,7 @@ browser_replace(
 \t\tSYSTEMTIME modified;
 \t\tif (FileTimeToLocalFileTime(&data.ftLastWriteTime, &local_time) && FileTimeToSystemTime(&local_time, &modified))
 \t\t{
-\t\t\tsnprintf(result.date, sizeof(result.date), "%02u-%02u-%04u", modified.wDay, modified.wMonth, modified.wYear);
+\t\t\tsnprintf(result.date, sizeof(result.date), "%02u-%02u-%02u", modified.wDay, modified.wMonth, modified.wYear % 100);
 \t\t\tsnprintf(result.time, sizeof(result.time), "%02u:%02u", modified.wHour, modified.wMinute);
 \t\t}
 \t\t#endif
