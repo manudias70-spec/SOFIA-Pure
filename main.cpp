@@ -2142,11 +2142,11 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui::NewFrame();
 			ImDrawList* draw = ImGui::GetBackgroundDrawList();
-			// Extend the crop upward while preserving the source width and lower edge.
-			// Frame bounds: x=234..917, y=80..502.
+			// Shift the Commander viewing window upward by one-sixth of its source height.
+			// Frame bounds: x=234..917, y=10..432.
 			const ImVec2 imageMin(16.0f, 16.0f), imageMax(436.0f, 276.0f);
 			draw->AddRectFilled(ImVec2(12.0f, 12.0f), ImVec2(440.0f, 280.0f), IM_COL32(0, 0, 0, 220), 4.0f);
-			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(234.0f / 960.0f, 80.0f / 540.0f), ImVec2(917.0f / 960.0f, 502.0f / 540.0f));
+			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(234.0f / 960.0f, 10.0f / 540.0f), ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
 			draw->AddRect(imageMin, imageMax, IM_COL32(70, 190, 255, 255), 2.0f, 0, 2.0f);
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
