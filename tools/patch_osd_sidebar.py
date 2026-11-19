@@ -287,11 +287,11 @@ browser_replace(
 browser_replace(
     "draw file-browser column headings",
     "\t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)",
-    """\t\tconst int file_name_chars = (panel_w - 32) / buf.CW - (8 + 10 + 5 + 6);
+    """\t\tconst int file_name_chars = (panel_w - 32) / buf.CW - (8 + 10 + 5 + 2); // Compact metadata columns; give four more characters to filenames.
 \t\tconst int file_col_name = panel_x + 16;
 \t\tconst int file_col_size = file_col_name + (file_name_chars + 2) * buf.CW;
-\t\tconst int file_col_date = file_col_size + 10 * buf.CW;
-\t\tconst int file_col_time = file_col_date + 12 * buf.CW;
+\t\tconst int file_col_date = file_col_size + 8 * buf.CW;
+\t\tconst int file_col_time = file_col_date + 10 * buf.CW;
 \t\tif (is_filebrowse)
 \t\t{
 \t\t\tconst int hy = listu - lh;
