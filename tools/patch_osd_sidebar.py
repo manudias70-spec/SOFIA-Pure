@@ -335,6 +335,75 @@ replace_once("Commander right footer bold",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
 
+
+# Reduce only the active right Commander pane's bitmap glyph height by one scanline.
+replace_once("right pane compact bitmap renderer",
+    "\\tvoid DrawChar(const Bit8u* fnt, int ch, int x, int y, int c, Bit32u col = 0xFFFFFFFF)",
+    """\\t// Compact rendering for the right Commander pane: one fewer vertical scanline.
+\\tvoid PrintCompact(int lh, int x, int y, const char* msg, Bit32u col = 0xFFFFFFFF, int maxw = 0xFFFFFF)
+\\t{
+\\t\\tDBP_ASSERT(y >= 0 && y < (int)height);
+\\t\\tconst int ch = (lh == 8 ? 8 : 14), drawn = ch - 1;
+\\t\\tconst Bit8u* fnt = (lh == 8 ? int10_font_08 : int10_font_14);
+\\t\\tint printed = 0;
+\\t\\tfor (const unsigned char* p = (const unsigned char*)msg; *p && printed < maxw / CW; printed++)
+\\t\\t{
+\\t\\t\\tunsigned int cp = *p++;
+\\t\\t\\tif (cp >= 0xC2 && cp <= 0xDF && p[0]) cp = ((cp & 0x1F) << 6) | (*p++ & 0x3F);
+\\t\\t\\telse if (cp >= 0xE0 && cp <= 0xEF && p[0] && p[1]) { cp = ((cp & 0x0F) << 12) | ((p[0] & 0x3F) << 6) | (p[1] & 0x3F); p += 2; }
+\\t\\t\\telse if (cp >= 0xF0 && cp <= 0xF4 && p[0] && p[1] && p[2]) { cp = '?'; p += 3; }
+\\t\\t\\tconst unsigned char glyph = (unsigned char)(cp < 0x80 ? cp : UTF8ToCP437(cp));
+\\t\\t\\tconst Bit8u* glyphrow = &fnt[glyph * ch];
+\\t\\t\\tBit32u* py = video + (width * y) + x;
+\\t\\t\\tif ((col & 0xFF000000) == 0xFF000000)
+\\t\\t\\t{
+\\t\\t\\t\\tfor (int ry = 0; ry < drawn; ry++, py += width)
+\\t\\t\\t\\t\\tfor (Bit32u* px = py, bit = 256; bit; px++) if (glyphrow[ry] & (bit >>= 1)) *px = col;
+\\t\\t\\t}
+\\t\\t\\telse
+\\t\\t\\t{
+\\t\\t\\t\\tAlphaBlendPrep a(col);
+\\t\\t\\t\\tfor (int ry = 0; ry < drawn; ry++, py += width)
+\\t\\t\\t\\t\\tfor (Bit32u* px = py, bit = 256; bit; px++) if (glyphrow[ry] & (bit >>= 1)) AlphaBlend(px, a);
+\\t\\t\\t}
+\\t\\t\\tx += CW;
+\\t\\t}
+\\t}
+\\tvoid PrintCenteredOutlinedCompact(int lh, int x, int w, int y, const char* msg, Bit32u col = 0xFFFFFFFF, Bit32u colol = 0xFF000000)
+\\t{
+\\t\\tif ((colol & 0xFF000000) != 0xFF000000) colol = (((colol >> 24) / 2) << 24) | (colol & 0xFFFFFF);
+\\t\\tconst int cx = x + (int)((w - UTF8Length(msg) * CW) / 2);
+\\t\\tfor (int i = 0; i < 9; i++) if (i != 4) PrintCompact(lh, cx + ((i%3)-1), y + ((i/3)-1), msg, colol);
+\\t\\tPrintCompact(lh, cx, y, msg, col);
+\\t}
+\\tvoid DrawChar(const Bit8u* fnt, int ch, int x, int y, int c, Bit32u col = 0xFFFFFFFF)""");
+
+replace_once("right pane title font",
+    "\\t\\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? \\"FILE EXPLORER\\" : \\"DOSBOX PURE START MENU\\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\\n\\t\\tif (is_filebrowse) buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? \\"FILE EXPLORER\\" : \\"DOSBOX PURE START MENU\\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));",
+    "\\t\\tif (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x, panel_w, panel_y+7, \\"FILE EXPLORER\\", 0xFFFFFFFF);\\n\\t\\telse buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, \\"DOSBOX PURE START MENU\\", (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\\n\\t\\tif (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x + 1, panel_w, panel_y+7, \\"FILE EXPLORER\\", 0xFFFFFFFF);");
+replace_once("right pane path font",
+    "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);",
+    "buf.PrintCompact(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);");
+replace_once("right pane secondary header font",
+    "if (is_filebrowse) buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_CONTENT));",
+    "if (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), 0xFFFFFFFF);");
+replace_once("right pane footer font",
+    "buf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);",
+    "buf.PrintCenteredOutlinedCompact(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);");
+
+for old_text, new_text, label in [
+    ('buf.Print(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);','buf.PrintCompact(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);',"right NAME heading"),
+    ('buf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);','buf.PrintCompact(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);',"right SIZE heading"),
+    ('buf.Print(lh, file_col_date, hy, "FECHA", 0xFF55FFFF, 10 * buf.CW);','buf.PrintCompact(lh, file_col_date, hy, "FECHA", 0xFF55FFFF, 10 * buf.CW);',"right DATE heading"),
+    ('buf.Print(lh, file_col_time, hy, "HORA", 0xFF55FFFF, 5 * buf.CW);','buf.PrintCompact(lh, file_col_time, hy, "HORA", 0xFF55FFFF, 5 * buf.CW);',"right TIME heading"),
+    ('buf.Print(lh, file_col_name, y, item.str.c_str(), rowcol, file_name_chars * buf.CW);','buf.PrintCompact(lh, file_col_name, y, item.str.c_str(), rowcol, file_name_chars * buf.CW);',"right filenames"),
+    ('buf.Print(lh, file_col_size, y, meta.size, rowcol, 8 * buf.CW);','buf.PrintCompact(lh, file_col_size, y, meta.size, rowcol, 8 * buf.CW);',"right sizes"),
+    ('buf.Print(lh, file_col_date, y, meta.date, rowcol, 10 * buf.CW);','buf.PrintCompact(lh, file_col_date, y, meta.date, rowcol, 10 * buf.CW);',"right dates"),
+    ('buf.Print(lh, file_col_time, y, meta.time, rowcol, 5 * buf.CW);','buf.PrintCompact(lh, file_col_time, y, meta.time, rowcol, 5 * buf.CW);',"right times"),
+]:
+    replace_once(label, old_text, new_text);
+
+
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
 
