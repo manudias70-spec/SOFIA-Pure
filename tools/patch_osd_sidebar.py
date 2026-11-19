@@ -1,0 +1,475 @@
+#!/usr/bin/env python3
+"""Apply the SOFIA-Pure fullscreen OSD left-rail layout to the pinned DOSBox Pure source."""
+import json
+from pathlib import Path
+
+target = Path("dosbox-pure/dosbox_pure_osd.h")
+if not target.is_file():
+    raise SystemExit(f"Expected upstream OSD source not found: {target}")
+
+patches = json.loads(r'''[["Spanish UTF-8 glyph support","\tvoid PrintCenteredOutlined(int lh, int x, int w, int y, const char* msg, Bit32u col = 0xFFFFFFFF, Bit32u colol = 0xFF000000)\n\t{\n\t\tPrintOutlined(lh, x + (int)((w-strlen(msg)*CW)/2), y, msg, col, colol);\n\t}","\tstatic int UTF8ToCP437(unsigned int c)\n\t{\n\t\tswitch (c)\n\t\t{\n\t\t\tcase 0x00E1: return 160; // a acute\n\t\t\tcase 0x00E9: return 130; // e acute\n\t\t\tcase 0x00ED: return 161; // i acute\n\t\t\tcase 0x00F3: return 162; // o acute\n\t\t\tcase 0x00FA: return 163; // u acute\n\t\t\tcase 0x00F1: return 164; // n tilde\n\t\t\tcase 0x00D1: return 165; // N tilde\n\t\t\tcase 0x00FC: return 129; // u diaeresis\n\t\t\tcase 0x00DC: return 154; // U diaeresis\n\t\t\tcase 0x00BF: return 168; // inverted question\n\t\t\tcase 0x00A1: return 173; // inverted exclamation\n\t\t\tdefault: return '?';\n\t\t}\n\t}\n\n\tstatic int UTF8Length(const char* msg)\n\t{\n\t\tint n = 0;\n\t\tfor (const unsigned char* p = (const unsigned char*)msg; *p; n++)\n\t\t{\n\t\t\tif (*p < 0x80) p++;\n\t\t\telse if ((*p & 0xE0) == 0xC0 && p[1]) p += 2;\n\t\t\telse if ((*p & 0xF0) == 0xE0 && p[1] && p[2]) p += 3;\n\t\t\telse if ((*p & 0xF8) == 0xF0 && p[1] && p[2] && p[3]) p += 4;\n\t\t\telse p++;\n\t\t}\n\t\treturn n;\n\t}\n\n\tvoid PrintCenteredOutlined(int lh, int x, int w, int y, const char* msg, Bit32u col = 0xFFFFFFFF, Bit32u colol = 0xFF000000)\n\t{\n\t\tPrintOutlined(lh, x + (int)((w-UTF8Length(msg)*CW)/2), y, msg, col, colol);\n\t}"],["UTF-8 rendering","\tvoid Print(int lh, int x, int y, const char* msg, Bit32u col = 0xFFFFFFFF, int maxw = 0xFFFFFF)\n\t{\n\t\tDBP_ASSERT(y >= 0 && y < (int)height);\n\t\tconst Bit8u* fnt = (lh == 8 ? int10_font_08 : int10_font_14);\n\t\tconst int ch = (lh == 8 ? 8 : 14);\n\t\tfor (const char* p = msg, *pEnd = p + (maxw / CW); *p && p != pEnd; x += CW)\n\t\t{\n\t\t\tunsigned char c = *(p++);\n\t\t\tif (c >= 128) { c = (unsigned char)15; } // substitute and show each UTF8 byte\n\t\t\t//if (c >= 192) { p++; if (c >= 224 && p != pEnd) p++; if (c >= 240 && p != pEnd) p++; c = (unsigned char)15; } // show UTF8 code points as one character\n\t\t\tDrawChar(fnt, ch, x, y, (char)c, col);\n\t\t}\n\t}","\tvoid Print(int lh, int x, int y, const char* msg, Bit32u col = 0xFFFFFFFF, int maxw = 0xFFFFFF)\n\t{\n\t\tDBP_ASSERT(y >= 0 && y < (int)height);\n\t\tconst Bit8u* fnt = (lh == 8 ? int10_font_08 : int10_font_14);\n\t\tconst int ch = (lh == 8 ? 8 : 14);\n\t\tint printed = 0;\n\t\tfor (const unsigned char* p = (const unsigned char*)msg; *p && printed < maxw / CW; printed++)\n\t\t{\n\t\t\tunsigned int cp = *p++;\n\t\t\tif (cp >= 0xC2 && cp <= 0xDF && p[0]) cp = ((cp & 0x1F) << 6) | (*p++ & 0x3F);\n\t\t\telse if (cp >= 0xE0 && cp <= 0xEF && p[0] && p[1]) { cp = ((cp & 0x0F) << 12) | ((p[0] & 0x3F) << 6) | (p[1] & 0x3F); p += 2; }\n\t\t\telse if (cp >= 0xF0 && cp <= 0xF4 && p[0] && p[1] && p[2]) { cp = '?'; p += 3; }\n\t\t\tunsigned char glyph = (unsigned char)(cp < 0x80 ? cp : UTF8ToCP437(cp));\n\t\t\tDrawChar(fnt, ch, x, y, glyph, col);\n\t\t\tx += CW;\n\t\t}\n\t}"],["mouse hit-test","\t\t\tint my = (int)(m.y+0.499f);\n\t\t\tmouse_sel = scroll + (((int)my - listu) / lh);\n\t\t\tif (mouseMoved)\n\t\t\t{\n\t\t\t\tint mx = (int)(m.x+0.499f);\n\t\t\t\tsel = mouse_sel;\n\t\t\t\tif (my < listu) { sel = scroll; hide_sel = true; }\n\t\t\t\telse if (sel >= count) { sel = count - 1; hide_sel = true; }\n\t\t\t\telse if (mx >= scrx && scrollbar) { hide_sel = true; }\n\t\t\t\telse if (my >= listu+rows*lh) { sel = scroll+rows-1; hide_sel = true; }\n\t\t\t\telse { hide_sel = false; }\n\t\t\t\tscroll_unlocked = true;\n\t\t\t}","\t\t\tint mx = (int)(m.x+0.499f), my = (int)(m.y+0.499f);\n\t\t\tconst bool outsideMenu = (DBP_FullscreenOSD && (mx < menul || mx >= menur));\n\t\t\tconst bool onExitButton = (DBP_FullscreenOSD && mx >= buf.width - 128 && my >= buf.height - 13 - lh);\n\t\t\tmouse_sel = (outsideMenu || onExitButton ? -1 : scroll + (((int)my - listu) / lh));\n\t\t\tif (mouseMoved)\n\t\t\t{\n\t\t\t\tif (outsideMenu || onExitButton) { hide_sel = true; }\n\t\t\t\telse\n\t\t\t\t{\n\t\t\t\t\tsel = mouse_sel;\n\t\t\t\t\tif (my < listu) { sel = scroll; hide_sel = true; }\n\t\t\t\t\telse if (sel >= count) { sel = count - 1; hide_sel = true; }\n\t\t\t\t\telse if (mx >= scrx && scrollbar) { hide_sel = true; }\n\t\t\t\t\telse if (my >= listu+rows*lh) { sel = scroll+rows-1; hide_sel = true; }\n\t\t\t\t\telse { hide_sel = false; }\n\t\t\t\t}\n\t\t\t\tscroll_unlocked = true;\n\t\t\t}"],["main menu header","\t\tUpdateHeld();\n\n\t\tbuf.DrawBox( w/10, 5, w-w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox( 8, lh+7, w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\n\t\tbuf.PrintCenteredOutlined(lh, 0, w, 7, \"DOSBOX PURE START MENU\", buf.COL_MENUTITLE);\n\t\tbuf.PrintCenteredOutlined(lh, 0, w, 7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), buf.COL_CONTENT);","\t\tUpdateHeld();\n\n\t\t#ifdef DBP_STANDALONE\n\t\tconst bool is_filebrowse = (listmode == IT_FILEBROWSE);\n\t\tconst bool is_nc_explorer = (listmode == IT_MAINMENU || is_filebrowse);\n\t\t#else\n\t\tconst bool is_filebrowse = false;\n\t\t#endif\n\t\tconst int content_x = (DBP_FullscreenOSD ? 192 : 0), content_w = w - content_x;\n\t\tconst int panel_slot_x = (DBP_FullscreenOSD && is_filebrowse ? content_x + content_w/2 : content_x);\n\t\tconst int panel_slot_w = w - panel_slot_x;\n\t\tconst int panel_gap_adjust = (content_w/50 - 2) / 2; // Keep only a minimal 2-pixel gap between the central panes.\n\t\tconst int panel_x = (DBP_FullscreenOSD && is_filebrowse ? panel_slot_x + panel_slot_w/50 - panel_gap_adjust : panel_slot_x); // Move the right pane toward the left without changing its width.\n\t\tconst int panel_w = (DBP_FullscreenOSD && is_filebrowse ? panel_slot_w*9/10 : panel_slot_w); // Preserve the previously approved 10% width reduction.\n\t\tconst int panel_y = (DBP_FullscreenOSD && is_filebrowse ? h/6 : 0);\n\t\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);\n\n\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\n\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? \"FILE EXPLORER\" : \"DOSBOX PURE START MENU\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\n\t\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? \"FILE EXPLORER\" : \"DOSBOX PURE START MENU\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\n\t\t#ifdef DBP_STANDALONE\n\t\tif (is_filebrowse)\n\t\t{\n\t\t\tconst char* browsepath = (DBPS_BrowsePath.empty() ? \"Select a drive or folder\" : (DBPS_BrowsePath == \"$\" ? \"Select a drive\" : DBPS_BrowsePath.c_str()));\n\t\t\tbuf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);\n\t\t}\n\t\telse\n\t\t#endif\n\t\tif (!is_filebrowse)\n\t\t{\n\t\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_CONTENT));\n\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_CONTENT));\n\t\t}"],["main menu panel bounds","\t\tint inforow = (w > 319), hdr = lh*2+12, rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);\n\t\tint listu = DrawMenuBase(buf, blend, lh, rows, m, mouseMoved, 8, w - 8, hdr, (list[0].type == IT_NONE));\n\t\tbool autoboot_show = (DBP_Run::autoboot.use && listmode != IT_VARIANTLIST && (list[sel].type < _IT_NO_AUTOBOOT || hide_sel) && first_shell);\n\t\twindowlinelength = (w - 80) / buf.CW;","\t\tint inforow = (panel_w > 319), hdr = lh*2+12, rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);\n\t\tint listu = DrawMenuBase(buf, blend, lh, rows, m, mouseMoved, panel_x + 8, panel_x + panel_w - 8, hdr, (list[0].type == IT_NONE), is_nc_explorer);\n\t\t// Fixed left companion pane: visual-only in this first dual-pane pass.\n\t\tif (DBP_FullscreenOSD && is_filebrowse)\n\t\t{\n\t\t\tconst int left_panel_slot_x = content_x;\n\t\t\tconst int left_panel_slot_w = panel_slot_x - left_panel_slot_x;\n\t\t\tconst int left_panel_x = left_panel_slot_x + left_panel_slot_w*4/50 + panel_gap_adjust + 9; // Nudge only the left pane 6 pixels toward the right pane.\n\t\t\tconst int left_panel_w = left_panel_slot_w*9/10; // Preserve the previously approved 10% width reduction.\n\t\t\tif (left_panel_w > 80)\n\t\t\t{\n\t\t\t\t// Same Norton Commander double-line frame and colors as the active right pane.\n\t\t\t\tbuf.DrawBox(left_panel_x, hdr - 3, left_panel_w, rows*lh + 6, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\t\tbuf.DrawBox(left_panel_x + 3, hdr, left_panel_w - 6, rows*lh, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\t\tconst Bit32u left_header_bg = 0xFF0000AA;\n\t\t\t\tconst Bit32u left_border = 0xFF00FFFF;\n\t\t\t\tbuf.DrawBox(left_panel_x + left_panel_w/10, panel_y+5, left_panel_w-left_panel_w/5, lh+3, left_header_bg | blend, left_border);\n\t\t\t\tbuf.DrawBox(left_panel_x, panel_y+lh+7, left_panel_w, lh+3, left_header_bg | blend, left_border);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, \"DIRECTORIOS\", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, \"UNIDADES Y CARPETAS\", 0xFFFFFFFF);\n\t\t\t\t// Same DOSBox Pure font and line height as the active right pane.\n\t\t\t\t// A one-pixel second pass gives the existing bitmap glyphs a bold weight.\n\t\t\t\tauto printLeftBold = [&](int x, int y, const char* msg)\n\t\t\t\t{\n\t\t\t\t\tbuf.Print(lh, x, y, msg, 0xFFFFFFFF, left_panel_w - 16);\n\t\t\t\t\tbuf.Print(lh, x + 1, y, msg, 0xFFFFFFFF, left_panel_w - 17);\n\t\t\t\t};\n\t\t\t\tauto printLeftBoldCentered = [&](int y, const char* msg)\n\t\t\t\t{\n\t\t\t\t\tconst int text_w = (int)strlen(msg) * (int)buf.CW;\n\t\t\t\t\tbuf.Print(lh, left_panel_x + (left_panel_w - text_w) / 2, y, msg, 0xFFFFFFFF, left_panel_w - 16);\n\t\t\t\t};\n\t\t\t\tauto printLeftBoldRight = [&](int y, const char* msg)\n\t\t\t\t{\n\t\t\t\t\tconst int text_w = (int)strlen(msg) * (int)buf.CW;\n\t\t\t\t\tprintLeftBold(left_panel_x + left_panel_w - 12 - text_w, y, msg);\n\t\t\t\t};\n\t\t\t\tauto leftSeparator = [&](int y)\n\t\t\t\t{\n\t\t\t\t\tbuf.FillRect(left_panel_x + 4, y, left_panel_w - 8, 1, 0xFFFFFFFF);\n\t\t\t\t};\n\n\t\t\t\t// Draw labels and colons in white, values in DOS green.\n\t\t\t\tconst Bit32u left_value_green = 0xFF00FF00;\n\t\t\t\tauto printLeftLabelValueCentered = [&](int y, const char* label, const char* value)\n\t\t\t\t{\n\t\t\t\t\tconst int label_w = (int)strlen(label) * (int)buf.CW;\n\t\t\t\t\tconst int value_w = (int)strlen(value) * (int)buf.CW;\n\t\t\t\t\tconst int x = left_panel_x + (left_panel_w - label_w - value_w) / 2;\n\t\t\t\t\tbuf.Print(lh, x, y, label, 0xFFFFFFFF, left_panel_w - 16);\n\t\t\t\t\tbuf.Print(lh, x + label_w, y, value, left_value_green, left_panel_w - 16 - label_w);\n\t\t\t\t};\n\t\t\t\tauto printLeftLabelValue = [&](int y, const char* label, const char* value)\n\t\t\t\t{\n\t\t\t\t\tconst int label_w = (int)strlen(label) * (int)buf.CW;\n\t\t\t\t\tbuf.Print(lh, left_panel_x + 8, y, label, 0xFFFFFFFF, left_panel_w - 16);\n\t\t\t\t\tbuf.Print(lh, left_panel_x + 8 + label_w, y, value, left_value_green, left_panel_w - 16 - label_w);\n\t\t\t\t};\n\n\t\t\t\t// Section 1: SOFIA Commander identity and status.\n\t\t\t\tint row = listu + lh;\n\t\t\t\tbuf.Print(lh, left_panel_x + (left_panel_w - 16 - 31 * (int)buf.CW) / 2, row, \"The Sofi Commander, Versión 5.0\", 0xFFFFFFFF, left_panel_w - 16); row += lh;\n\t\t\t\tbuf.Print(lh, left_panel_x + (left_panel_w - 16 - 18 * (int)buf.CW) / 2, row, \"31 de octubre 2026\", 0xFFFFFFFF, left_panel_w - 16); row += lh;\n\t\t\t\tprintLeftLabelValueCentered(row, \"Interface: \", \"Modern Retro DOS\"); row += lh;\n\t\t\t\tprintLeftLabelValueCentered(row, \"Core: \", \"DOSBox Pure\"); row += lh;\n\t\t\t\tprintLeftLabelValueCentered(row, \"Status: \", \"Ready\"); row += lh;\n\t\t\t\trow += lh; // Preserve one blank row before the first white divider.\n\t\t\t\tleftSeparator(row); row += lh;\n\n\t\t\t\t// Section 2: configuration information, moved one row upward.\n\t\t\t\tprintLeftLabelValueCentered(row, \"Video filter: \", \"VGA / SVGA\"); row += lh;\n\t\t\t\tprintLeftLabelValueCentered(row, \"Aspect ratio: \", \"4:3\"); row += lh;\n\t\t\t\tprintLeftLabelValueCentered(row, \"Sound: \", \"Sound Blaster\"); row += lh;\n\t\t\t\tprintLeftLabelValueCentered(row, \"MIDI: \", \"General MIDI\"); row += 2 * lh;\n\t\t\t\tleftSeparator(row); row += 2 * lh;\n\n\t\t\t\t// Section 3: volume label and serial, aligned to the left.\n\t\t\t\trow -= lh;\n\t\t\t\tprintLeftLabelValue(row, \"VOLUME LABEL: \", \"Sofi-pure\"); row += lh;\n\t\t\t\tprintLeftLabelValue(row, \"SERIAL: \", \"5A0F-1A26\");\n\t\t\t\t// Close section 3 beneath the serial line.\n\t\t\t\tleftSeparator(row + 2 * lh);\n\n\t\t\t\t// Fourth section: INFO label in the original DIRINFO box.\n\t\t\t\tbuf.DrawBox(left_panel_x, bot, left_panel_w, lh+3, left_header_bg | blend, left_border);\n\t\t\t\tprintLeftBoldCentered(bot + 2, \"Info\");\n\t\t\t\t// DIR INFO message: left-aligned and vertically centered in the fourth cell.\n\t\t\t\tbuf.Print(lh, left_panel_x + 8, row + 2 * lh + 1 + (bot - (row + 2 * lh + 1) - lh) / 2, \"No \\\"dirinfo\\\" file in thIs directory\", 0xFFFFFFFF, left_panel_w - 16);\n\t\t\t}\n\t\t}\n\t\tbool autoboot_show = (DBP_Run::autoboot.use && listmode != IT_VARIANTLIST && !is_filebrowse && (list[sel].type < _IT_NO_AUTOBOOT || hide_sel) && first_shell);\n\t\twindowlinelength = (panel_w - 80) / buf.CW;"],["mount row coordinates","\t\t\t\tint xdiff = (w - buf.CW*(strlen + 7)), mntx = (xdiff >= 0 ? xdiff / 2 : w - (buf.CW*9)), strx = (xdiff >= 0 ? mntx + (buf.CW*7) : xdiff - (buf.CW*3));\n\t\t\t\tbuf.Print(lh, mntx + ((mounted && xdiff >= 0) ? buf.CW : 0), y, (mounted ? \"EJECT\" : \"INSERT\"), (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL));\n\t\t\t\tbuf.Print(lh, strx, y, item.str.c_str(), (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL));","\t\t\t\tint xdiff = (panel_w - buf.CW*(strlen + 7)), mntx = (xdiff >= 0 ? xdiff / 2 : panel_w - (buf.CW*9)), strx = (xdiff >= 0 ? mntx + (buf.CW*7) : xdiff - (buf.CW*3));\n\t\t\t\tbuf.Print(lh, panel_x + mntx + ((mounted && xdiff >= 0) ? buf.CW : 0), y, (mounted ? \"EJECT\" : \"INSERT\"), (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL));\n\t\t\t\tbuf.Print(lh, panel_x + strx, y, item.str.c_str(), (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL));"],["run row coordinates","\t\t\t\tint off = ((item.type != IT_RUN || multidrive) ? 0 : 3), len = strlen - off, lblx = (w - buf.CW*len) / 2;\n\t\t\t\tbuf.Print(lh, lblx,       y, item.str.c_str() + off, (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL));","\t\t\t\tint off = ((item.type != IT_RUN || multidrive) ? 0 : 3), len = strlen - off, lblx = panel_x + (panel_w - buf.CW*len) / 2;\n\t\t\t\tbuf.Print(lh, lblx,       y, item.str.c_str() + off, (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL));"],["generic row coordinates","\t\t\telse buf.Print(lh, (buf.CW*(strlen + 3) < w ? (w - buf.CW*strlen) / 2 : 12), y, item.str.c_str(), (item.type != IT_NONE ? (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL) : (item.info == INFO_HEADER ? buf.COL_HEADER : (item.info == INFO_WARN ? buf.COL_WARN : (item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)))), w-20);","\t\t\telse buf.Print(lh, panel_x + (buf.CW*(strlen + 3) < panel_w ? (panel_w - buf.CW*strlen) / 2 : 12), y, item.str.c_str(), (item.type != IT_NONE ? (i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL) : (item.info == INFO_HEADER ? buf.COL_HEADER : (item.info == INFO_WARN ? buf.COL_WARN : (item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)))), panel_w-20);"],["main menu footer","\t\tif (inforow)\n\t\t{\n\t\t\tchar skiptext[38];\n\t\t\tif (!autoboot_show) skiptext[0] = '\\0';\n\t\t\telse if (DBP_Run::autoboot.skip == -1) snprintf(skiptext, sizeof(skiptext), \"Skip showing the text console\");\n\t\t\telse if (DBP_Run::autoboot.skip) snprintf(skiptext, sizeof(skiptext), \"Skip showing first %d frames\", DBP_Run::autoboot.skip);\n\t\t\t#ifndef DBP_STANDALONE\n\t\t\telse snprintf(skiptext, sizeof(skiptext), \"SHIFT/L2/R2 + Restart to come back\");\n\t\t\t#else\n\t\t\telse snprintf(skiptext, sizeof(skiptext), \"Auto Start is Enabled\");\n\t\t\t#endif\n\n\t\t\tif (w > 639)\n\t\t\t{\n\t\t\t\tbuf.DrawBox(8, bot, w-319, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, 8, w-319, bot+2, skiptext, buf.COL_BTNTEXT);\n\t\t\t}\n\t\t\telse if (w > 320)\n\t\t\t{\n\t\t\t\tbuf.DrawBox(8, bot, w-319, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t}\n\t\t\t\n\t\t\tif (w < 640 && autoboot_show)\n\t\t\t{\n\t\t\t\tbuf.DrawBox(8, bot, w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, 0, w, bot+2, skiptext, buf.COL_BTNTEXT);\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tbuf.DrawBox(w-68, bot, 60, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.DrawBox(w-217, bot, 150, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.DrawBox(w-312, bot, 96, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, w-68, 60, bot+2, \"\\x7 Run\", buf.COL_BTNTEXT);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, w-217, 150, bot+2, \"\\x1A\\x1B Set Auto Start\", buf.COL_BTNTEXT);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, w-312, 96, bot+2, \"\\x18\\x19 Scroll\", buf.COL_BTNTEXT);\n\t\t\t}\n\n\t\t\tif (m.y >= bot && m.y <= bot+lh+3)\n\t\t\t{\n\t\t\t\tif (m.click || m.wheel_up) DoInput(RES_NONE, IT_NONE, 1);\n\t\t\t\tif (m.right_up || m.wheel_down) DoInput(RES_NONE, IT_NONE, -1);\n\t\t\t}\n\t\t}","\t\tif (inforow)\n\t\t{\n\t\t\tif (is_filebrowse)\n\t\t\t{\n\t\t\t\tbuf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tchar skiptext[38];\n\t\t\t\tif (!autoboot_show) skiptext[0] = '\\0';\n\t\t\t\telse if (DBP_Run::autoboot.skip == -1) snprintf(skiptext, sizeof(skiptext), \"Skip showing the text console\");\n\t\t\t\telse if (DBP_Run::autoboot.skip) snprintf(skiptext, sizeof(skiptext), \"Skip showing first %d frames\", DBP_Run::autoboot.skip);\n\t\t\t\t#ifndef DBP_STANDALONE\n\t\t\t\telse snprintf(skiptext, sizeof(skiptext), \"SHIFT/L2/R2 + Restart to come back\");\n\t\t\t\t#else\n\t\t\t\telse snprintf(skiptext, sizeof(skiptext), \"Auto Start is Enabled\");\n\t\t\t\t#endif\n\n\t\t\t\tif (panel_w > 639)\n\t\t\t\t{\n\t\t\t\t\tbuf.DrawBox(panel_x + 8, bot, panel_w-319, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w-319, bot+2, skiptext, buf.COL_BTNTEXT);\n\t\t\t\t}\n\t\t\t\telse if (panel_w > 320)\n\t\t\t\t{\n\t\t\t\t\tbuf.DrawBox(panel_x + 8, bot, panel_w-319, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\t}\n\n\t\t\t\tif (panel_w < 640 && autoboot_show)\n\t\t\t\t{\n\t\t\t\t\tbuf.DrawBox(panel_x + 8, bot, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, bot+2, skiptext, buf.COL_BTNTEXT);\n\t\t\t\t}\n\t\t\t\telse\n\t\t\t\t{\n\t\t\t\t\tbuf.DrawBox(panel_x + panel_w-68, bot, 60, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\t\tbuf.DrawBox(panel_x + panel_w-217, bot, 150, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\t\tbuf.DrawBox(panel_x + panel_w-312, bot, 96, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + panel_w-68, 60, bot+2, \"\\x7 Run\", buf.COL_BTNTEXT);\n\t\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + panel_w-217, 150, bot+2, \"\\x1A\\x1B Set Auto Start\", buf.COL_BTNTEXT);\n\t\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + panel_w-312, 96, bot+2, \"\\x18\\x19 Scroll\", buf.COL_BTNTEXT);\n\t\t\t\t}\n\n\t\t\t\tif (m.y >= bot && m.y <= bot+lh+3)\n\t\t\t\t{\n\t\t\t\t\tif (m.click || m.wheel_up) DoInput(RES_NONE, IT_NONE, 1);\n\t\t\t\t\tif (m.right_up || m.wheel_down) DoInput(RES_NONE, IT_NONE, -1);\n\t\t\t\t}\n\t\t\t}\n\t\t}"],["mapper panel","\t\tint hdr = lh*3, rows = (h - hdr - ftr) / lh-1, count = (int)list.size(), l = w/2 - 150, r = w/2 + 150, xtra = (lh == 8 ? 0 : 1), wide = edit_mode == NOT_EDITING && !is_presets_menu() && w > 500;\n\t\tif (l < 0) { l = 0, r = w; }\n\t\tbuf.DrawBox(l, hdr-7-lh*2, r-l, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.PrintCenteredOutlined(lh, 0, w, hdr-lh*2-5, \"Gamepad Mapper\", buf.COL_MENUTITLE);","\t\tconst int panel_x = (DBP_FullscreenOSD ? 192 : 0), panel_w = w - panel_x;\n\t\tint hdr = lh*3, rows = (h - hdr - ftr) / lh-1, count = (int)list.size(), l = panel_x + panel_w/2 - 150, r = panel_x + panel_w/2 + 150, xtra = (lh == 8 ? 0 : 1), wide = edit_mode == NOT_EDITING && !is_presets_menu() && panel_w > 500;\n\t\tif (l < panel_x) { l = panel_x, r = panel_x + panel_w; }\n\t\tbuf.DrawBox(l, hdr-7-lh*2, r-l, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, hdr-lh*2-5, \"Gamepad Mapper\", buf.COL_MENUTITLE);"],["settings panel","\t\tint hdr = lh*2, rows = (h - hdr - ftr) / lh, count = (int)list.size(), l = 30, r = w-30;\n\t\tif (l < 0) { l = 0, r = w; }\n\t\tbuf.DrawBox(l + 60, hdr-6-lh, r-l-120, lh+4, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.PrintCenteredOutlined(lh, 0, w, hdr-lh-4, \"DOSBox Pure Settings Menu\", buf.COL_MENUTITLE);","\t\tconst int panel_x = (DBP_FullscreenOSD ? 192 : 0), panel_w = w - panel_x;\n\t\tint hdr = lh*2, rows = (h - hdr - ftr) / lh, count = (int)list.size(), l = panel_x + 30, r = w-30;\n\t\tif (l < panel_x) { l = panel_x, r = panel_x + panel_w; }\n\t\tbuf.DrawBox(l + 60, hdr-6-lh, r-l-120, lh+4, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, hdr-lh-4, \"DOSBox Pure Settings Menu\", buf.COL_MENUTITLE);"],["OSD side-nav flag","\t\tbool isOSK = (mode == DBPOSD_OSK);\n\t\tbool mouseMoved = mouse.Update(buf, isOSK);","\t\tbool isOSK = (mode == DBPOSD_OSK);\n\t\tconst bool sideNav = (DBP_FullscreenOSD && mode != DBPOSD_OSK);\n\t\tbool mouseMoved = mouse.Update(buf, isOSK);"],["left shortcut conditional","\t\t\tif (w >= 296 && buf.DrawButtonAt(btnblend, btny, lh, 4, 4, 8, 30, false,                 mouse, \"L\",                                           txtblend) && mouse.click) evnt(DBPET_KEYUP, KBD_grave, 0);","\t\t\tif (!sideNav && w >= 296 && buf.DrawButtonAt(btnblend, btny, lh, 4, 4, 8, 30, false,                 mouse, \"L\",                                           txtblend) && mouse.click) evnt(DBPET_KEYUP, KBD_grave, 0);"],["standalone nav rail","\t\t\t#else\n\t\t\tint osk = 3*(int)(first_shell && !DBP_FullscreenOSD), mpr = 3*(int)!!first_shell, n = 4+osk+mpr;\n\t\t\tif (       buf.DrawButton(btnblend, btny, lh,   0,   2, n, btnmrgn, mode == DBPOSD_MAIN,     mouse, \"START MENU\",                              txtblend) && mouse.click) SetMode(DBPOSD_MAIN);\n\t\t\tif (osk && buf.DrawButton(btnblend, btny, lh,   2,   5, n, btnmrgn, mode == DBPOSD_OSK,      mouse, \"ON-SCREEN KEYBOARD\",                      txtblend) && mouse.click) SetMode(DBPOSD_OSK);\n\t\t\tif (mpr && buf.DrawButton(btnblend, btny, lh, n-5, n-2, n, btnmrgn, mode == DBPOSD_MAPPER,   mouse, \"CONTROLLER MAPPER\",                       txtblend) && mouse.click) SetMode(DBPOSD_MAPPER);\n\t\t\tif (       buf.DrawButton(btnblend, btny, lh, n-2, n  , n, btnmrgn, mode == DBPOSD_SETTINGS, mouse, \"SETTINGS\",                                txtblend) && mouse.click) SetMode(DBPOSD_SETTINGS);\n\t\t\t#endif","\t\t\t#else\n\t\t\tif (sideNav)\n\t\t\t{\n\t\t\t\tbuf.DrawBox(8, 8, 176, h-16, buf.BGCOL_MENU | btnblend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, 8, 176, 24, \"SOFIA-PURE\", buf.COL_MENUTITLE);\n\t\t\t\tbuf.FillRect(16, 48, 160, 1, buf.COL_LINEBOX);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 70, lh, 6, 6, 16, 176, mode == DBPOSD_MAIN, mouse, \"Explorar\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_MAIN);\n\t\t\t\tif (first_shell && buf.DrawButtonAt(btnblend, 106, lh, 6, 6, 16, 176, mode == DBPOSD_MAPPER, mouse, \"Controles y atajos\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_MAPPER);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 142, lh, 6, 6, 16, 176, mode == DBPOSD_SETTINGS, mouse, \"Emulación\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_SETTINGS);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 178, lh, 6, 6, 16, 176, false, mouse, \"Audio\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_SETTINGS);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 214, lh, 6, 6, 16, 176, false, mouse, \"Video\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_SETTINGS);\n\t\t\t\tbuf.FillRect(16, 250, 96, 1, buf.COL_LINEBOX);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 266, lh, 6, 6, 16, 176, false, mouse, \"Ir a DOSBox\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) { DBP_CloseOSD(); return; }\n\t\t\t\tbuf.PrintCenteredOutlined(lh, 8, 176, h-24, \"ALT + F12\", buf.COL_BTNTEXT);\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tint osk = 3*(int)(first_shell && !DBP_FullscreenOSD), mpr = 3*(int)!!first_shell, n = 4+osk+mpr;\n\t\t\t\tif (       buf.DrawButton(btnblend, btny, lh,   0,   2, n, btnmrgn, mode == DBPOSD_MAIN,     mouse, \"START MENU\",                              txtblend) && mouse.click) SetMode(DBPOSD_MAIN);\n\t\t\t\tif (osk && buf.DrawButton(btnblend, btny, lh,   2,   5, n, btnmrgn, mode == DBPOSD_OSK,      mouse, \"ON-SCREEN KEYBOARD\",                      txtblend) && mouse.click) SetMode(DBPOSD_OSK);\n\t\t\t\tif (mpr && buf.DrawButton(btnblend, btny, lh, n-5, n-2, n, btnmrgn, mode == DBPOSD_MAPPER,   mouse, \"CONTROLLER MAPPER\",                       txtblend) && mouse.click) SetMode(DBPOSD_MAPPER);\n\t\t\t\tif (       buf.DrawButton(btnblend, btny, lh, n-2, n  , n, btnmrgn, mode == DBPOSD_SETTINGS, mouse, \"SETTINGS\",                                txtblend) && mouse.click) SetMode(DBPOSD_SETTINGS);\n\t\t\t}\n\t\t\t#endif"],["right shortcut conditional","\t\t\tif (w >= 296 && buf.DrawButtonAt(btnblend, btny, lh, 4, 4, w-30, w-8, false,             mouse, \"R\",                                           txtblend) && mouse.click) evnt(DBPET_KEYUP, KBD_tab, 0);\n\t\t\tif (mouse.y >= btny && (mouse.wheel_up || mouse.wheel_down)) evnt(DBPET_KEYUP, (mouse.wheel_down ? KBD_grave : KBD_tab), 0);","\t\t\tif (!sideNav && w >= 296 && buf.DrawButtonAt(btnblend, btny, lh, 4, 4, w-30, w-8, false,             mouse, \"R\",                                           txtblend) && mouse.click) evnt(DBPET_KEYUP, KBD_tab, 0);\n\t\t\tif (!sideNav && mouse.y >= btny && (mouse.wheel_up || mouse.wheel_down)) evnt(DBPET_KEYUP, (mouse.wheel_down ? KBD_grave : KBD_tab), 0);"],["fullscreen OSD close shortcut","\t\telse if (((res == RES_CANCEL && list.back().type == IT_CLOSEOSD) || res == RES_CLOSESCREENKEYBOARD) && !DBP_FullscreenOSD)","\t\telse if (res == RES_CLOSESCREENKEYBOARD || (res == RES_CANCEL && list.back().type == IT_CLOSEOSD && !DBP_FullscreenOSD))"],["application quit callback declaration","static void DBP_CloseOSD();","static void DBP_CloseOSD();\nextern void DBPS_QuitApplication();"],["bottom-right quit button","\t\t\t#ifdef DBP_STANDALONE\n\t\t\tcase DBPOSD_SETTINGS: ptr.settings->DrawMenu(buf, menublend, lh, w, h, ftr, mouseMoved, mouse); break;\n\t\t\t#endif\n\t\t}\n\n\t\tmouse.Draw(buf, isOSK);","\t\t\t#ifdef DBP_STANDALONE\n\t\t\tcase DBPOSD_SETTINGS: ptr.settings->DrawMenu(buf, menublend, lh, w, h, ftr, mouseMoved, mouse); break;\n\t\t\t#endif\n\t\t}\n\n\t\t#ifdef DBP_STANDALONE\n\t\tif (DBP_FullscreenOSD && mode != DBPOSD_OSK)\n\t\t{\n\t\t\tif (buf.DrawButtonAt(0xFF000000, h - 13 - lh, lh, 4, 4, w - 128, w - 8, false, mouse, \"SALIR\", 0xFF000000) && mouse.click)\n\t\t\t{\n\t\t\t\tDBPS_QuitApplication();\n\t\t\t\treturn;\n\t\t\t}\n\t\t}\n\t\t#endif\n\n\t\tmouse.Draw(buf, isOSK);"],["Settings category entry point","struct DBP_SettingsMenuState final : DBP_MenuState\n{","static const char* DBP_SettingsCategory = NULL;\n\nstruct DBP_SettingsMenuState final : DBP_MenuState\n{"],["Settings category initial selection","DBP_SettingsMenuState() { menu(IT_CATEGORIES); }","DBP_SettingsMenuState()\n\t{\n\t\tcurmenu = IT_CATEGORIES;\n\t\tmenu(IT_CATEGORIES);\n\t\tif (!DBP_SettingsCategory)\n\t\t{\n\t\t\tfor (int i = (int)list.size() - 1; i >= 0; i--)\n\t\t\t{\n\t\t\t\tif (list[i].type != IT_CATEGORY) continue;\n\t\t\t\tconst char* key = option_cats[list[i].info].key;\n\t\t\t\tif (strcmp(key, \"Audio\") && strcmp(key, \"Video\")) continue;\n\t\t\t\tint end = i + 1;\n\t\t\t\twhile (end < (int)list.size() && list[end].type != IT_CATEGORY) end++;\n\t\t\t\tlist.erase(list.begin() + i, list.begin() + end);\n\t\t\t}\n\t\t}\n\t\tif (DBP_SettingsCategory)\n\t\t{\n\t\t\tfor (Bit16s cat = 0; option_cats[cat].key; cat++)\n\t\t\t{\n\t\t\t\tif (strcmp(option_cats[cat].key, DBP_SettingsCategory)) continue;\n\t\t\t\tfor (int i = 0; i < (int)list.size(); i++)\n\t\t\t\t{\n\t\t\t\t\tif (list[i].type != IT_CATEGORY || list[i].info != cat) continue;\n\t\t\t\t\tsel = i;\n\t\t\t\t\tmenu(IT_CATEGORY);\n\t\t\t\t\tbreak;\n\t\t\t\t}\n\t\t\t\tbreak;\n\t\t\t}\n\t\t}\n\t}"],["Sidebar category routing","if (buf.DrawButtonAt(btnblend, 142, lh, 6, 6, 16, 176, mode == DBPOSD_SETTINGS, mouse, \"Emulación\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_SETTINGS);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 178, lh, 6, 6, 16, 176, false, mouse, \"Audio\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_SETTINGS);\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 214, lh, 6, 6, 16, 176, false, mouse, \"Video\", txtblend) && mouse.click && mode != DBPOSD_SETTINGS) SetMode(DBPOSD_SETTINGS);","const bool emulationActive = (mode == DBPOSD_SETTINGS && DBP_SettingsCategory == NULL);\n\t\t\t\tconst bool audioActive = (mode == DBPOSD_SETTINGS && DBP_SettingsCategory && !strcmp(DBP_SettingsCategory, \"Audio\"));\n\t\t\t\tconst bool videoActive = (mode == DBPOSD_SETTINGS && DBP_SettingsCategory && !strcmp(DBP_SettingsCategory, \"Video\"));\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 142, lh, 6, 6, 16, 176, emulationActive, mouse, \"Emulación\", txtblend) && mouse.click && !emulationActive) { DBP_SettingsCategory = NULL; SetMode(DBPOSD_SETTINGS); }\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 178, lh, 6, 6, 16, 176, audioActive, mouse, \"Audio\", txtblend) && mouse.click && !audioActive) { DBP_SettingsCategory = \"Audio\"; SetMode(DBPOSD_SETTINGS); }\n\t\t\t\tif (buf.DrawButtonAt(btnblend, 214, lh, 6, 6, 16, 176, videoActive, mouse, \"Video\", txtblend) && mouse.click && !videoActive) { DBP_SettingsCategory = \"Video\"; SetMode(DBPOSD_SETTINGS); }"]]''')
+source = target.read_text(encoding="utf-8")
+for label, old_text, new_text in patches:
+    count = source.count(old_text)
+    if count != 1:
+        raise SystemExit(f"UI patch aborted: {label!r} expected one source match, found {count}")
+    source = source.replace(old_text, new_text, 1)
+
+
+
+# First visual pass for the Video settings page. Keep the original item list,
+# selection, mouse hit-testing and option handling; only change its drawing.
+settings_struct = source.index("struct DBP_SettingsMenuState final")
+draw_start = source.index("\tvoid DrawMenu(DBP_BufferDrawing& buf", settings_struct)
+draw_end = source.index("\n\t}\n};\n#endif", draw_start) + len("\n\t}")
+settings_draw = r'''\tvoid DrawMenu(DBP_BufferDrawing& buf, Bit32u blend, int lh, int w, int h, int ftr, bool mouseMoved, const DBP_MenuMouse& m)
+\t{
+\t\tUpdateHeld();
+\t\tif (curmenu == IT_CATEGORY)
+\t\t{
+\t\t\tBit16s topinfo = list[0].info;
+\t\t\tconst Item *plist = &list[0], *plistend = plist + list.size();
+\t\t\tconst retro_core_option_v2_category& oc = option_cats[topinfo];
+\t\t\tfor (const retro_core_option_v2_definition& od : option_defs)
+\t\t\t{
+\t\t\t\tif (od.category_key && (od.category_key != oc.key || DBP_Option::GetHidden(od))) continue;
+\t\t\t\twhile (plist != plistend && plist->type != IT_OPTION) plist++;
+\t\t\t\tif (od.category_key ? (plist != plistend && plist->info == (Bit16s)(&od - option_defs)) : plist == plistend) { plist++; continue; }
+\t\t\t\tmenu(IT_CATEGORY);
+\t\t\t\tbreak;
+\t\t\t}
+\t\t}
+
+\t\tconst bool is_video = (curmenu == IT_CATEGORY && strcmp(option_cats[list[0].info].key, "Video") == 0);
+\t\tconst int menu_lh = (DBP_FullscreenOSD ? 8 : lh);
+\t\tconst int panel_x = (DBP_FullscreenOSD ? 216 : 0);
+\t\tconst int panel_y = (DBP_FullscreenOSD ? 36 : 0);
+\t\tconst int panel_right = (DBP_FullscreenOSD ? w-24 : w-30);
+\t\tconst int panel_bottom = (DBP_FullscreenOSD ? h-32 : h-ftr);
+\t\tint hdr = panel_y + menu_lh*2, rows = (panel_bottom - hdr) / menu_lh, count = (int)list.size();
+\t\tint l = panel_x + (DBP_FullscreenOSD ? 24 : 30), r = panel_right;
+\t\tif (l < 0 || l >= r-160) { l = 30; r = w-30; }
+
+\t\tif (DBP_FullscreenOSD)
+\t\t{
+\t\t\tbuf.DrawBox(l-12, panel_y-10, r-l+24, panel_bottom-panel_y+18, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);
+\t\t\tbuf.DrawBox(l, hdr-menu_lh, r-l, menu_lh+5, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
+\t\t\tbuf.PrintCenteredOutlined(menu_lh, l, r-l, hdr-menu_lh+2,
+\t\t\t\t(is_video ? "CONFIGURACION DE VIDEO" : "OPCIONES"), buf.COL_MENUTITLE);
+\t\t}
+\t\telse
+\t\t{
+\t\t\tbuf.DrawBox(l + 60, hdr-6-menu_lh, r-l-120, menu_lh+4, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);
+\t\t\tbuf.PrintCenteredOutlined(menu_lh, l, r-l, hdr-menu_lh-4, "DOSBox Pure Settings Menu", buf.COL_MENUTITLE);
+\t\t}
+
+\t\tDrawMenuBase(buf, blend, menu_lh, rows, m, mouseMoved, l, r, hdr);
+\t\tfor (int i = scroll, maxw = r-l-27; i != count && i != (scroll + rows); i++)
+\t\t{
+\t\t\tBit8u itype = list[i].type;
+\t\t\tif (itype == IT_OPTION)
+\t\t\t{
+\t\t\t\tconst retro_core_option_v2_definition& od = option_defs[list[i].info];
+\t\t\t\tconst char* var_value = retro_get_variable(od.key, od.default_value);
+\t\t\t\tfor (const retro_core_option_value& ov : od.values)
+\t\t\t\t{
+\t\t\t\t\tif (!ov.value) break;
+\t\t\t\t\tif (strcmp(var_value, ov.value)) continue;
+\t\t\t\t\tbuf.Print(menu_lh, l+16 + maxw-130, hdr + (i - scroll)*menu_lh, "\x1D", buf.COL_HEADER, 120);
+\t\t\t\t\tbuf.Print(menu_lh, l+16 + maxw-120, hdr + (i - scroll)*menu_lh, ov.label, buf.COL_NORMAL, 120);
+\t\t\t\t\tbreak;
+\t\t\t\t}
+\t\t\t\tbuf.Print(menu_lh, l+16, hdr + (i - scroll)*menu_lh, list[i].str.c_str(), buf.COL_NORMAL, maxw - 140);
+\t\t\t}
+\t\t\telse
+\t\t\t\tbuf.Print(menu_lh, l+16, hdr + (i - scroll)*menu_lh, list[i].str.c_str(), (itype != IT_NONE ? buf.COL_NORMAL : buf.COL_HEADER), maxw);
+\t\t}
+\t}'''
+# Convert the patch text's escaped tabs/newlines into actual source formatting.
+settings_draw = settings_draw.replace("\\t", "\t").replace("\\n", "\n")
+source = source[:draw_start] + settings_draw + source[draw_end:]
+print("Applied Video settings visual layout")
+
+
+translations = json.loads(r'''{"[ ] Set Setting Override For Loaded Game":"[ ] Guardar ajustes para este juego","Unable to write config override %c:\\\\%s":"No se pudo guardar la configuración en %c:\\\\%s","Gamepad Mapper is disabled":"El asignador de controles está desactivado","for this controller port":"para este puerto de control","Set 'Use Gamepad Mapper'":"Activa 'Usar asignador de controles'","in the Controls menu":"en el menú Controles","Preset: ":"Perfil: ","[Create Binding]":"[Crear asignación]","Function: ":"Función: ","Wheel Options: ":"Opciones de la rueda: ","Add Option":"Añadir opción","Warning:":"Advertencia:","Wheel is inaccessible because no":"La rueda no está disponible porque ningún","button was bound to Action Wheel":"botón está asignado a la acción Rueda","options have been defined here":"se definieron opciones aquí","Close Mapper":"Cerrar asignador","Select Preset":"Seleccionar perfil","Fill Unbound with Generic Keys":"Completar controles libres con teclas genéricas","[Reset Mapping]":"[Restablecer asignaciones]","[Additional Binding]":"[Asignación adicional]","[Remove Binding]":"[Quitar asignación]","[ Change Controller Input ]":"[ Cambiar entrada del control ]","[ Assign Controller Input ]":"[ Asignar entrada del control ]","Assign New Input":"Asignar nueva entrada","Press an input on the controller":"Pulsa un botón o mueve un control","Gamepad Mapper":"Asignador de controles","Controller Port %d":"Puerto del control %d","DOSBOX PURE START MENU":"MENÚ INICIAL DE DOSBOX PURE","- No Content Loaded -":"- Sin contenido cargado -","EJECT":"EXPULSAR","INSERT":"INSERTAR","* [SET AUTO START]":"* [CONFIGURAR INICIO AUTOMÁTICO]","Skip showing the text console":"Omitir la consola de texto","Skip showing first %d frames":"Omitir los primeros %d fotogramas","SHIFT/L2/R2 + Restart to come back":"SHIFT/L2/R2 + Reiniciar para volver","Auto Start is Enabled":"El inicio automático está activado","Run":"Ejecutar","Set Auto Start":"Configurar inicio automático","Scroll":"Desplazar","Reset DOS to":"¿Reiniciar DOS para","Are you sure you want to reset DOS":"¿Seguro que quieres reiniciar DOS","exit DOSBox?":"¿y salir de DOSBox?","and shut down DOSBox Pure?":"y cerrar DOSBox Pure?","start this?":"¿iniciar esto?","to start the selected application?":"para iniciar la aplicación seleccionada?","CANCEL":"CANCELAR","DOS Crashed":"DOS se ha bloqueado","Reset":"Reiniciar","[ Boot from Disk Image ]":"[ Arrancar desde imagen de disco ]","[ Run Installed Operating System ]":"[ Iniciar sistema operativo instalado ]","[ Run System Shell ]":"[ Iniciar intérprete de comandos ]","[ Boot and Install New Operating System ]":"[ Arrancar e instalar un sistema operativo ]","[ Load Content ]":"[ Cargar contenido ]","[ Saving & Loading ]":"[ Guardar y cargar ]","Active Configuration: ":"Configuración activa: ","Default":"Predeterminada","[ Select Game Configuration ]":"[ Seleccionar configuración del juego ]","No executable file found":"No se encontró ningún archivo ejecutable","Go to Command Line":"Ir a la línea de comandos","Close Menu":"Cerrar menú","Exit DOSBox Pure":"Salir de DOSBox Pure","Select Boot System Mode":"Seleccionar modo de arranque","Hard Disk Size For Install":"Tamaño del disco duro para la instalación","Create a new dynamic hard disk image in the following location:":"Crear una nueva imagen dinámica de disco duro en la siguiente ubicación:","%3d %cB Hard Disk":"Disco duro de %3d %cB","Hard disk images over 2GB will be formatted with FAT32":"Las imágenes de disco de más de 2 GB se formatearán con FAT32","NOTE: FAT32 is only supported in Windows 95C and newer":"NOTA: FAT32 solo es compatible con Windows 95C y posteriores","[ Boot Only Without Creating Hard Disk Image ]":"[ Arrancar sin crear una imagen de disco duro ]","Select Operating System Disk Image":"Seleccionar imagen de disco del sistema operativo","[ Refresh List ]":"[ Actualizar lista ]","Changes made to the C: drive will be discarded":"Se descartarán los cambios realizados en la unidad C:","Changes made to the C: drive will be stored in the following location:":"Los cambios realizados en la unidad C: se guardarán en la siguiente ubicación:","discard":"descartar","hide":"ocultar","D: will be based on the loaded .IMG file":"La unidad D: se basará en el archivo .IMG cargado","Changes made to the D: drive will be stored in the following location:":"Los cambios realizados en la unidad D: se guardarán en la siguiente ubicación:","Changes made to the D: drive will be discarded":"Se descartarán los cambios realizados en la unidad D:","D: hard drive was disabled, use only mounted CDs":"El disco D: está desactivado; solo se usarán los CD montados","Select System Shell":"Seleccionar intérprete de comandos","Select Game Configuration":"Seleccionar configuración del juego","Run Game":"Ejecutar juego","The configuration can be switched with the On-Screen Menu":"La configuración se puede cambiar desde el menú en pantalla","or by holding shift or L2/R2 when restarting the core":"o manteniendo SHIFT o L2/R2 al reiniciar el núcleo","Run Other Program":"Ejecutar otro programa","[ Load this folder as content ]":"[ Cargar esta carpeta como contenido ]","No files":"No hay archivos","Saving and Loading":"Guardar y cargar","Save Name: ":"Nombre de la partida: ","Save Slot: ":"Ranura de guardado: ","Save":"Guardar","Load":"Cargar","Back":"Volver","[ Mount as CD/DISK Image ]":"[ Montar como imagen de CD/disco ]","[ Load as Content ]":"[ Cargar como contenido ]","The selected configuration can't be applied because the settings in the files below have been customized:":"No se puede aplicar la configuración seleccionada porque se modificaron los ajustes de los siguientes archivos:","To use the configuration as intended the files need to be reset, but any changes made to them by you will be lost.":"Para usar esta configuración hay que restablecer esos archivos, pero se perderán los cambios que hayas realizado.","[ Yes, reset these files ]":"[ Sí, restablecer estos archivos ]","[ No, keep my custom files as is ]":"[ No, conservar mis archivos ]","[ Cancel ]":"[ Cancelar ]","Detected keyboard and joypad being pressed at the same time.\\n":"Se detectó que se está usando el teclado y el control al mismo tiempo.\\n","To freely use the keyboard without hotkeys enable 'Game Focus' (Scroll Lock key by default) if available.":"Para usar el teclado sin activar atajos, habilita 'Enfoque de juego' (Scroll Lock por defecto), si está disponible.","START MENU":"MENÚ INICIAL","KEYBOARD":"TECLADO","ON-SCREEN KEYBOARD":"TECLADO EN PANTALLA","CONTROLS":"CONTROLES","CONTROLLER MAPPER":"ASIGNADOR DE CONTROLES","SETTINGS":"OPCIONES","* GAME ENDED - EXITING IN %u SECONDS - PRESS ANY KEY TO CONTINUE *":"* JUEGO FINALIZADO - SALIENDO EN %u SEGUNDOS - PULSA UNA TECLA PARA CONTINUAR *","* PRESS ANY KEY TO RETURN TO START MENU *":"* PULSA UNA TECLA PARA VOLVER AL MENÚ INICIAL *","Use setting General > Advanced > Start Menu to enable exiting automatically":"Activa la salida automática en General > Avanzado > Menú inicial","Unsupported file type %s":"Tipo de archivo no compatible: %s"}''')
+for old_text, new_text in translations.items():
+    source = source.replace('"' + old_text + '"', '"' + new_text + '"')
+
+# Make Escape and the floating panel's close affordance return to the Explorer.
+# Defer the mode switch until the current Settings callback has returned; SetMode
+# destroys the active Settings state, so switching inside DoInput would be unsafe.
+navigation_patch = r'''
+settings_struct = source.index("struct DBP_SettingsMenuState final")
+settings_do = source.index("DoInput(Result res, Bit8u ok_type, int x_change)", settings_struct)
+cancel_line = source.index("RES_CANCEL) ok_type = IT_CANCEL;", settings_do)
+if settings_do < settings_struct or cancel_line < settings_do:
+    raise SystemExit("Navigation patch aborted: Settings cancel handler not found")
+cancel_end = cancel_line + len("RES_CANCEL) ok_type = IT_CANCEL;")
+source = source[:cancel_line] + "RES_CANCEL) { DBPS_ReturnToExplorer = true; return; }\n\t\tif (res == " + source[cancel_line:cancel_end] + source[cancel_end:]
+
+flag_anchor = "struct DBP_SettingsMenuState final : DBP_MenuState"
+if source.count(flag_anchor) != 1:
+    raise SystemExit("Navigation patch aborted: Settings struct anchor not unique")
+source = source.replace(flag_anchor, "static bool DBPS_ReturnToExplorer = false;\n\n" + flag_anchor, 1)
+
+gfx_start = source.index("virtual void gfx(DBP_Buffer& _buf)", source.index("struct DBP_OnScreenDisplay"))
+mode_switch = source.index("switch (mode)", gfx_start)
+settings_case = source.index("case DBPOSD_SETTINGS:", mode_switch)
+case_end = source.index("\n", settings_case)
+settings_draw_replacement = """case DBPOSD_SETTINGS:
+\t\t\t{
+\t\t\t\tconst int close_x = w - 42, close_y = 8, close_w = 32, close_h = lh + 6;
+\t\t\t\tif (DBP_FullscreenOSD && mouse.click && mouse.x >= close_x && mouse.x < close_x + close_w && mouse.y >= close_y && mouse.y < close_y + close_h)
+\t\t\t\t\tDBPS_ReturnToExplorer = true;
+\t\t\t\tif (!DBPS_ReturnToExplorer)
+\t\t\t\t\tptr.settings->DrawMenu(buf, menublend, lh, w, h, ftr, mouseMoved, mouse);
+\t\t\t\tif (DBP_FullscreenOSD)
+\t\t\t\t{
+\t\t\t\t\tbuf.DrawBox(close_x, close_y, close_w, close_h, buf.BGCOL_HEADER | menublend, buf.COL_LINEBOX);
+\t\t\t\t\tbuf.PrintCenteredOutlined(lh, close_x, close_w, close_y + 2, "X", buf.COL_BTNTEXT);
+\t\t\t\t\tbuf.DrawBox(192, h - lh - 18, w - 200, lh + 4, buf.BGCOL_HEADER | menublend, buf.COL_LINEBOX);
+\t\t\t\t\tbuf.PrintCenteredOutlined(lh, 192, w - 200, h - lh - 16, "VOLVER - ESC", buf.COL_BTNTEXT);
+\t\t\t\t}
+\t\t\t\tbreak;
+\t\t\t}"""
+source = source[:settings_case] + settings_draw_replacement + source[case_end:]
+
+evnt_start = source.index("virtual bool evnt(DBP_Event_Type type, int val, int val2) override", source.index("struct DBP_OnScreenDisplay"))
+tab_cycle = source.index("if (type == DBPET_KEYUP && ((KBD_KEYS)val == KBD_tab || (KBD_KEYS)val == KBD_grave))", evnt_start)
+source = source[:tab_cycle] + """if (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)
+\t\t{
+\t\t\tDBPS_ReturnToExplorer = false;
+\t\t\tSetMode(DBPOSD_MAIN);
+\t\t}
+\t\t""" + source[tab_cycle:]
+
+mouse_draw_anchor = "\n\t\tmouse.Draw(buf, isOSK);"
+if source.count(mouse_draw_anchor) != 1:
+    raise SystemExit("Navigation patch aborted: OSD mouse draw anchor not unique")
+source = source.replace(mouse_draw_anchor, "\n\t\tif (mode == DBPOSD_SETTINGS && DBPS_ReturnToExplorer)\n\t\t{\n\t\t\tDBPS_ReturnToExplorer = false;\n\t\t\tSetMode(DBPOSD_MAIN);\n\t\t}\n\t\tmouse.Draw(buf, isOSK);", 1)
+print("Applied Escape and close-button navigation to Explorer")
+'''
+exec(navigation_patch)
+
+
+
+
+
+
+
+
+
+
+
+
+# Norton Commander palette for the standalone Explorer and its file picker.
+def replace_once(label, old_text, new_text):
+    global source
+    count = source.count(old_text)
+    if count != 1:
+        raise SystemExit(f"Norton palette patch aborted: {label!r} expected one source match, found {count}")
+    source = source.replace(old_text, new_text, 1)
+
+replace_once("file-browser mode parameter",
+    "\tint DrawMenuBase(DBP_BufferDrawing& buf, Bit32u blend, const int lh, const int rows, const DBP_MenuMouse& m, bool mouseMoved, int menul, int menur, int menuu, bool centerv = false)",
+    "\tint DrawMenuBase(DBP_BufferDrawing& buf, Bit32u blend, const int lh, const int rows, const DBP_MenuMouse& m, bool mouseMoved, int menul, int menur, int menuu, bool centerv = false, bool nc_explorer = false)")
+
+replace_once("file-browser panel colors",
+    "\t\tbuf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);",
+    "\t\tif (nc_explorer)\n\t\t{\n\t\t\tbuf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\tbuf.DrawBox(menul + 3, menuu, menur - menul - 6, menuh, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t}\n\t\telse buf.DrawBox(menul, menuu - 3, menur - menul, menuh + 6, buf.BGCOL_MENU | blend, buf.COL_LINEBOX);")
+replace_once("file-browser selection colors",
+    "\t\t\tbuf.AlphaBlendFillRect(menul+3, listu + (sel - scroll)*lh, menur - menul - 6 - (scrollbar ? 10 : 0), lh + xtra, buf.BGCOL_SELECTION | blend);",
+    "\t\t\tbuf.AlphaBlendFillRect(menul+3, listu + (sel - scroll)*lh, menur - menul - 6 - (scrollbar ? 10 : 0), lh + xtra, (nc_explorer ? 0xFFFFFFFF : buf.BGCOL_SELECTION) | blend);")
+replace_once("file-browser scrollbar colors",
+    "\t\t\tbuf.AlphaBlendFillRect(scrx, menuu, 8, menuh, buf.BGCOL_SCROLL | blend);\n\t\t\tbuf.AlphaBlendFillRect(scrx, menuu + scrollu, 8, scrolld - scrollu, buf.BGCOL_SELECTION | blend);",
+    "\t\t\tbuf.AlphaBlendFillRect(scrx, menuu, 8, menuh, (nc_explorer ? 0xFF000080 : buf.BGCOL_SCROLL) | blend);\n\t\t\tbuf.AlphaBlendFillRect(scrx, menuu + scrollu, 8, scrolld - scrollu, (nc_explorer ? 0xFF00FFFF : buf.BGCOL_SELECTION) | blend);")
+replace_once("file-browser header palette",
+    "\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);",
+    "\t\tconst Bit32u nc_header_bg = (is_filebrowse ? 0xFF0000AA : (is_nc_explorer ? 0xFF000080 : buf.BGCOL_HEADER));\n\t\tconst Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);\n\t\tbuf.DrawBox(panel_x + panel_w/10, panel_y+5, panel_w-panel_w/5, lh+3, nc_header_bg | blend, nc_border);\n\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);")
+
+# Shared outer frame: drawn first so the existing two pane frames, headers,
+# footer boxes and all their colors remain untouched and visible above it.
+replace_once("Commander shared outer frame",
+    "\t\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);",
+    "\t\tconst int panel_h = (DBP_FullscreenOSD && is_filebrowse ? h*2/3 + 5*lh : h);\n\t\tif (DBP_FullscreenOSD && is_filebrowse)\n\t\t{\n\t\t\tconst int frame_hdr = lh*2+12;\n\t\t\tconst int frame_info = (panel_w > 319);\n\t\t\tconst int frame_rows = (h - frame_hdr - ftr) / lh - frame_info;\n\t\t\tconst int frame_bot = frame_hdr + frame_rows*lh + 3 - (lh == 8 ? 1 : 0);\n\t\t\tconst int frame_x = content_x + 4 + content_w/20; // 5% inset on each side: 10% narrower, centered.\n\t\t\tconst int frame_y = panel_y + 1;\n\t\t\tconst int frame_w = content_w*9/10 - 8;\n\t\t\tconst int frame_h = (frame_bot + 5) - frame_y;\n\t\t\tbuf.DrawBox(frame_x, frame_y, frame_w, frame_h, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t\tbuf.DrawBox(frame_x + 3, frame_y + 3, frame_w - 6, frame_h - 6, 0xFF0000AA | blend, 0xFFFFFFFF);\n\t\t}")
+
+replace_once("file-browser path palette",
+    "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, buf.COL_CONTENT, panel_w-16);",
+    "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);")
+row_color_old = "(i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL)"
+row_color_new = "(i == se ? (is_nc_explorer ? 0xFF000055 : buf.COL_HIGHLIGHT) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))"
+if source.count(row_color_old) < 1:
+    raise SystemExit("Norton palette patch aborted: file-browser row color anchor not found")
+source = source.replace(row_color_old, row_color_new)
+replace_once("file-browser generic row text palette",
+    "(item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)",
+    "(item.info == INFO_DIM ? (is_nc_explorer ? 0xFF55FFFF : buf.COL_DIM) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))")
+replace_once("file-browser footer palette",
+    "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);",
+    "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
+
+
+# Add a compact Norton-style metadata row to the standalone file browser.
+# Metadata is collected once per RefreshList, not queried every rendered frame.
+def browser_replace(label, old_text, new_text):
+    global source
+    count = source.count(old_text)
+    if count != 1:
+        raise SystemExit(f"File-browser columns patch aborted: {label!r} expected one source match, found {count}")
+    source = source.replace(old_text, new_text, 1)
+
+browser_replace(
+    "open file explorer on SOFIA-Pure startup",
+    "\t\telse if (DBP_Run::patch.show_variants) RefreshList(IT_VARIANTLIST);\n\t\topen_ticks = DBP_GetTicks();",
+    "\t\telse if (DBP_Run::patch.show_variants) RefreshList(IT_VARIANTLIST);\n\t\t#ifdef DBP_STANDALONE\n\t\tif (DBP_Run::autoboot.startup.mode == DBP_Run::RUN_NONE && !DBP_Run::patch.show_variants) RefreshList(IT_FILEBROWSE);\n\t\t#endif\n\t\topen_ticks = DBP_GetTicks();")
+
+browser_replace(
+    "file-browser metadata members",
+    "\tint exe_count, fs_rows, windowlinelength;\n\tbool multidrive;\n\tBit8u popupsel;\n\tItemType listmode;",
+    """\tstruct BrowserFileInfo { char size[12], date[12], time[6]; };
+\tstd::vector<BrowserFileInfo> browser_info;
+\tint exe_count, fs_rows, windowlinelength;
+\tbool multidrive;
+\tBit8u popupsel;
+\tItemType listmode;
+
+\tstatic BrowserFileInfo GetBrowserFileInfo(const std::string& name, bool is_dir)
+\t{
+\t\tBrowserFileInfo result = {};
+\t\t#if defined(WIN32) && defined(DBP_STANDALONE)
+\t\tif (name == "[ Go Up ]" || DBPS_BrowsePath == "$") return result;
+\t\tstd::string path = (DBPS_BrowsePath.empty() ? "." : DBPS_BrowsePath);
+\t\tif (path.back() != '\\\\' && path.back() != '/') path += '\\\\';
+\t\tpath += name;
+\t\tint wide_len = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, NULL, 0);
+\t\tif (wide_len <= 0) return result;
+\t\tstd::wstring wide_path((size_t)wide_len, L'\\0');
+\t\tif (!MultiByteToWideChar(CP_UTF8, 0, path.c_str(), -1, &wide_path[0], wide_len)) return result;
+\t\tWIN32_FILE_ATTRIBUTE_DATA data;
+\t\tif (!GetFileAttributesExW(wide_path.c_str(), GetFileExInfoStandard, &data)) return result;
+\t\tunsigned long long bytes = ((unsigned long long)data.nFileSizeHigh << 32) | data.nFileSizeLow;
+\t\tif (is_dir) snprintf(result.size, sizeof(result.size), "<DIR>");
+\t\telse if (bytes >= 1024) snprintf(result.size, sizeof(result.size), "%llu KB", (bytes + 1023) / 1024);
+\t\telse snprintf(result.size, sizeof(result.size), "%llu B", bytes);
+\t\tFILETIME local_time;
+\t\tSYSTEMTIME modified;
+\t\tif (FileTimeToLocalFileTime(&data.ftLastWriteTime, &local_time) && FileTimeToSystemTime(&local_time, &modified))
+\t\t{
+\t\t\tsnprintf(result.date, sizeof(result.date), "%02u-%02u-%02u", modified.wDay, modified.wMonth, modified.wYear % 100);
+\t\t\tsnprintf(result.time, sizeof(result.time), "%02u:%02u", modified.wHour, modified.wMinute);
+\t\t}
+\t\t#endif
+\t\treturn result;
+\t}""")
+browser_replace("clear file-browser metadata",
+    "\t\tlistmode = mode;\n\t\tlist.clear();",
+    "\t\tlistmode = mode;\n\t\tlist.clear();\n\t\tbrowser_info.clear();")
+browser_replace(
+    "collect file-browser metadata",
+    "\t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;",
+    """\t\t#ifdef DBP_STANDALONE
+\t\tif (mode == IT_FILEBROWSE)
+\t\t{
+\t\t\tbrowser_info.resize(list.size());
+\t\t\tfor (size_t i = 0; i < list.size(); i++)
+\t\t\t{
+\t\t\t\tconst Item& item = list[i];
+\t\t\t\tif (item.type == IT_FILEBROWSE && item.info >= 1 && item.info <= 3)
+\t\t\t\t\tbrowser_info[i] = GetBrowserFileInfo(item.str, item.info != 3);
+\t\t\t}
+\t\t}
+\t\t#endif
+\t\tif (keep_sel_pos && old_sel < (int)list.size()) sel = old_sel;""")
+browser_replace(
+    "reserve a header row for file-browser columns",
+    "int inforow = (panel_w > 319), hdr = lh*2+12, rows = (h - hdr - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);",
+    "int inforow = (panel_w > 319), hdr = panel_y + lh*2+12;\n\t\tif (is_filebrowse) hdr += lh+2;\n\t\tint rows = (panel_h - (hdr - panel_y) - ftr) / lh - inforow, count = (int)list.size(), bot = hdr + rows * lh + 3 - (lh == 8 ? 1 : 0);")
+browser_replace(
+    "draw file-browser column headings",
+    "\t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)",
+    """\t\tconst int file_name_chars = (panel_w - 32) / buf.CW - (8 + 10 + 5 + 4);
+\t\tconst int file_col_name = panel_x + 16;
+\t\tconst int file_col_size = file_col_name + (file_name_chars + 2) * buf.CW;
+\t\tconst int file_col_date = file_col_size + 10 * buf.CW;
+\t\tconst int file_col_time = file_col_date + 10 * buf.CW;
+\t\tif (is_filebrowse)
+\t\t{
+\t\t\tconst int hy = listu - lh;
+\t\t\tbuf.Print(lh, file_col_name, hy, "NOMBRE", 0xFFFFFFFF, file_name_chars * buf.CW);
+\t\t\tbuf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFFFFFFFF, 8 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFFFFFFFF, 8 * buf.CW);
+\t\t\tbuf.Print(lh, file_col_time, hy, "HORA", 0xFFFFFFFF, 5 * buf.CW);
+\t\t}
+\t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)""")
+browser_replace(
+    "render file-browser metadata columns",
+    "\t\t\tif (item.type == IT_MOUNT) // mountable file system",
+    """\t\t\tif (is_filebrowse && item.type == IT_FILEBROWSE && item.info >= 1 && item.info <= 3)
+\t\t\t{
+\t\t\t\tconst Bit32u rowcol = (i == se ? (is_nc_explorer ? 0xFF000055 : buf.COL_HIGHLIGHT) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL));
+\t\t\t\tconst BrowserFileInfo empty_info = {};
+\t\t\t\tconst BrowserFileInfo& meta = (i < browser_info.size() ? browser_info[i] : empty_info);
+\t\t\t\tbuf.Print(lh, file_col_name, y, item.str.c_str(), rowcol, file_name_chars * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_size, y, meta.size, rowcol, 8 * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_date, y, meta.date, rowcol, 8 * buf.CW);
+\t\t\t\tbuf.Print(lh, file_col_time, y, meta.time, rowcol, 5 * buf.CW);
+\t\t\t}
+\t\t\telse if (item.type == IT_MOUNT) // mountable file system""")
+
+
+
+# Commander header/footer polish. Only the small header/footer boxes are changed;
+# the left and right file-pane bodies, their geometry and explorer behavior stay untouched.
+replace_once("Commander right header border",
+    "const Bit32u nc_border = (is_nc_explorer ? 0xFF00FFFF : buf.COL_LINEBOX);",
+    "const Bit32u nc_border = (is_nc_explorer ? 0xFFFFFFFF : buf.COL_LINEBOX);")
+replace_once("Commander right footer border only",
+    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);',
+    'buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);')
+replace_once("Commander left header border",
+    "const Bit32u left_border = 0xFF00FFFF;",
+    "const Bit32u left_border = 0xFFFFFFFF;")
+replace_once("Commander left title standard font",
+    'buf.PrintCenteredOutlined(lh, left_panel_x, left_panel_w, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF);',
+    'buf.Print(lh, left_panel_x + (left_panel_w - (int)strlen("DIRECTORIOS") * (int)buf.CW) / 2, panel_y+7, "DIRECTORIOS", 0xFFFFFFFF, left_panel_w - 16);')
+replace_once("Commander left subtitle standard font",
+    'buf.PrintCenteredOutlined(lh, left_panel_x + 8, left_panel_w - 16, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF);',
+    'buf.Print(lh, left_panel_x + 8 + ((left_panel_w - 16) - (int)strlen("UNIDADES Y CARPETAS") * (int)buf.CW) / 2, panel_y+lh+9, "UNIDADES Y CARPETAS", 0xFFFFFFFF, left_panel_w - 16);')
+
+replace_once("Commander right footer bold",
+    "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);",
+    "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
+
+# Draw the Explorer title directly in its header. Locate the header by its
+# geometry, not by the legacy title text, so upstream wording cannot break this patch.
+header_anchor = "\t\tbuf.DrawBox(panel_x + 8, panel_y+lh+7, panel_w-16, lh+3, nc_header_bg | blend, nc_border);"
+if source.count(header_anchor) != 1:
+    raise SystemExit("Commander title patch aborted: right header geometry not unique")
+
+# Remove the upstream right-header title calls by their drawing position, not
+# by matching the old title string.
+title_region_start = source.index(header_anchor) + len(header_anchor)
+title_region_end = source.index("#ifdef DBP_STANDALONE", title_region_start)
+title_region = source[title_region_start:title_region_end]
+title_lines = [line for line in title_region.splitlines(keepends=True)
+               if "buf.PrintCenteredOutlined(lh, panel_x" not in line]
+if len(title_lines) == len(title_region.splitlines(keepends=True)):
+    raise SystemExit("Commander title patch aborted: positioned title calls were not found")
+source = source[:title_region_start] + "".join(title_lines) + source[title_region_end:]
+
+# Draw the intended title directly. The Explorer uses the panel's standard
+# bitmap font and size; other Commander modes retain their normal title.
+direct_title = """
+		if (is_filebrowse)
+		{
+			const char* panel_title = "EXPLORADOR DE ARCHIVOS";
+			buf.Print(lh, panel_x + (panel_w - 22 * (int)buf.CW) / 2, panel_y+7, panel_title, 0xFFFFFFFF, panel_w - 16);
+		}
+		else
+		{
+			buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, "DOSBOX PURE START MENU", buf.COL_MENUTITLE);
+			buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, "DOSBOX PURE START MENU", buf.COL_MENUTITLE);
+		}"""
+source = source.replace(header_anchor, header_anchor + direct_title, 1)
+
+# Draw the Commander footer text directly, without relying on the legacy wording.
+footer_box = "\t\t\t\tbuf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF0000AA | blend, 0xFFFFFFFF);"
+if source.count(footer_box) != 1:
+    raise SystemExit("Commander footer patch aborted: footer geometry not unique")
+footer_start = source.index(footer_box)
+footer_end = source.index("\n\t\t\telse", footer_start)
+footer_region = source[footer_start:footer_end]
+footer_lines = [line for line in footer_region.splitlines(keepends=True)
+                if "buf.PrintCenteredOutlined(lh, panel_x" not in line]
+if len(footer_lines) == len(footer_region.splitlines(keepends=True)):
+    raise SystemExit("Commander footer patch aborted: positioned legacy footer text not found")
+direct_footer = "\n\t\t\t\tconst char* footer_text = \"Enter: Abrir   Esc: Atrás\";\n\t\t\t\tbuf.Print(lh, panel_x + 8 + (panel_w - 16 - 25 * (int)buf.CW) / 2, bot+2, footer_text, 0xFFFFFFFF, panel_w - 16);"
+footer_region = "".join(footer_lines)
+footer_region = footer_region.replace(footer_box, footer_box + direct_footer, 1)
+source = source[:footer_start] + footer_region + source[footer_end:]
+
+target.write_text(source, encoding="utf-8")
+print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
+
+# Translate the upstream core-options catalog used by the standalone Settings menu.
+options_file = Path("dosbox-pure/core_options.h")
+if not options_file.is_file():
+    raise SystemExit(f"Expected core options source not found: {options_file}")
+options_source = options_file.read_text(encoding="utf-8")
+option_translations = {
+"General":"General",
+"Input":"Entrada","Performance":"Rendimiento","System":"Sistema","Audio":"Audio",
+"General settings (save states, start menu, fixed FPS).":"Ajustes generales (estados guardados, menú inicial y FPS fijos).",
+"General settings (hotkeys, start menu, fixed FPS).":"Ajustes generales (atajos, menú inicial y FPS fijos).",
+"Keyboard, mouse and joystick settings.":"Ajustes de teclado, ratón y joystick.",
+"Adjust the performance of the emulated CPU.":"Ajusta el rendimiento de la CPU emulada.",
+"Settings for the emulated graphics card and aspect ratio.":"Ajustes de la tarjeta gráfica emulada y la relación de aspecto.",
+"Other hardware emulation settings for RAM, CPU and OS.":"Otros ajustes de emulación de hardware: memoria RAM, CPU y sistema operativo.",
+"MIDI, SoundBlaster and other audio settings.":"Ajustes de MIDI, Sound Blaster y otros dispositivos de audio.",
+"Hotkey Modifier":"Modificador de atajos","Set which modifier keys need to be held to use hotkeys.":"Define qué teclas modificadoras hay que mantener pulsadas para usar los atajos.",
+"Fast Forward/Slow Motion Mode":"Modo de avance rápido/cámara lenta","Set if fast forward and slow motion is a toggle or hold.":"Define si el avance rápido y la cámara lenta se activan conmutando o manteniendo una tecla.",
+"Toggle":"Alternar","Hold":"Mantener pulsado","Fast Forward Limit":"Límite de avance rápido","Set the limit of fast forwarding.":"Define el límite de velocidad del avance rápido.",
+"As fast as possible":"Lo más rápido posible","Slow Motion Rate":"Velocidad de cámara lenta","Set the speed while slow motion is active.":"Define la velocidad mientras la cámara lenta está activa.",
+"Always Enable System Hotkeys":"Activar siempre los atajos del sistema","Set if ALT+F4 (Quit) and ALT+Enter (Full Screen) are handled even while a game is running.":"Define si ALT+F4 (Salir) y ALT+Enter (Pantalla completa) funcionan incluso durante un juego.",
+"Middle Mouse Button Open Menu":"Abrir menú con el botón central del ratón","If enabled the middle mouse button will open/close the On-Screen Menu.":"Si está activado, el botón central del ratón abre o cierra el menú en pantalla.",
+"Off":"Desactivado","On":"Activado","Mouse Lock Default Status":"Estado inicial del bloqueo del ratón","Mouse Sensitivity":"Sensibilidad del ratón","Sets the overall mouse cursor movement speed.":"Ajusta la velocidad general del cursor del ratón.",
+"Force Output FPS":"Forzar FPS de salida","Enable this to force output at a fixed rate. Try 60 FPS if you encounter screen tearing or vsync issues.":"Activa esta opción para fijar la frecuencia de salida. Prueba 60 FPS si aparecen cortes de imagen o problemas de sincronización vertical.",
+"Output will have frames skipped at lower rates and frames duplicated at higher rates.":"A frecuencias menores se omitirán fotogramas y a frecuencias mayores se duplicarán.",
+"Save States Support":"Compatibilidad con estados guardados","Make sure to test it in each game before using it. Complex late era DOS games might have problems.":"Pruébala en cada juego antes de usarla. Algunos juegos complejos de la última época de DOS pueden presentar problemas.",
+"Be aware that states saved with different video, CPU or memory settings are not loadable.":"Los estados guardados con otros ajustes de vídeo, CPU o memoria no se podrán cargar.",
+"Enable save states":"Activar estados guardados","Enable save states with rewind":"Activar estados guardados con rebobinado","Disabled":"Desactivado",
+"Advanced > Use Strict Mode":"Avanzado > Usar modo estricto","Disable the command line, running installed operating systems and using .BAT/.COM/.EXE/DOS.YML files from the save game.":"Desactiva la línea de comandos, la ejecución de sistemas operativos instalados y el uso de archivos .BAT/.COM/.EXE/DOS.YML desde la partida guardada.",
+"Advanced > Loading of dosbox.conf":"Avanzado > Carga de dosbox.conf","DOSBox Pure is meant to be configured via core options but optionally supports loading of legacy .conf files.":"DOSBox Pure está pensado para configurarse mediante las opciones del núcleo, pero también permite cargar archivos .conf antiguos.",
+"Disabled conf support (default)":"Compatibilidad con .conf desactivada (predeterminado)","Try 'dosbox.conf' in the loaded content (ZIP or folder)":"Buscar 'dosbox.conf' en el contenido cargado (ZIP o carpeta)","Try '.conf' with same name as loaded content (next to ZIP or folder)":"Buscar un archivo .conf con el mismo nombre que el contenido cargado (junto al ZIP o la carpeta)",
+"Advanced > Start Menu":"Avanzado > Menú inicial","Set the behavior of the start menu before and after launching a game.":"Define el comportamiento del menú inicial antes y después de ejecutar un juego.","You can also force it to open by holding shift or L2/R2 when selecting 'Restart'.":"También puedes forzar su apertura manteniendo SHIFT o L2/R2 al seleccionar «Reiniciar».",
+"Show at start, show again after game ends (default)":"Mostrar al iniciar y al terminar el juego (predeterminado)","Show at start, exit emulator 5 seconds after auto started game ends":"Mostrar al iniciar y salir del emulador 5 segundos después de terminar el juego iniciado automáticamente","Show at start, exit emulator 3 seconds after auto started game ends":"Mostrar al iniciar y salir del emulador 3 segundos después de terminar el juego iniciado automáticamente","Show at start, exit emulator immediately after auto started game ends":"Mostrar al iniciar y salir del emulador inmediatamente después de terminar el juego iniciado automáticamente","Ignore auto start setting, always show menu on startup and after game ends":"Ignorar el inicio automático y mostrar siempre el menú al iniciar y al terminar el juego",
+"Advanced > Menu Transparency":"Avanzado > Transparencia del menú","Set the transparency level of the Menu and the On-Screen Keyboard.":"Ajusta la transparencia del menú y del teclado en pantalla.",
+"Use L3 Button to Show Menu":"Usar L3 para mostrar el menú","Always bind the L3 controller button to show the menu to swap CDs/Disks and use the On-Screen Keyboard.":"Asigna siempre el botón L3 del control para mostrar el menú, cambiar CD/discos y usar el teclado en pantalla.",
+"On (Default to Menu)":"Activado (mostrar menú por defecto)","On (Default to On-Screen Keyboard)":"Activado (mostrar teclado en pantalla por defecto)","On (Only On-Screen Keyboard While in Game)":"Activado (solo teclado en pantalla durante el juego)",
+"Mouse Input Mode":"Modo de entrada del ratón","You can disable input handling from a mouse or a touchscreen (emulated mouse through joypad will still work).":"Puedes desactivar la entrada del ratón o la pantalla táctil (el ratón emulado mediante el control seguirá funcionando).","In touchpad mode use drag to move, tap to click, two finger tap to right-click and press-and-hold to drag":"En modo panel táctil, arrastra para mover, toca para hacer clic, toca con dos dedos para hacer clic derecho y mantén pulsado para arrastrar.",
+"Touchpad mode (default, see description, best for touch screens)":"Modo panel táctil (predeterminado; consulta la descripción, ideal para pantallas táctiles)","Auto (virtual or direct)":"Automático (virtual o directo)","Virtual mouse movement":"Movimiento virtual del ratón","Direct controlled mouse (not supported by all games)":"Control directo del ratón (no compatible con todos los juegos)","Off (ignore mouse inputs)":"Desactivado (ignorar entradas del ratón)",
+"Bind Mouse Wheel To Key":"Asignar la rueda del ratón a teclas","Bind mouse wheel up and down to two keyboard keys to be able to use it in DOS games.":"Asigna el movimiento arriba y abajo de la rueda del ratón a dos teclas para usarlo en juegos de DOS.","Disable":"Desactivar",
+"Advanced > Horizontal Mouse Sensitivity":"Avanzado > Sensibilidad horizontal del ratón","Experiment with this value if the mouse is too fast/slow moving left/right. Also allows disabling one axis.":"Prueba este valor si el ratón se mueve demasiado rápido o lento hacia los lados. También permite desactivar un eje.","Disable Horizontal Movement":"Desactivar movimiento horizontal","Disable Vertical Movement":"Desactivar movimiento vertical",
+"Advanced > Action Wheel Inputs":"Avanzado > Entradas de la rueda de acciones","Sets which inputs control the action wheel.":"Define qué entradas controlan la rueda de acciones.","Right Stick, D-Pad, Mouse (Default)":"Palanca derecha, cruceta y ratón (predeterminado)","Right Stick, D-Pad":"Palanca derecha y cruceta","Right Stick, Mouse":"Palanca derecha y ratón","Right Stick":"Palanca derecha","Both Sticks, D-Pad, Mouse":"Ambas palancas, cruceta y ratón","Both Sticks, D-Pad":"Ambas palancas y cruceta","Both Sticks, Mouse":"Ambas palancas y ratón","Both Sticks":"Ambas palancas","Left Stick, D-Pad, Mouse":"Palanca izquierda, cruceta y ratón","Left Stick, D-Pad":"Palanca izquierda y cruceta","Left Stick, Mouse":"Palanca izquierda y ratón","Left Stick":"Palanca izquierda","D-Pad, Mouse":"Cruceta y ratón","D-Pad":"Cruceta","Mouse":"Ratón",
+"Advanced > Automatic Game Pad Mappings":"Avanzado > Asignaciones automáticas del control","DOSBox Pure can automatically apply a gamepad control mapping scheme when it detects a game.":"DOSBox Pure puede aplicar automáticamente una configuración de controles cuando detecta un juego.","These button mappings are provided by the Keyb2Joypad Project (by Jemy Murphy and bigjim).":"Estas asignaciones de botones son proporcionadas por el proyecto Keyb2Joypad (de Jemy Murphy y bigjim).","On (default)":"Activado (predeterminado)","Enable with notification on game detection":"Activar con aviso al detectar un juego",
+"Advanced > Keyboard Layout":"Avanzado > Distribución del teclado","Select the keyboard layout (will not change the On-Screen Keyboard).":"Selecciona la distribución del teclado (no modifica el teclado en pantalla).","US (default)":"Estados Unidos (predeterminado)","Belgium":"Bélgica","Brazil":"Brasil","Croatia":"Croacia","Czech Republic":"República Checa","Denmark":"Dinamarca","Finland":"Finlandia","France":"Francia","Germany":"Alemania","Greece":"Grecia","Hungary":"Hungría","Iceland":"Islandia","Italy":"Italia","Netherlands":"Países Bajos","Norway":"Noruega","Poland":"Polonia","Portugal":"Portugal","Russia":"Rusia","Slovakia":"Eslovaquia","Slovenia":"Eslovenia","Spain":"España","Sweden":"Suecia","Switzerland (German)":"Suiza (alemán)","Switzerland (French)":"Suiza (francés)","Turkey":"Turquía",
+"Advanced > Joystick Analog Deadzone":"Avanzado > Zona muerta analógica del joystick","Set the deadzone of the joystick analog sticks. May be used to eliminate drift caused by poorly calibrated joystick hardware.":"Define la zona muerta de las palancas analógicas del joystick. Puede eliminar movimientos involuntarios causados por una calibración incorrecta.",
+"Advanced > Enable Joystick Timed Intervals":"Avanzado > Activar intervalos temporizados del joystick","Enable timed intervals for joystick axes. Experiment with this option if your joystick drifts.":"Activa intervalos temporizados para los ejes del joystick. Prueba esta opción si el joystick presenta deriva.",
+"Emulated Performance":"Rendimiento emulado","The raw performance that DOSBox will try to emulate.":"Rendimiento bruto que DOSBox intentará emular.","AUTO - DOSBox will try to detect performance needs (default)":"AUTO: DOSBox intentará detectar las necesidades de rendimiento (predeterminado)","MAX - Emulate as many instructions as possible":"MAX: emular tantas instrucciones como sea posible","Unlimited":"Sin límite",
+"Detailed > Maximum Emulated Performance":"Detallado > Rendimiento máximo emulado","With dynamic CPU speed (AUTO or MAX above), the maximum emulated performance level.":"Con la velocidad dinámica de CPU (AUTO o MAX), define el nivel máximo de rendimiento emulado.","Detailed > Performance Scale":"Detallado > Escala de rendimiento","Fine tune the emulated performance for specific needs.":"Ajusta con precisión el rendimiento emulado según tus necesidades.",
+"Detailed > Limit CPU Usage":"Detallado > Limitar uso de CPU","When emulating DOS as fast as possible, how much time per frame should be used by the emulation.":"Al emular DOS a la máxima velocidad posible, define cuánto tiempo por fotograma puede utilizar la emulación.","Lower this if your device becomes hot while using it.":"Reduce este valor si el dispositivo se calienta durante el uso.",
+"Advanced > Show Performance Statistics":"Avanzado > Mostrar estadísticas de rendimiento","Enable this to show statistics about performance and framerate and check if emulation is running at full speed.":"Activa esta opción para mostrar estadísticas de rendimiento y fotogramas por segundo, y comprobar si la emulación funciona a velocidad completa.","Simple":"Sencillo","Detailed information":"Información detallada",
+"Emulated Graphics Chip (restart required)":"Chip gráfico emulado (requiere reinicio)","The type of graphics chip that DOSBox will emulate.":"Tipo de chip gráfico que emulará DOSBox.","SVGA (Super Video Graphics Array) (default)":"SVGA (Super Video Graphics Array, predeterminado)","VGA (Video Graphics Array)":"VGA (Video Graphics Array)","EGA (Enhanced Graphics Adapter)":"EGA (Enhanced Graphics Adapter)","CGA (Color Graphics Adapter)":"CGA (Color Graphics Adapter)","Tandy (Tandy Graphics Adapter)":"Tandy (Tandy Graphics Adapter)","Hercules (Hercules Graphics Card)":"Hercules (tarjeta gráfica Hercules)","PCjr":"PCjr",
+"CGA Mode":"Modo CGA","The CGA variation that is being emulated.":"Variante CGA que se emulará.","Early model, composite mode auto (default)":"Modelo temprano, modo compuesto automático (predeterminado)","Early model, composite mode on":"Modelo temprano, modo compuesto activado","Early model, composite mode off":"Modelo temprano, modo compuesto desactivado","Late model, composite mode auto":"Modelo tardío, modo compuesto automático","Late model, composite mode on":"Modelo tardío, modo compuesto activado","Late model, composite mode off":"Modelo tardío, modo compuesto desactivado",
+"Hercules Color Mode":"Modo de color Hercules","The color scheme for Hercules emulation.":"Esquema de color para la emulación Hercules.","Black & white (default)":"Blanco y negro (predeterminado)","Black & amber":"Negro y ámbar","Black & green":"Negro y verde",
+"SVGA Mode (restart required)":"Modo SVGA (requiere reinicio)","The SVGA variation that is being emulated. Try changing this if you encounter graphical glitches.":"Variante SVGA que se emulará. Prueba a cambiarla si aparecen errores gráficos.","S3 Trio64 (default)":"S3 Trio64 (predeterminado)","S3 Trio64 no-line buffer hack (reduces flickering in some games)":"S3 Trio64 sin búfer de líneas (reduce el parpadeo en algunos juegos)","S3 Trio64 VESA 1.3":"S3 Trio64 VESA 1.3","Tseng Labs ET3000":"Tseng Labs ET3000","Tseng Labs ET4000":"Tseng Labs ET4000","Paradise PVGA1A":"Paradise PVGA1A",
+"SVGA Memory (restart required)":"Memoria SVGA (requiere reinicio)","The amount of memory available to the emulated SVGA card.":"Cantidad de memoria disponible para la tarjeta SVGA emulada.","2MB (default)":"2 MB (predeterminado)","8MB (not always recognized)":"8 MB (no siempre reconocidos)",
+"3dfx Voodoo Emulation":"Emulación 3dfx Voodoo","Enables certain games with support for the Voodoo 3D accelerator.":"Activa la compatibilidad con juegos que utilizan la aceleradora 3D Voodoo.","Enabled - 8MB memory (default)":"Activada: 8 MB de memoria (predeterminado)","Enabled - 12MB memory, Dual Texture":"Activada: 12 MB de memoria, textura dual","Enabled - 4MB memory, Low Resolution Only":"Activada: 4 MB de memoria, solo baja resolución",
+"3dfx Voodoo Performance":"Rendimiento 3dfx Voodoo","Options to tweak the behavior of the 3dfx emulation.":"Opciones para ajustar el comportamiento de la emulación 3dfx.","Switching to OpenGL requires a restart.":"Cambiar a OpenGL requiere reiniciar.","If OpenGL is available, host-side 3D acceleration is used which can make 3D rendering much faster.":"Si OpenGL está disponible, se utilizará la aceleración 3D del equipo anfitrión, lo que puede acelerar mucho el renderizado 3D.","Auto will use OpenGL if it is the active video driver in the frontend.":"El modo automático utilizará OpenGL si es el controlador de vídeo activo en la interfaz.","Auto (default)":"Automático (predeterminado)","Hardware OpenGL":"OpenGL por hardware","Software Multi Threaded":"Software multinúcleo","Software Multi Threaded, low quality":"Software multinúcleo, baja calidad","Software Single Threaded, low quality":"Software mononúcleo, baja calidad","Software Single Threaded":"Software mononúcleo",
+"3dfx Voodoo OpenGL Scaling":"Escalado OpenGL de 3dfx Voodoo","Increase the native resolution of the rendered image.":"Aumenta la resolución nativa de la imagen renderizada.","3dfx Voodoo Gamma Correction":"Corrección gamma de 3dfx Voodoo","Change brightness of rendered 3dfx output.":"Cambia el brillo de la imagen 3dfx.",
+"Scaling":"Escalado","Choose how to scale the game display to the window/fullscreen resolution. Integer scaling will enforce all pixels to be the same size but may add a border.":"Elige cómo adaptar la imagen del juego a la ventana o pantalla completa. El escalado entero mantiene todos los píxeles del mismo tamaño, pero puede añadir bordes.","Sharp Scaling (default)":"Escalado nítido (predeterminado)","Simple Scaling (nearest neighbor)":"Escalado simple (vecino más cercano)","Bilinear Scaling":"Escalado bilineal","Integer Scaling":"Escalado entero",
+"CRT Filter":"Filtro CRT","Enable CRT filter effect on displayed screen (works best on high resolution displays and without integer scaling).":"Activa el efecto de filtro CRT en la pantalla (funciona mejor con resoluciones altas y sin escalado entero).","Only Scanlines":"Solo líneas de escaneo","TV style phosphors":"Fósforo estilo televisor","Aperture-grille phosphors":"Fósforo de rejilla de apertura","Stretched VGA style phosphors":"Fósforo VGA estirado","VGA style phosphors":"Fósforo estilo VGA",
+"CRT Filter Scanline Intensity":"Intensidad de líneas de escaneo CRT","No scanline gaps":"Sin espacios entre líneas","Weaker gaps":"Espacios más suaves","Weak gaps":"Espacios débiles","Normal gaps":"Espacios normales","Strong gaps":"Espacios marcados","Stronger gaps":"Espacios más marcados","Strongest gaps":"Espacios máximos",
+"CRT Filter Blur/Sharpness":"Desenfoque/nitidez del filtro CRT","Blurry":"Desenfocado","Smooth":"Suave","Pixely":"Pixelado","Sharper":"Más nítido","Sharpest":"Máxima nitidez","CRT Filter Phosphor Mask Strength":"Intensidad de máscara de fósforo CRT","Very Strong":"Muy intensa","CRT Filter Curvature":"Curvatura del filtro CRT","CRT Filter Rounded Corner":"Esquinas redondeadas del filtro CRT","Weak":"Débil","Strong":"Intensa",
+"Aspect Ratio Correction":"Corrección de relación de aspecto","Adjust the aspect ratio to approximate what a CRT monitor would display (works best on high resolution displays and without integer scaling).":"Ajusta la relación de aspecto para aproximar la imagen de un monitor CRT (funciona mejor con resoluciones altas y sin escalado entero).","On (single-scan)":"Activado (barrido simple)","On (double-scan when applicable)":"Activado (doble barrido cuando corresponda)","Padded to 4:3 (single-scan)":"Ajustar a 4:3 (barrido simple)","Padded to 4:3 (double-scan when applicable)":"Ajustar a 4:3 (doble barrido cuando corresponda)","Stretch the display to fill the window, ignoring any content aspect ratio":"Estirar la imagen para llenar la ventana, ignorando su relación de aspecto",
+"Overscan Border Size":"Tamaño del borde de overscan","When enabled, show a border around the display. Some games use the color of the border to convey information.":"Muestra un borde alrededor de la imagen. Algunos juegos utilizan su color para transmitir información.","Small":"Pequeño","Medium":"Mediano","Large":"Grande",
+"Memory Size (restart required)":"Tamaño de memoria (requiere reinicio)","The amount of (high) memory that the emulated machine has. You can also disable extended memory (EMS/XMS).":"Cantidad de memoria (alta) disponible en la máquina emulada. También puedes desactivar la memoria extendida (EMS/XMS).","Using more than the default is not recommended, due to incompatibility with certain games and applications.":"No se recomienda superar el valor predeterminado debido a incompatibilidades con algunos juegos y aplicaciones.","Disable extended memory (no EMS/XMS)":"Desactivar memoria extendida (sin EMS/XMS)",
+"Modem Type":"Tipo de módem","Type of emulated modem on COM1 for netplay. With the dial-up modem, one side needs to dial any number to connect.":"Tipo de módem emulado en COM1 para juego en red. Con el módem telefónico, uno de los equipos debe marcar cualquier número para conectarse.","Null Modem (Direct Serial)":"Módem nulo (serie directa)","Dial-Up Modem (Hayes Standard)":"Módem telefónico (estándar Hayes)",
+"CPU Type (restart required)":"Tipo de CPU (requiere reinicio)","Emulated CPU type. Auto is the fastest choice.":"Tipo de CPU emulada. Automático es la opción más rápida.","Games that require specific CPU type selection:":"Juegos que requieren seleccionar un tipo de CPU específico:","Auto - Mixed feature set with maximum performance and compatibility":"Automático: conjunto mixto de instrucciones con máximo rendimiento y compatibilidad","386 - 386 instruction with fast memory access":"386: instrucciones 386 con acceso rápido a memoria","386 (slow) - 386 instruction set with memory privilege checks":"386 (lento): conjunto de instrucciones 386 con comprobaciones de privilegios de memoria","386 (prefetch) - 386 instruction set with prefetch queue emulation":"386 (precarga): conjunto de instrucciones 386 con emulación de cola de precarga","486 (slow) - 486 instruction set with memory privilege checks":"486 (lento): conjunto de instrucciones 486 con comprobaciones de privilegios de memoria","Pentium (slow) - 586 instruction set with memory privilege checks":"Pentium (lento): conjunto de instrucciones 586 con comprobaciones de privilegios de memoria","Pentium MMX (slow) - 586 instruction set with MMX extension":"Pentium MMX (lento): conjunto de instrucciones 586 con extensión MMX",
+"Advanced > CPU Core":"Avanzado > Núcleo de CPU","Emulation method (DOSBox CPU core) used.":"Método de emulación utilizado por el núcleo de CPU de DOSBox.","Auto - Real-mode games use normal, protected-mode games use dynamic":"Automático: los juegos en modo real usan normal y los de modo protegido usan dinámico","Dynamic - Dynamic recompilation (fast, using dynamic_x86 implementation)":"Dinámico: recompilación dinámica (rápido, implementación dynamic_x86)","Dynamic - Dynamic recompilation (fast, using dynrec implementation)":"Dinámico: recompilación dinámica (rápido, implementación dynrec)","Normal (interpreter)":"Normal (intérprete)","Simple (interpreter optimized for old real-mode games)":"Simple (intérprete optimizado para juegos antiguos en modo real)",
+"Advanced > OS Disk Modifications (restart required)":"Avanzado > Modificaciones del disco del sistema (requiere reinicio)","When running an installed operating system, modifications to the C: drive will be made on the disk image by default.":"Al ejecutar un sistema operativo instalado, los cambios en la unidad C: se aplican por defecto a la imagen de disco.","Setting it to 'Discard' allows the content to be closed any time without worry of file system or registry corruption.":"La opción «Descartar» permite cerrar el contenido en cualquier momento sin riesgo de dañar el sistema de archivos o el registro.","When using 'Save Difference Per Content' the disk image must never be modified again, otherwise existing differences become unusable.":"Al usar «Guardar diferencias por contenido», la imagen de disco no debe modificarse de nuevo; de lo contrario, las diferencias guardadas dejarán de ser utilizables.","Keep (default)":"Conservar (predeterminado)","Discard":"Descartar","Save Difference Per Content":"Guardar diferencias por contenido",
+"Advanced > Free Space on D: in OS (restart required)":"Avanzado > Espacio libre en D: del sistema (requiere reinicio)","Controls the amount of free space available on the D: drive when running an installed operating system.":"Controla la cantidad de espacio libre disponible en la unidad D: al ejecutar un sistema operativo instalado.","If the total size of the D: drive (data + free space) exceeds 2 GB, it can't be used in earlier versions of Windows 95.":"Si el tamaño total de la unidad D: (datos + espacio libre) supera los 2 GB, no podrá utilizarse en versiones anteriores de Windows 95.","WARNING: Created save files are tied to this setting, so changing this will hide all existing D: drive changes.":"ADVERTENCIA: los archivos de guardado dependen de este ajuste. Si lo cambias, todos los cambios existentes en la unidad D: dejarán de estar visibles.","Disable D: Hard Disk (use only CD-ROM)":"Desactivar disco duro D: (usar solo CD-ROM)",
+"Advanced > Force Normal Core in OS":"Avanzado > Forzar núcleo normal en el sistema operativo","The normal core can be more stable when running an installed operating system.":"El núcleo normal puede ser más estable al ejecutar un sistema operativo instalado.","This can be toggled on and off to navigate around crashes.":"Puedes activar o desactivar esta opción para evitar bloqueos.",
+"Audio Sample Rate (restart required)":"Frecuencia de muestreo de audio (requiere reinicio)","This should match the frontend audio output rate (Hz) setting.":"Debe coincidir con la frecuencia de salida de audio (Hz) configurada en la interfaz.","Audio Latency":"Latencia de audio","If set too low, audio dropouts can occur. Value is for internal processing and the actually perceived latency will be higher.":"Si se configura demasiado baja, pueden producirse cortes de audio. Este valor corresponde al procesamiento interno; la latencia percibida será mayor.",
+"SoundBlaster Settings":"Ajustes de Sound Blaster","Set the address, interrupt, low 8-bit and high 16-bit DMA.":"Define la dirección, la interrupción y los canales DMA de 8 y 16 bits.",
+"MIDI Output":"Salida MIDI","Select the .SF2 SoundFont file, .ROM file or interface used for MIDI output.":"Selecciona el archivo SoundFont .SF2, el archivo .ROM o la interfaz utilizada para la salida MIDI.","To add SoundFonts or ROM files, copy them into the 'system' directory of the frontend.":"Para añadir SoundFonts o archivos ROM, cópialos en la carpeta 'system' de la interfaz.","To use the frontend MIDI driver, make sure it's set up correctly.":"Para utilizar el controlador MIDI de la interfaz, asegúrate de que esté configurado correctamente.",
+"Volume > Sound Blaster":"Volumen > Sound Blaster","Sets the volume of Sound Blaster output (including Creative Music System / GameBlaster).":"Ajusta el volumen de salida de Sound Blaster (incluidos Creative Music System y GameBlaster).","Volume > MIDI Synthesizer":"Volumen > Sintetizador MIDI","Sets the volume of MIDI output (SoundFont or MT-32).":"Ajusta el volumen de la salida MIDI (SoundFont o MT-32).","Volume > Adlib":"Volumen > AdLib","Sets the volume of Adlib music (FM/OPL).":"Ajusta el volumen de la música AdLib (FM/OPL).","Volume > PC-Speaker":"Volumen > Altavoz del PC","Sets the volume of the PC-Speaker.":"Ajusta el volumen del altavoz del PC.","Volume > CD-ROM Audio":"Volumen > Audio de CD-ROM","Sets the volume of CD-ROM Audio output.":"Ajusta el volumen de audio del CD-ROM.","Volume > Other Devices":"Volumen > Otros dispositivos","Sets the volume of Tandy Sound System, Gravis Ultra Sound output and Disney Sound Source.":"Ajusta el volumen de Tandy Sound System, Gravis Ultrasound y Disney Sound Source.",
+"Advanced > SoundBlaster Type":"Avanzado > Tipo de Sound Blaster","Type of emulated SoundBlaster card.":"Tipo de tarjeta Sound Blaster emulada.","SoundBlaster 16 (default)":"Sound Blaster 16 (predeterminado)","SoundBlaster Pro 2":"Sound Blaster Pro 2","SoundBlaster Pro":"Sound Blaster Pro","SoundBlaster 2.0":"Sound Blaster 2.0","SoundBlaster 1.0":"Sound Blaster 1.0","GameBlaster":"Game Blaster",
+"Advanced > SoundBlaster Adlib/FM Mode":"Avanzado > Modo AdLib/FM de Sound Blaster","The SoundBlaster emulated FM synth mode. All modes are Adlib compatible except CMS.":"Modo de síntesis FM emulado de Sound Blaster. Todos los modos son compatibles con AdLib, excepto CMS.","Auto (select based on the SoundBlaster type) (default)":"Automático (según el tipo de Sound Blaster, predeterminado)","CMS (Creative Music System / GameBlaster)":"CMS (Creative Music System / Game Blaster)","OPL-2 (AdLib / OPL-2 / Yamaha 3812)":"OPL-2 (AdLib / OPL-2 / Yamaha 3812)","Dual OPL-2 (Dual OPL-2 used by SoundBlaster Pro 1.0 for stereo sound)":"Doble OPL-2 (utilizado por Sound Blaster Pro 1.0 para sonido estéreo)","OPL-3 (AdLib / OPL-3 / Yamaha YMF262)":"OPL-3 (AdLib / OPL-3 / Yamaha YMF262)","OPL-3 Gold (AdLib Gold / OPL-3 / Yamaha YMF262)":"OPL-3 Gold (AdLib Gold / OPL-3 / Yamaha YMF262)",
+"Advanced > SoundBlaster Adlib Provider":"Avanzado > Proveedor AdLib de Sound Blaster","Provider for the Adlib emulation. Default has good quality and low performance requirements.":"Proveedor de la emulación AdLib. El predeterminado ofrece buena calidad y requiere pocos recursos.","High quality Nuked OPL3":"Nuked OPL3 de alta calidad",
+"Advanced > Enable Gravis Ultrasound (restart required)":"Avanzado > Activar Gravis Ultrasound (requiere reinicio)","Enable Gravis Ultrasound emulation. Settings are fixed at port 0x240, IRQ 5, DMA 3.":"Activa la emulación Gravis Ultrasound. Los ajustes están fijados en puerto 0x240, IRQ 5 y DMA 3.","Advanced > Enable Tandy Sound Device (restart required)":"Avanzado > Activar dispositivo de sonido Tandy (requiere reinicio)","Enable Tandy Sound Device emulation even when running without Tandy Graphics Adapter emulation.":"Activa la emulación del dispositivo de sonido Tandy incluso si no se emula el adaptador gráfico Tandy.","Advanced > Swap Stereo Channels":"Avanzado > Intercambiar canales estéreo","Swap the left and the right audio channel.":"Intercambia los canales de audio izquierdo y derecho."
+}
+for old_text, new_text in option_translations.items():
+    options_source = options_source.replace('"' + old_text + '"', '"' + new_text + '"')
+options_file.write_text(options_source, encoding="utf-8")
+print(f"Translated {len(option_translations)} core option labels, descriptions and values")
