@@ -34,6 +34,8 @@
 #include "vfs_implementation.h"
 #include "xbrz_shader.h"
 #include "sofia_splash.h"
+#include "imgui.h"
+#include "backends/imgui_impl_opengl3.h"
 
 #include <dosbox_pure_sta.h>
 int DBPS_SaveSlotIndex;
@@ -70,6 +72,7 @@ static ZL_Color colOSDBG;
 static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
+static bool ImGuiReady = false;
 
 static const retro_key ZLKtoRETROKEY[] =
 {
@@ -1176,7 +1179,7 @@ void DBPS_SubmitOSDFrame(const void *data, unsigned width, unsigned height)
 {
 	ZL_ASSERT(width == DBPS_OSD_WIDTH && height == DBPS_OSD_HEIGHT);
 	srfOSD.SetScaleTo((float)width, (float)height);
-	srfOSD.SetPixels((const unsigned char*)data, 0, 0, width, height, 4);
+	srfOSD.SetPixelsBGRA((const unsigned char*)data, 0, 0, width, height);
 	unsigned p0 = ((unsigned int*)data)[0], p1 = ((unsigned int*)data)[width/2], p2 = ((unsigned int*)data)[width-1], osdbg = ((p0 == p1 || p0 == p2) ? p0 : p1);
 	colOSDBG = ZL_Color(s((osdbg>>16)&0xFF)/s(255), s((osdbg>>8)&0xFF)/s(255), s(osdbg&0xFF)/s(255), s((osdbg>>24)&0xFF)/s(255));
 }
@@ -1990,7 +1993,13 @@ static void OnLoad(int argc, char *argv[])
 	ZL_Application::SetFpsLimit((float)av.timing.fps);
 	srfCore = ZL_Surface(av.geometry.max_width, av.geometry.max_height);
 	srfOSD = ZL_Surface(DBPS_OSD_WIDTH, DBPS_OSD_HEIGHT, true);
-	shdrOSD = ZL_Shader(ZL_SHADER_SOURCE_HEADER(ZL_GLES_PRECISION_LOW) "uniform sampler2D u_texture; varying vec4 v_color; varying vec2 v_texcoord; void main() { gl_FragColor = v_color * texture2D(u_texture, v_texcoord).bgra; }");
+	shdrOSD = ZL_Shader(ZL_SHADER_SOURCE_HEADER(ZL_GLES_PRECISION_LOW) "uniform sampler2D u_texture; varying vec4 v_color; varying vec2 v_texcoord; void main() { gl_FragColor = v_color * texture2D(u_texture, v_texcoord); }");
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::GetIO().IniFilename = NULL;
+	ImGui::StyleColorsDark();
+	ImGuiReady = ImGui_ImplOpenGL3_Init("#version 130");
+	if (!ImGuiReady) ImGui::DestroyContext();
 	DoApplyGeometry = DoApplyInterfaceOptions = true;
 }
 
@@ -2123,11 +2132,34 @@ static struct sDOSBoxPure : public ZL_Application
 	virtual void AfterFrame()
 	{
 		OnDraw();
+		if (ImGuiReady && srfOSD.GetGLTexture())
+		{
+			ImGuiIO& io = ImGui::GetIO();
+			io.DisplaySize = ImVec2((float)ZLWIDTH, (float)ZLHEIGHT);
+			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+			io.DeltaTime = (float)ZL_Application::Elapsed;
+			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui::NewFrame();
+			ImDrawList* draw = ImGui::GetBackgroundDrawList();
+			const ImVec2 imageMin(16.0f, 16.0f), imageMax(496.0f, 286.0f);
+			draw->AddRectFilled(ImVec2(12.0f, 12.0f), ImVec2(500.0f, 290.0f), IM_COL32(0, 0, 0, 220), 4.0f);
+			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+			draw->AddRect(imageMin, imageMax, IM_COL32(70, 190, 255, 255), 2.0f, 0, 2.0f);
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
 		if (npcb && (server.IsOpened() || my_client_id)) npcb->poll();
 	}
 
 	virtual void OnQuit()
 	{
+		if (ImGuiReady)
+		{
+			ImGui_ImplOpenGL3_Shutdown();
+			ImGui::DestroyContext();
+			ImGuiReady = false;
+		}
 		SynchronizeSettings(true);
 		retro_unload_game();
 	}

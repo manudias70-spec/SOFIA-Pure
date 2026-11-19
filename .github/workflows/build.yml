@@ -35,6 +35,7 @@ jobs:
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'AWE32_OpenROMBesideExe' -Quiet)) { throw "AWE32 ROM loader was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
+        python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
