@@ -209,9 +209,16 @@ filebrowse_row = source[filebrowse_row_start:filebrowse_row_end]
 if filebrowse_row.count(row_color_old) != 1:
     raise SystemExit("Norton palette patch aborted: expected one selection color in compact file-browser row")
 source = source[:filebrowse_row_start] + filebrowse_row.replace(row_color_old, row_color_new, 1) + source[filebrowse_row_end:]
-replace_once("file-browser generic row text palette",
-    "(item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)",
-    "(item.info == INFO_DIM ? (is_nc_explorer ? 0xFF55FFFF : buf.COL_DIM) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))")
+generic_row_old = "(item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)"
+generic_row_new = "(item.info == INFO_DIM ? (is_nc_explorer ? 0xFF55FFFF : buf.COL_DIM) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))"
+filebrowse_row_start = source.find("else if (is_filebrowse) buf.PrintCompact(")
+filebrowse_row_end = source.find("\\n", filebrowse_row_start)
+if filebrowse_row_start < 0 or filebrowse_row_end < 0:
+    raise SystemExit("Norton palette patch aborted: compact file-browser row not found for dim-text palette")
+filebrowse_row = source[filebrowse_row_start:filebrowse_row_end]
+if filebrowse_row.count(generic_row_old) != 1:
+    raise SystemExit("Norton palette patch aborted: expected one dim-text color in compact file-browser row")
+source = source[:filebrowse_row_start] + filebrowse_row.replace(generic_row_old, generic_row_new, 1) + source[filebrowse_row_end:]
 replace_once("file-browser footer palette",
     "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, buf.BGCOL_HEADER | blend, buf.COL_LINEBOX);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", buf.COL_BTNTEXT);",
     "buf.DrawBox(panel_x + 8, bot, panel_w - 16, lh+3, 0xFF000080 | blend, 0xFF00FFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
