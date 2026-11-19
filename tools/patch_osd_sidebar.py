@@ -198,9 +198,16 @@ replace_once("file-browser path palette",
     "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);")
 row_color_old = "(i == se ? buf.COL_HIGHLIGHT : buf.COL_NORMAL)"
 row_color_new = "(i == se ? (is_nc_explorer ? 0xFF000055 : buf.COL_HIGHLIGHT) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))"
-if source.count(row_color_old) < 1:
-    raise SystemExit("Norton palette patch aborted: file-browser row color anchor not found")
-source = source.replace(row_color_old, row_color_new)
+filebrowse_row_start = source.find("else if (is_filebrowse) buf.PrintCompact(")
+if filebrowse_row_start < 0:
+    raise SystemExit("Norton palette patch aborted: file-browser compact row not found")
+filebrowse_row_end = source.find("\\n", filebrowse_row_start)
+if filebrowse_row_end < 0:
+    raise SystemExit("Norton palette patch aborted: file-browser compact row end not found")
+filebrowse_row = source[filebrowse_row_start:filebrowse_row_end]
+if filebrowse_row.count(row_color_old) != 1:
+    raise SystemExit("Norton palette patch aborted: expected one selection color in compact file-browser row")
+source = source[:filebrowse_row_start] + filebrowse_row.replace(row_color_old, row_color_new, 1) + source[filebrowse_row_end:]
 replace_once("file-browser generic row text palette",
     "(item.info == INFO_DIM ? buf.COL_DIM : buf.COL_NORMAL)",
     "(item.info == INFO_DIM ? (is_nc_explorer ? 0xFF55FFFF : buf.COL_DIM) : (is_nc_explorer ? 0xFFFFFFFF : buf.COL_NORMAL))")
