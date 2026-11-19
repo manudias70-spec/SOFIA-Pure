@@ -2144,7 +2144,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImDrawList* draw = ImGui::GetBackgroundDrawList();
 			const ImVec2 imageMin(16.0f, 16.0f), imageMax(496.0f, 286.0f);
 			draw->AddRectFilled(ImVec2(12.0f, 12.0f), ImVec2(500.0f, 290.0f), IM_COL32(0, 0, 0, 220), 4.0f);
-			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f));
 			draw->AddRect(imageMin, imageMax, IM_COL32(70, 190, 255, 255), 2.0f, 0, 2.0f);
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
