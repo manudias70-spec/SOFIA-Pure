@@ -27,6 +27,11 @@
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
 #include <vector>
 
 #include <libretro-common/include/libretro.h>
@@ -393,7 +398,12 @@ void DBPS_ControlWindow(int action)
 	if (action == 2) { ZL_Application::Quit(); return; }
 	SDL_Window* window = SDL_GetMouseFocus();
 	if (!window) return;
-	if (action == 0) SDL_MinimizeWindow(window);
+	if (action == 0)
+	{
+		// Bypass SDL's fullscreen transition path and minimize the active native app window directly.
+		HWND nativeWindow = GetActiveWindow();
+		if (nativeWindow) ShowWindow(nativeWindow, SW_MINIMIZE);
+	}
 	else if (action == 1)
 	{
 		if (ZL_Display::IsMaximized()) SDL_RestoreWindow(window);
