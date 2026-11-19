@@ -378,22 +378,7 @@ replace_once("right pane compact bitmap renderer",
 \t}
 \tvoid DrawChar(const Bit8u* fnt, int ch, int x, int y, int c, Bit32u col = 0xFFFFFFFF)""");
 
-replace_once("right pane title font",
-    "\t\tbuf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, (is_filebrowse ? \"FILE EXPLORER\" : \"DOSBOX PURE START MENU\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\n\t\tif (is_filebrowse) buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7, (is_filebrowse ? \"FILE EXPLORER\" : \"DOSBOX PURE START MENU\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));",
-    "\t\tif (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x, panel_w, panel_y+7, \"FILE EXPLORER\", 0xFFFFFFFF);\n\t\telse buf.PrintCenteredOutlined(lh, panel_x, panel_w, panel_y+7, \"DOSBOX PURE START MENU\", (is_nc_explorer ? 0xFFFFFFFF : buf.COL_MENUTITLE));\n\t\tif (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x + 1, panel_w, panel_y+7, \"FILE EXPLORER\", 0xFFFFFFFF);");
-replace_once("right pane path font",
-    "buf.Print(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);",
-    "buf.PrintCompact(lh, panel_x + 8, panel_y+7+lh+2, browsepath, 0xFFFFFFFF, panel_w-16);");
-replace_once("right pane secondary header font",
-    "if (is_filebrowse) buf.PrintCenteredOutlined(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), (is_nc_explorer ? 0xFFFFFFFF : buf.COL_CONTENT));",
-    "if (is_filebrowse) buf.PrintCenteredOutlinedCompact(lh, panel_x + 1, panel_w, panel_y+7+lh+2, (!dbp_content_name.empty() ? dbp_content_name.c_str() : \"- No Content Loaded -\"), 0xFFFFFFFF);");
-footer_old = 'buf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", buf.COL_BTNTEXT);'
-footer_new = 'buf.PrintCenteredOutlinedCompact(lh, panel_x + 8, panel_w - 16, bot+2, "ENTER OPEN   ESC BACK", buf.COL_BTNTEXT);'
-footer_count = source.count(footer_old)
-if footer_count != 2:
-    raise SystemExit(f"right pane footer font expected two source matches, found {footer_count}")
-source = source.replace(footer_old, footer_new)
-
+# Keep right-pane headers, path and footer unchanged; compact only the file-list body.
 for old_text, new_text, label in [
     ('buf.Print(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);','buf.PrintCompact(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);',"right NAME heading"),
     ('buf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);','buf.PrintCompact(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);',"right SIZE heading"),
