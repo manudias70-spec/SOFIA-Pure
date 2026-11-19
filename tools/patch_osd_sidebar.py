@@ -165,11 +165,11 @@ control_mouse_replacement = """\t\tUpdateHeld();
 \t\t\tconst int cy = 8, ch = lh + 3, cw = 20, cg = 3;
 \t\t\tconst int cx = w - 8 - 3 * cw - 2 * cg;
 \t\t\tconst int mx = (int)(m.x + 0.499f), my = (int)(m.y + 0.499f);
-\t\t\tif (my >= cy && my < cy + ch)
+\t\t\tif (my >= cy && my < cy + ch &&
+\t\t\t\tmx >= cx + 2 * (cw + cg) && mx < cx + 3 * cw + 2 * cg)
 \t\t\t{
-\t\t\t\tif (mx >= cx && mx < cx + cw) { DBPS_ControlWindow(0); return; }
-\t\t\t\tif (mx >= cx + cw + cg && mx < cx + 2 * cw + cg) { DBPS_ControlWindow(1); return; }
-\t\t\t\tif (mx >= cx + 2 * (cw + cg) && mx < cx + 3 * cw + 2 * cg) { DBPS_ControlWindow(2); return; }
+\t\t\t\tDBPS_ControlWindow(2);
+\t\t\t\treturn;
 \t\t\t}
 \t\t}
 
