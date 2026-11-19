@@ -298,7 +298,6 @@ browser_replace(
 \t\t\tbuf.Print(lh, file_col_name, hy, "NOMBRE", 0xFF55FFFF, file_name_chars * buf.CW);
 \t\t\tbuf.Print(lh, file_col_size, hy, "TAMAÑO", 0xFF55FFFF, 8 * buf.CW);
 \t\t\tbuf.Print(lh, file_col_date, hy, "FECHA", 0xFF55FFFF, 10 * buf.CW);
-\t\t\tbuf.Print(lh, file_col_time, hy, "HORA", 0xFF55FFFF, 5 * buf.CW);
 \t\t}
 \t\tfor (int i = scroll, se = (hide_sel ? -1 : sel); i != count && i != (scroll + rows); i++)""")
 browser_replace(
@@ -312,7 +311,6 @@ browser_replace(
 \t\t\t\tbuf.Print(lh, file_col_name, y, item.str.c_str(), rowcol, file_name_chars * buf.CW);
 \t\t\t\tbuf.Print(lh, file_col_size, y, meta.size, rowcol, 8 * buf.CW);
 \t\t\t\tbuf.Print(lh, file_col_date, y, meta.date, rowcol, 10 * buf.CW);
-\t\t\t\tbuf.Print(lh, file_col_time, y, meta.time, rowcol, 5 * buf.CW);
 \t\t\t}
 \t\t\telse if (item.type == IT_MOUNT) // mountable file system""")
 
