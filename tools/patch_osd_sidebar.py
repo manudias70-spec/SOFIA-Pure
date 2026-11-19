@@ -335,6 +335,81 @@ replace_once("Commander right footer bold",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);",
     "\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 8, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);\n\t\t\t\tbuf.PrintCenteredOutlined(lh, panel_x + 9, panel_w - 16, bot+2, \"ENTER OPEN   ESC BACK\", 0xFFFFFFFF);")
 
+
+# Experimental one-pixel reduction for Commander body text only.
+# Keep the native 8px/14px line grid and character width; render one fewer
+# bitmap scanline so headers and footers retain their original visual weight.
+compact_font_patch = r"""
+	void PrintCompact(int lh, int x, int y, const char* msg, Bit32u col = 0xFFFFFFFF, int maxw = 0xFFFFFF)
+	{
+		DBP_ASSERT(y >= 0 && y < (int)height);
+		const Bit8u* fnt = (lh == 8 ? int10_font_08 : int10_font_14);
+		const int ch = (lh == 8 ? 8 : 14);
+		for (const char* p = msg, *pEnd = p + (maxw / CW); *p && p != pEnd; x += CW)
+		{
+			unsigned char c = *(p++);
+			if (c >= 128) { c = (unsigned char)15; }
+			DrawCharCompact(fnt, ch, x, y, (char)c, col);
+		}
+	}
+
+	void DrawCharCompact(const Bit8u* fnt, int ch, int x, int y, int c, Bit32u col = 0xFFFFFFFF)
+	{
+		if (x < 0 || x + CW >= (int)width) return;
+		const Bit8u* glyph = &fnt[(Bit8u)c * ch];
+		Bit32u w = width, *py = video + (w * y) + x;
+		if ((col & 0xFF000000) == 0xFF000000)
+		{
+			for (int row = 0; row < ch - 1; row++, py += w)
+			{
+				const Bit8u bits = glyph[(row * ch) / (ch - 1)];
+				for (Bit32u *px = py, bit = 256; bit; px++) if (bits & (bit >>= 1)) *px = col;
+			}
+		}
+		else
+		{
+			for (AlphaBlendPrep a(col); ; )
+			{
+				for (int row = 0; row < ch - 1; row++, py += w)
+				{
+					const Bit8u bits = glyph[(row * ch) / (ch - 1)];
+					for (Bit32u *px = py, bit = 256; bit; px++) if (bits & (bit >>= 1)) AlphaBlend(px, a);
+				}
+				break;
+			}
+		}
+	}
+"""
+draw_anchor = "\n\tvoid DrawChar(const Bit8u* fnt, int ch, int x, int y, int c, Bit32u col = 0xFFFFFFFF)"
+if source.count(draw_anchor) != 1:
+    raise SystemExit("Compact font patch aborted: DrawChar anchor not unique")
+source = source.replace(draw_anchor, "\n" + compact_font_patch + draw_anchor, 1)
+
+# Left pane body only: preserve its two header rows and the footer/INFO cells.
+left_body_start = source.index("// Same DOSBox Pure font and line height as the active right pane.")
+left_body_end = source.index("\n\t\t\t}", left_body_start)
+left_body = source[left_body_start:left_body_end]
+left_body = left_body.replace("buf.Print(lh,", "buf.PrintCompact(lh,")
+source = source[:left_body_start] + left_body + source[left_body_end:]
+
+# Right pane: reduce the file-column labels and metadata/name rows, not
+# the Commander title/path header or the bottom action footer.
+for old, new in [
+    ('buf.Print(lh, file_col_name, hy, "NOMBRE"', 'buf.PrintCompact(lh, file_col_name, hy, "NOMBRE"'),
+    ('buf.Print(lh, file_col_size, hy, "TAMAÑO"', 'buf.PrintCompact(lh, file_col_size, hy, "TAMAÑO"'),
+    ('buf.Print(lh, file_col_date, hy, "FECHA"', 'buf.PrintCompact(lh, file_col_date, hy, "FECHA"'),
+    ('buf.Print(lh, file_col_time, hy, "HORA"', 'buf.PrintCompact(lh, file_col_time, hy, "HORA"'),
+    ('buf.Print(lh, file_col_name, y, item.str.c_str()', 'buf.PrintCompact(lh, file_col_name, y, item.str.c_str()'),
+    ('buf.Print(lh, file_col_size, y, meta.size', 'buf.PrintCompact(lh, file_col_size, y, meta.size'),
+    ('buf.Print(lh, file_col_date, y, meta.date', 'buf.PrintCompact(lh, file_col_date, y, meta.date'),
+    ('buf.Print(lh, file_col_time, y, meta.time', 'buf.PrintCompact(lh, file_col_time, y, meta.time')
+]:
+    if source.count(old) != 1:
+        raise SystemExit("Compact font patch aborted: expected one drawing call: " + old)
+    source = source.replace(old, new, 1)
+
+print("Applied one-pixel compact bitmap font to Commander panel bodies")
+
 target.write_text(source, encoding="utf-8")
 print(f"Applied {len(patches)} SOFIA-Pure OSD layout changes to {target}")
 
