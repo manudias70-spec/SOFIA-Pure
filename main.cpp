@@ -27,6 +27,7 @@
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
 
+#include <cfloat>
 #include <vector>
 
 #include <libretro-common/include/libretro.h>
@@ -1460,6 +1461,48 @@ static void OnJoyDeviceChange(bool added, int which)
 	RefreshJoysticks();
 }
 
+// Forward ZillaLib pointer input to Dear ImGui. ZillaLib uses a bottom-left
+// origin, while ImGui expects top-left screen coordinates.
+static void OnImGuiPointerMove(ZL_PointerMoveEvent& e)
+{
+	if (e.which != 0 || !ImGuiReady) return;
+	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+}
+
+static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
+{
+	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
+	ImGui::GetIO().AddMouseButtonEvent(button, true);
+	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+}
+
+static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
+{
+	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
+	ImGui::GetIO().AddMouseButtonEvent(button, false);
+	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+}
+
+static void OnImGuiMouseWheel(ZL_MouseWheelEvent& e)
+{
+	if (e.which != 0 || !ImGuiReady) return;
+	ImGui::GetIO().AddMouseWheelEvent((float)e.x, (float)e.y);
+}
+
+static void OnImGuiWindowActivated(ZL_WindowActivateEvent& e)
+{
+	if (ImGuiReady && !e.mouse_focus)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+		io.AddMouseButtonEvent(0, false);
+		io.AddMouseButtonEvent(1, false);
+		io.AddMouseButtonEvent(2, false);
+	}
+}
+
 static void OnResized(ZL_WindowResizeEvent& ev)
 {
 	if (ev.window_fullscreen) ZL_Application::SettingsSet("screen_fullscreen", "true");
@@ -2096,6 +2139,11 @@ static struct sDOSBoxPure : public ZL_Application
 
 		ZL_Display::sigKeyDown.connect(OnKeyDown);
 		ZL_Display::sigKeyUp.connect(OnKeyUp);
+		ZL_Display::sigPointerMove.connect(OnImGuiPointerMove);
+		ZL_Display::sigPointerDown.connect(OnImGuiPointerDown);
+		ZL_Display::sigPointerUp.connect(OnImGuiPointerUp);
+		ZL_Display::sigMouseWheel.connect(OnImGuiMouseWheel);
+		ZL_Display::sigActivated.connect(OnImGuiWindowActivated);
 		ZL_Display::sigDropFile.connect(OnDropFile);
 		ZL_Display::sigJoyDeviceChange.connect(OnJoyDeviceChange);
 		ZL_Display::sigResized.connect(OnResized);
