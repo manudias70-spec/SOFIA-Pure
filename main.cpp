@@ -2378,8 +2378,11 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				else
 				{
-					SofiCommanderMinimized = true;
+					// Match Commander's own close control without changing its implementation.
+					SofiCommanderOpen = false;
 					SofiCommanderFocused = false;
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = false;
 				}
 			}
 			ImGui::PopStyleColor(4);
