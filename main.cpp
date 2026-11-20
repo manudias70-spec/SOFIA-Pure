@@ -2313,7 +2313,7 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 
 			// Native application controls, styled to match the SOFI Space title bar.
-			ImGui::SetNextWindowPos(ImVec2(w - 132.0f, 18.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 132.0f, 18.0f), ImGuiCond_Always);
 			ImGui::SetNextWindowSize(ImVec2(120.0f, 40.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Window Controls", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
