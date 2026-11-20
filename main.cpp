@@ -75,6 +75,7 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiPointerCaptured = false, SofiCaptureButtonDown = false, SofiSuppressMiddleMenu = false;
+static bool SofiCommanderHovered = false;
 
 static const retro_key ZLKtoRETROKEY[] =
 {
@@ -385,6 +386,7 @@ static std::vector<Bit8u> pktmem;
 extern "C" { unsigned int SDL_GetTicks(void); }
 extern "C" { int SDL_ShowCursor(int toggle); }
 extern "C" { struct SDL_Window* SDL_GetMouseFocus(void); }
+extern "C" { void SDL_WarpMouseInWindow(struct SDL_Window* window, int x, int y); }
 extern "C" { void* SDL_GL_GetProcAddress(const char *proc); } 
 extern "C" { unsigned long SDL_GetThreadID(struct SDL_Thread* = NULL); }
 extern "C" { extern int SDL_GetLockModStates(void); }
@@ -1914,7 +1916,17 @@ static void OnDraw()
 		lastHiddenCursor = false;
 		doHideCursor = false;
 	}
-	if ((SofiPointerCaptured || (PointerLock && !showOSD)) && !ThrottlePaused)
+	if (SofiCommanderHovered && SofiPointerCaptured)
+	{
+		// Hand pointer ownership to Commander/Pure when the virtual SOFI pointer enters it.
+		SofiPointerCaptured = false;
+		SofiCaptureButtonDown = false;
+		ZL_Display::SetPointerLock(false);
+		doPointerLock = false;
+		if (SDL_Window* window = SDL_GetMouseFocus())
+			SDL_WarpMouseInWindow(window, (int)PointerLockPos.x, (int)(ZLHEIGHT - PointerLockPos.y));
+	}
+	if ((SofiPointerCaptured || (PointerLock && !showOSD)) && !SofiCommanderHovered && !ThrottlePaused)
 	{
 		if (!doPointerLock)
 		{
@@ -2241,8 +2253,8 @@ static struct sDOSBoxPure : public ZL_Application
 			if (SofiPointerCaptured)
 				io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
 			ImGui::NewFrame();
-			// Draw an ImGui-owned cursor so SOFI remains usable outside Commander.
-			io.MouseDrawCursor = true;
+			// Exactly one software cursor owner: SOFI outside Commander, Pure inside it.
+			io.MouseDrawCursor = !SofiCommanderHovered;
 
 			// SOFI Space - first visual layer. Drawn behind all interactive windows.
 			{
@@ -2279,7 +2291,9 @@ static struct sDOSBoxPure : public ZL_Application
 			// provides move/resize handling; the preview scales proportionally inside it.
 			ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
-			if (ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse))
+			const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
+			SofiCommanderHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+			if (commanderVisible)
 			{
 				const ImVec2 imageSize = ImGui::GetContentRegionAvail();
 				// Fill the entire Commander content area, allowing aspect-ratio distortion.
