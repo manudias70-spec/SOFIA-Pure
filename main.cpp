@@ -2189,6 +2189,48 @@ static struct sDOSBoxPure : public ZL_Application
 			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui::NewFrame();
+
+			// SOFI Space - first visual layer. Drawn behind all interactive windows.
+			{
+				ImDrawList* bg = ImGui::GetBackgroundDrawList();
+				const float w = io.DisplaySize.x;
+				const float h = io.DisplaySize.y;
+				const ImU32 space = IM_COL32(5, 10, 24, 245);
+				const ImU32 panel = IM_COL32(8, 18, 38, 250);
+				const ImU32 cyan = IM_COL32(40, 190, 255, 220);
+				const ImU32 muted = IM_COL32(105, 150, 185, 210);
+
+				bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), space);
+				bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, 76), panel);
+				bg->AddRectFilled(ImVec2(0, 76), ImVec2(112, h - 28), panel);
+				bg->AddRectFilled(ImVec2(112, h - 28), ImVec2(w, h), panel);
+				bg->AddLine(ImVec2(0, 76), ImVec2(w, 76), cyan, 1.5f);
+				bg->AddLine(ImVec2(112, 76), ImVec2(112, h - 28), cyan, 1.5f);
+				bg->AddLine(ImVec2(112, h - 28), ImVec2(w, h - 28), muted, 1.0f);
+
+				// Subtle retro-futuristic grid in the workspace.
+				for (float x = 132; x < w; x += 32)
+					bg->AddLine(ImVec2(x, 77), ImVec2(x, h - 29), IM_COL32(30, 95, 145, 32), 1.0f);
+				for (float y = 92; y < h - 28; y += 32)
+					bg->AddLine(ImVec2(113, y), ImVec2(w, y), IM_COL32(30, 95, 145, 32), 1.0f);
+
+				bg->AddCircleFilled(ImVec2(34, 38), 12, IM_COL32(20, 120, 190, 255), 24);
+				bg->AddCircle(ImVec2(34, 38), 17, cyan, 2.0f);
+				bg->AddText(ImVec2(60, 19), IM_COL32(225, 245, 255, 255), "SOFI-PURE");
+				bg->AddText(ImVec2(61, 43), muted, "SPACE INTERFACE");
+
+				const char* items[] = { "HOME", "CORE", "MEDIA", "TOOLS", "SETTINGS" };
+				for (int i = 0; i < 5; ++i)
+				{
+					const float y = 112.0f + i * 62.0f;
+					bg->AddRectFilled(ImVec2(12, y), ImVec2(100, y + 44),
+						i == 0 ? IM_COL32(12, 65, 105, 220) : IM_COL32(10, 28, 48, 190), 5.0f);
+					bg->AddRect(ImVec2(12, y), ImVec2(100, y + 44),
+						i == 0 ? cyan : IM_COL32(35, 105, 145, 130), 5.0f, 0, 1.0f);
+					bg->AddText(ImVec2(25, y + 15), i == 0 ? IM_COL32(225, 250, 255, 255) : muted, items[i]);
+				}
+				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
+			}
 			// Commander now lives in a real ImGui window. Its default window behavior
 			// provides move/resize handling; the preview scales proportionally inside it.
 			ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
