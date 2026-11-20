@@ -2141,13 +2141,29 @@ static struct sDOSBoxPure : public ZL_Application
 			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui::NewFrame();
-			ImDrawList* draw = ImGui::GetBackgroundDrawList();
-			// Align the outer viewing frame with the source Commander top edge (Y=10).
-			// Frame bounds: x=234..917, y=10..432.
-			const ImVec2 imageMin(16.0f, 14.0f), imageMax(436.0f, 274.0f);
-			draw->AddRectFilled(ImVec2(12.0f, 10.0f), ImVec2(440.0f, 278.0f), IM_COL32(0, 0, 0, 220), 4.0f);
-			draw->AddImage((ImTextureID)srfOSD.GetGLTexture(), imageMin, imageMax, ImVec2(234.0f / 960.0f, 27.0f / 540.0f), ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
-			draw->AddRect(imageMin, imageMax, IM_COL32(70, 190, 255, 255), 2.0f, 0, 2.0f);
+			// Commander now lives in a real ImGui window. Its default window behavior
+			// provides move/resize handling; the preview scales proportionally inside it.
+			ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
+			if (ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse))
+			{
+				const ImVec2 available = ImGui::GetContentRegionAvail();
+				const float imageAspect = 683.0f / 405.0f;
+				ImVec2 imageSize = available;
+				if (imageSize.x > imageSize.y * imageAspect)
+					imageSize.x = imageSize.y * imageAspect;
+				else
+					imageSize.y = imageSize.x / imageAspect;
+				if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+				{
+					ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
+						ImVec2(234.0f / 960.0f, 27.0f / 540.0f),
+						ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
+					ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+						IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
+				}
+			}
+			ImGui::End();
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
