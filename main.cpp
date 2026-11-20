@@ -77,6 +77,7 @@ static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
+static bool SofiCommanderMinimized = false, SofiCommanderMaximizeOnOpen = false, SofiCommanderApplyMinimized = false;
 static std::string SofiCommanderIniPath;
 
 static const retro_key ZLKtoRETROKEY[] =
@@ -2334,7 +2335,20 @@ static struct sDOSBoxPure : public ZL_Application
 					selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 				if (ImGui::Button(sofiSections[i], ImVec2(88.0f, 44.0f)))
 				{
-					if (i == 4) SofiCommanderOpen = true;
+					if (i == 4)
+					{
+						if (!SofiCommanderOpen)
+						{
+							SofiCommanderOpen = true;
+							SofiCommanderMinimized = false;
+							SofiCommanderMaximizeOnOpen = true;
+						}
+						else
+						{
+							SofiCommanderMinimized = !SofiCommanderMinimized;
+							SofiCommanderApplyMinimized = true;
+						}
+					}
 					else selectedSofiSection = i;
 				}
 				ImGui::PopStyleColor(4);
@@ -2343,15 +2357,29 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
-			// Commander starts hidden. Explorer restores it and gives it focus;
-			// moving focus to another ImGui window hides it again.
+			// Explorer cycles Commander through hidden, minimized and visible states.
+			// First opening maximizes it; restoring a minimized window preserves its last geometry.
 			SofiCommanderHovered = false;
 			if (SofiCommanderOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
-				ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
-				ImGui::SetNextWindowFocus();
+				if (SofiCommanderMaximizeOnOpen)
+				{
+					const ImVec2 display = ImGui::GetIO().DisplaySize;
+					ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Always);
+					ImGui::SetNextWindowSize(ImVec2(display.x - 20.0f, display.y - 20.0f), ImGuiCond_Always);
+					ImGui::SetNextWindowCollapsed(false, ImGuiCond_Always);
+					SofiCommanderMaximizeOnOpen = false;
+					SofiCommanderFocused = false;
+				}
+				else if (SofiCommanderApplyMinimized)
+				{
+					ImGui::SetNextWindowCollapsed(SofiCommanderMinimized, ImGuiCond_Always);
+					SofiCommanderApplyMinimized = false;
+				}
+				if (!SofiCommanderMinimized && !SofiCommanderFocused)
+					ImGui::SetNextWindowFocus();
 				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL);
+				const bool commanderCollapsed = ImGui::IsWindowCollapsed();
 				if (commanderVisible)
 				{
 					const ImVec2 imageSize = ImGui::GetContentRegionAvail();
@@ -2366,9 +2394,10 @@ static struct sDOSBoxPure : public ZL_Application
 							IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
 					}
 				}
+				SofiCommanderMinimized = commanderCollapsed;
 				const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 				ImGui::End();
-				if (!commanderFocused && SofiCommanderFocused)
+				if (!commanderFocused && SofiCommanderFocused && !SofiCommanderMinimized)
 				{
 					SofiCommanderOpen = false;
 					SofiCommanderFocused = false;
@@ -2378,6 +2407,7 @@ static struct sDOSBoxPure : public ZL_Application
 			else
 			{
 				SofiCommanderFocused = false;
+				SofiCommanderMinimized = false;
 			}
 
 			// Native application controls are drawn last so Commander cannot cover their hit targets.
