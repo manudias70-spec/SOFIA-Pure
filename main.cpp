@@ -2346,46 +2346,6 @@ static struct sDOSBoxPure : public ZL_Application
 				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
 			}
 
-			// SOFI Space navigation: keep Explorer as the only visible navigation button.
-			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
-			ImGui::Begin("SOFI Navigation", NULL,
-				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
-			const bool selected = SofiCommanderOpen;
-			ImGui::PushStyleColor(ImGuiCol_Button,
-				selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-			ImGui::PushStyleColor(ImGuiCol_Border,
-				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)))
-			{
-				if (!SofiCommanderOpen)
-				{
-					SofiCommanderOpen = true;
-					SofiCommanderMinimized = false;
-					SofiCommanderApplyMinimized = true;
-					SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
-				}
-				else if (SofiCommanderMinimized)
-				{
-					SofiCommanderMinimized = false;
-					SofiCommanderApplyMinimized = true;
-				}
-				else
-				{
-					SofiCommanderMinimized = true;
-					SofiCommanderFocused = false;
-				}
-			}
-			ImGui::PopStyleColor(4);
-			ImGui::PopStyleVar(2);
-			ImGui::End();
-
 			// Explorer opens Commander at its saved normal size, restores it when minimized,
 			// and minimizes it when already visible.
 			SofiCommanderHovered = false;
@@ -2592,6 +2552,46 @@ static struct sDOSBoxPure : public ZL_Application
 				draw->AddLine(ImVec2(cx + 5.0f, cy - 5.0f), ImVec2(cx - 5.0f, cy + 5.0f), IM_COL32(255, 240, 240, 255), 2.0f);
 			}
 			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar(2);
+			ImGui::End();
+
+			// SOFI Space navigation: keep Explorer as the only visible navigation button.
+			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
+			ImGui::Begin("SOFI Navigation", NULL,
+				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
+			const bool selected = SofiCommanderOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)))
+			{
+				if (!SofiCommanderOpen)
+				{
+					SofiCommanderOpen = true;
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = true;
+					SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
+				}
+				else if (SofiCommanderMinimized)
+				{
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = true;
+				}
+				else
+				{
+					SofiCommanderMinimized = true;
+					SofiCommanderFocused = false;
+				}
+			}
+			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
