@@ -76,6 +76,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
+static bool SofiSpaceVisible = true;
 static std::string SofiCommanderIniPath;
 
 static const retro_key ZLKtoRETROKEY[] =
@@ -1492,6 +1493,7 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 		{
 			// Middle click releases Pure's relative-mode capture and returns ownership to SOFI.
 			SofiCommanderCaptured = false;
+			SofiSpaceVisible = true;
 			SofiSuppressMiddleMenu = true;
 			SofiSuppressMiddleRelease = true;
 			ZL_Display::SetPointerLock(false);
@@ -1507,6 +1509,7 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 	if (e.button == ZL_BUTTON_LEFT && SofiCommanderHovered)
 	{
 		SofiCommanderCaptured = true;
+		SofiSpaceVisible = false;
 		SofiSuppressMiddleRelease = false;
 		PointerLockPos = ZL_Vector((scalar)e.x, (scalar)e.y);
 		io.AddMouseButtonEvent(0, false);
@@ -2275,6 +2278,7 @@ static struct sDOSBoxPure : public ZL_Application
 			io.MouseDrawCursor = !SofiCommanderCaptured;
 
 			// SOFI Space - first visual layer. Drawn behind all interactive windows.
+			if (SofiSpaceVisible)
 			{
 				ImDrawList* bg = ImGui::GetBackgroundDrawList();
 				const float w = io.DisplaySize.x;
@@ -2329,10 +2333,12 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// SOFI Space navigation: real interactive buttons, kept independent
 			// from Commander and from the emulator's configuration dialogs.
+			if (SofiSpaceVisible)
+			{
 			static int selectedSofiSection = -1;
 			const char* sofiSections[] = { "VIDEO", "AUDIO", "CORE", "SETTINGS" };
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 270.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
@@ -2354,7 +2360,18 @@ static struct sDOSBoxPure : public ZL_Application
 				if (i != 3) ImGui::Spacing();
 			}
 			ImGui::PopStyleVar(2);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(12, 55, 88, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(50, 205, 255, 255));
+			if (ImGui::Button("SOFI UI", ImVec2(88.0f, 44.0f)))
+				SofiSpaceVisible = false;
+			ImGui::PopStyleColor(4);
+			ImGui::PopStyleVar(2);
 			ImGui::End();
+			}
 
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
