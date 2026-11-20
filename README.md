@@ -86,9 +86,9 @@ Los créditos específicos y avisos de licencia de cada componente prevalecen so
 
 ## Licencia y componentes de terceros
 
-La distribución combinada de SOFIA-Pure se ofrece bajo **GNU GPL versión 3**. La base DOSBox Pure / DOSBox Pure Unleashed declara expresamente GPL versión 2 o cualquier versión posterior; por ello, esta distribución selecciona GPLv3 para combinarla con el shader derivado de xBRZ, cuyo aviso de origen especifica GPL-3.0. Los componentes con licencias o avisos propios conservan sus atribuciones y condiciones, detalladas en [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md). El texto GPLv2 original se conserva en `LICENSES/GPL-2.0.txt` como referencia para los avisos heredados.
+**La licencia de distribución del conjunto todavía está en revisión; no debe interpretarse este repositorio como una declaración de que todos sus componentes ya son compatibles entre sí.** DOSBox Pure / DOSBox Pure Unleashed declara GPL versión 2 o cualquier versión posterior, mientras que el shader derivado de xBRZ conserva un aviso GPL-3.0. Además, la integración EMU8000 identifica como referencia el código de 86Box, cuyo repositorio declara GPL-2.0. La compatibilidad de esa combinación requiere una revisión adicional antes de publicar releases o binarios.
 
-Esta selección se basa en los avisos disponibles en los repositorios y archivos fuente consultados. Antes de distribuir binarios, debe comprobarse que cada paquete incluya el código fuente correspondiente, los avisos y los materiales exigidos por las licencias aplicables.
+Los avisos, textos de licencia y procedencias se documentan en [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md). Hasta resolver la compatibilidad —por ejemplo, obteniendo permisos adicionales o sustituyendo el componente incompatible— no se debe afirmar una licencia única para la distribución combinada ni anunciar binarios como listos para redistribución.
 
 ## Comunidad y distribución
 
