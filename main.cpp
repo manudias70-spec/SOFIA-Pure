@@ -77,8 +77,7 @@ static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
-static bool SofiCommanderMinimized = false, SofiCommanderMaximized = false, SofiCommanderMaximizeOnOpen = false, SofiCommanderApplyMinimized = false;
-static bool SofiCommanderApplyMaximized = false;
+static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
 static ImVec2 SofiCommanderRestorePos(0.0f, 0.0f);
 // Commander minimize/restore uses a compact title bar while preserving saved geometry.
@@ -2345,7 +2344,6 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							SofiCommanderOpen = true;
 							SofiCommanderMinimized = false;
-							SofiCommanderMaximizeOnOpen = false;
 						}
 						else
 						{
@@ -2366,7 +2364,7 @@ static struct sDOSBoxPure : public ZL_Application
 			SofiCommanderHovered = false;
 			if (SofiCommanderOpen)
 			{
-				if (SofiCommanderApplyMinimized || SofiCommanderApplyMaximized)
+				if (SofiCommanderApplyMinimized)
 				{
 					const float titleHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().WindowPadding.y * 2.0f;
 					if (SofiCommanderMinimized)
@@ -2374,14 +2372,8 @@ static struct sDOSBoxPure : public ZL_Application
 						if (SofiCommanderRestoreSize.x <= 0.0f) SofiCommanderRestoreSize = ImVec2(520.0f, 320.0f);
 						// Keep the compact Commander bar attached to the bottom edge of SOFI Space.
 						ImGui::SetNextWindowPos(ImVec2(SofiCommanderRestorePos.x,
-							viewportPos.y + viewportSize.y - titleHeight), ImGuiCond_Always);
+							ImGui::GetIO().DisplaySize.y - titleHeight), ImGuiCond_Always);
 						ImGui::SetNextWindowSize(ImVec2(SofiCommanderRestoreSize.x, titleHeight), ImGuiCond_Always);
-					}
-					else if (SofiCommanderMaximized)
-					{
-						// Maximize against the exact framebuffer dimensions used by SOFI Space.
-						ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
-						ImGui::SetNextWindowSize(ImVec2((float)ZLWIDTH, (float)ZLHEIGHT), ImGuiCond_Always);
 					}
 					else
 					{
@@ -2389,7 +2381,6 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::SetNextWindowSize(SofiCommanderRestoreSize, ImGuiCond_Always);
 					}
 					SofiCommanderApplyMinimized = false;
-					SofiCommanderApplyMaximized = false;
 				}
 				if (!SofiCommanderMinimized && !SofiCommanderFocused)
 					ImGui::SetNextWindowFocus();
@@ -2400,7 +2391,7 @@ static struct sDOSBoxPure : public ZL_Application
 				// Compact title-bar controls, aligned to the right like SOFI Space.
 					const ImVec2 windowPos = ImGui::GetWindowPos();
 					const ImVec2 windowSize = ImGui::GetWindowSize();
-					if (!SofiCommanderMinimized && !SofiCommanderMaximized)
+					if (!SofiCommanderMinimized)
 					{
 						SofiCommanderRestoreSize = windowSize;
 						SofiCommanderRestorePos = windowPos;
@@ -2469,17 +2460,8 @@ static struct sDOSBoxPure : public ZL_Application
 					if (SofiCommanderMinimized)
 					{
 						SofiCommanderMinimized = false;
-						SofiCommanderMaximized = false;
 					}
-					else if (!SofiCommanderMaximized)
-					{
-						SofiCommanderRestoreSize = windowSize;
-						SofiCommanderRestorePos = windowPos;
-						SofiCommanderMaximized = true;
-					}
-					else SofiCommanderMaximized = false;
-					SofiCommanderApplyMinimized = true;
-					SofiCommanderApplyMaximized = true;
+						SofiCommanderApplyMinimized = true;
 				}
 				const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 				ImGui::End();
