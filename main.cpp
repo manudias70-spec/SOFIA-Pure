@@ -388,6 +388,11 @@ static std::vector<Bit8u> pktmem;
 extern "C" { unsigned int SDL_GetTicks(void); }
 extern "C" { int SDL_ShowCursor(int toggle); }
 extern "C" { struct SDL_Window* SDL_GetMouseFocus(void); }
+extern "C" { void SDL_MinimizeWindow(struct SDL_Window* window); }
+extern "C" { void SDL_MaximizeWindow(struct SDL_Window* window); }
+extern "C" { void SDL_RestoreWindow(struct SDL_Window* window); }
+extern "C" { unsigned int SDL_GetWindowFlags(struct SDL_Window* window); }
+static const unsigned int SOFI_SDL_WINDOW_MAXIMIZED = 0x00000080u;
 extern "C" { void SDL_WarpMouseInWindow(struct SDL_Window* window, int x, int y); }
 extern "C" { void* SDL_GL_GetProcAddress(const char *proc); } 
 extern "C" { unsigned long SDL_GetThreadID(struct SDL_Thread* = NULL); }
@@ -2306,6 +2311,43 @@ static struct sDOSBoxPure : public ZL_Application
 
 				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
 			}
+
+			// Native application controls, styled to match the SOFI Space title bar.
+			ImGui::SetNextWindowPos(ImVec2(w - 132.0f, 18.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(120.0f, 40.0f), ImGuiCond_Always);
+			ImGui::Begin("SOFI Window Controls", NULL,
+				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
+				ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 5.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(18, 48, 72, 230));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(30, 105, 150, 255));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(40, 155, 210, 255));
+			if (ImGui::Button("_", ImVec2(34.0f, 28.0f)))
+			{
+				if (SDL_Window* window = SDL_GetMouseFocus()) SDL_MinimizeWindow(window);
+			}
+			ImGui::SameLine(0.0f, 4.0f);
+			if (ImGui::Button("□", ImVec2(34.0f, 28.0f)))
+			{
+				if (SDL_Window* window = SDL_GetMouseFocus())
+				{
+					if (SDL_GetWindowFlags(window) & SOFI_SDL_WINDOW_MAXIMIZED) SDL_RestoreWindow(window);
+					else SDL_MaximizeWindow(window);
+				}
+			}
+			ImGui::PopStyleColor(3);
+			ImGui::SameLine(0.0f, 4.0f);
+			ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(115, 28, 42, 235));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(205, 38, 55, 255));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(245, 55, 65, 255));
+			if (ImGui::Button("X", ImVec2(34.0f, 28.0f))) ZL_Application::Quit();
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar(2);
+			ImGui::End();
+
 			// SOFI Space navigation: the Explorer button controls the auxiliary Commander window.
 			static int selectedSofiSection = -1;
 			const char* sofiSections[] = { "VIDEO", "AUDIO", "CORE", "SETTINGS", "EXPLORADOR" };
@@ -2345,7 +2387,7 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowFocus();
-				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
+				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL);
 				if (commanderVisible)
 				{
 					const ImVec2 imageSize = ImGui::GetContentRegionAvail();
