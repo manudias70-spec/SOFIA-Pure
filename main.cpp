@@ -1876,6 +1876,14 @@ static void OnDraw()
 
 	bool showOSD = DBPS_IsShowingOSD();
 	static bool doPointerLock, doHideCursor, lastHiddenCursor;
+	// SOFI owns the visible pointer in every mode, including pointer-lock mode.
+	// Enforce this outside the legacy pointer-lock visibility branch.
+	if (ImGuiReady)
+	{
+		SDL_ShowCursor(0);
+		lastHiddenCursor = false;
+		doHideCursor = false;
+	}
 	if (PointerLock && !showOSD && !ThrottlePaused)
 	{
 		if (!doPointerLock) { ZL_Display::SetPointerLock((doPointerLock = true)); PointerLockPos = ZL_Input::Pointer(); }
@@ -1884,16 +1892,7 @@ static void OnDraw()
 	else
 	{
 		if (doPointerLock) ZL_Display::SetPointerLock((doPointerLock = false));
-		// SOFI owns the visible interface: keep the system pointer available over it.
-		if (ImGuiReady)
-		{
-			// SOFI uses ImGui's software-drawn cursor across the entire interface.
-			// Hide the legacy SDL/Pure cursor to avoid showing two different pointers.
-			SDL_ShowCursor(0);
-			lastHiddenCursor = false;
-			doHideCursor = false;
-		}
-		else
+		if (!ImGuiReady)
 		{
 			bool showCursorAgain = (doPointerLock && !showOSD && doHideCursor && lastHiddenCursor); // show when pausing or disabling pointer lock
 			if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
