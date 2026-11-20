@@ -2344,11 +2344,17 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							SofiCommanderOpen = true;
 							SofiCommanderMinimized = false;
+							SofiCommanderApplyMinimized = true;
+						}
+						else if (SofiCommanderMinimized)
+						{
+							SofiCommanderMinimized = false;
+							SofiCommanderApplyMinimized = true;
 						}
 						else
 						{
-							SofiCommanderMinimized = !SofiCommanderMinimized;
-							SofiCommanderApplyMinimized = true;
+							SofiCommanderMinimized = true;
+							SofiCommanderFocused = false;
 						}
 					}
 					else selectedSofiSection = i;
@@ -2364,38 +2370,35 @@ static struct sDOSBoxPure : public ZL_Application
 			SofiCommanderHovered = false;
 			if (SofiCommanderOpen)
 			{
-				if (SofiCommanderApplyMinimized)
+				// A minimized Commander is not submitted to ImGui at all, so no title bar
+				// or residual window remains over the SOFI Space interface.
+				if (SofiCommanderMinimized)
 				{
-					const float titleHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().WindowPadding.y * 2.0f;
-					if (SofiCommanderMinimized)
+					SofiCommanderFocused = false;
+				}
+				else
+				{
+					if (SofiCommanderApplyMinimized)
 					{
-						if (SofiCommanderRestoreSize.x <= 0.0f) SofiCommanderRestoreSize = ImVec2(520.0f, 320.0f);
-						// Keep the compact Commander bar attached to the bottom edge of SOFI Space.
-						ImGui::SetNextWindowPos(ImVec2(SofiCommanderRestorePos.x,
-							ImGui::GetIO().DisplaySize.y - titleHeight), ImGuiCond_Always);
-						ImGui::SetNextWindowSize(ImVec2(SofiCommanderRestoreSize.x, titleHeight), ImGuiCond_Always);
-					}
-					else
-					{
+						if (SofiCommanderRestoreSize.x <= 0.0f)
+							SofiCommanderRestoreSize = ImVec2(520.0f, 320.0f);
 						ImGui::SetNextWindowPos(SofiCommanderRestorePos, ImGuiCond_Always);
 						ImGui::SetNextWindowSize(SofiCommanderRestoreSize, ImGuiCond_Always);
+						SofiCommanderApplyMinimized = false;
 					}
-					SofiCommanderApplyMinimized = false;
-				}
-				if (!SofiCommanderMinimized && !SofiCommanderFocused)
-					ImGui::SetNextWindowFocus();
-				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
-				bool commanderMinimizeClicked = false;
-				bool commanderRestoreClicked = false;
-				bool commanderCloseClicked = false;
-				// Compact title-bar controls, aligned to the right like SOFI Space.
+					if (!SofiCommanderFocused)
+						ImGui::SetNextWindowFocus();
+
+					const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
+					bool commanderMinimizeClicked = false;
+					bool commanderRestoreClicked = false;
+					bool commanderCloseClicked = false;
 					const ImVec2 windowPos = ImGui::GetWindowPos();
 					const ImVec2 windowSize = ImGui::GetWindowSize();
-					if (!SofiCommanderMinimized)
-					{
-						SofiCommanderRestoreSize = windowSize;
-						SofiCommanderRestorePos = windowPos;
-					}
+					SofiCommanderRestoreSize = windowSize;
+					SofiCommanderRestorePos = windowPos;
+
+					// Compact title-bar controls, aligned to the right like SOFI Space.
 					const float titleBarHeight = ImGui::GetFrameHeight();
 					const float buttonSize = 22.0f;
 					const float buttonY = windowPos.y + (titleBarHeight - buttonSize) * 0.5f;
@@ -2406,15 +2409,15 @@ static struct sDOSBoxPure : public ZL_Application
 					const ImVec2 restoreMax(closeRight - buttonSize - 2.0f, buttonY + buttonSize);
 					const ImVec2 minimizeMin(closeRight - buttonSize * 3.0f - 4.0f, buttonY);
 					const ImVec2 minimizeMax(closeRight - buttonSize * 2.0f - 4.0f, buttonY + buttonSize);
-				ImDrawList* titleDraw = ImGui::GetWindowDrawList();
-				titleDraw->PushClipRect(windowPos, ImVec2(windowPos.x + windowSize.x, windowPos.y + titleBarHeight), false);
-				const bool minimizeHovered = ImGui::IsMouseHoveringRect(minimizeMin, minimizeMax, false);
-				const bool restoreHovered = ImGui::IsMouseHoveringRect(restoreMin, restoreMax, false);
-				const bool closeHovered = ImGui::IsMouseHoveringRect(closeMin, closeMax, false);
-				titleDraw->AddRectFilled(minimizeMin, minimizeMax,
-					minimizeHovered ? IM_COL32(25, 115, 160, 255) : IM_COL32(18, 48, 72, 230), 4.0f);
-				titleDraw->AddRectFilled(restoreMin, restoreMax,
-					restoreHovered ? IM_COL32(25, 115, 160, 255) : IM_COL32(18, 48, 72, 230), 4.0f);
+					ImDrawList* titleDraw = ImGui::GetWindowDrawList();
+					titleDraw->PushClipRect(windowPos, ImVec2(windowPos.x + windowSize.x, windowPos.y + titleBarHeight), false);
+					const bool minimizeHovered = ImGui::IsMouseHoveringRect(minimizeMin, minimizeMax, false);
+					const bool restoreHovered = ImGui::IsMouseHoveringRect(restoreMin, restoreMax, false);
+					const bool closeHovered = ImGui::IsMouseHoveringRect(closeMin, closeMax, false);
+					titleDraw->AddRectFilled(minimizeMin, minimizeMax,
+						minimizeHovered ? IM_COL32(25, 115, 160, 255) : IM_COL32(18, 48, 72, 230), 4.0f);
+					titleDraw->AddRectFilled(restoreMin, restoreMax,
+						restoreHovered ? IM_COL32(25, 115, 160, 255) : IM_COL32(18, 48, 72, 230), 4.0f);
 					titleDraw->AddRectFilled(closeMin, closeMax,
 						closeHovered ? IM_COL32(205, 38, 55, 255) : IM_COL32(110, 35, 48, 230), 4.0f);
 					const float minCx = (minimizeMin.x + minimizeMax.x) * 0.5f;
@@ -2431,61 +2434,62 @@ static struct sDOSBoxPure : public ZL_Application
 						ImVec2(closeCx + 4.5f, closeCy + 4.5f), IM_COL32(255, 245, 245, 255), 2.0f);
 					titleDraw->AddLine(ImVec2(closeCx + 4.5f, closeCy - 4.5f),
 						ImVec2(closeCx - 4.5f, closeCy + 4.5f), IM_COL32(255, 245, 245, 255), 2.0f);
-					commanderMinimizeClicked = !SofiCommanderMinimized && minimizeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-				commanderRestoreClicked = restoreHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-				commanderCloseClicked = closeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-				titleDraw->PopClipRect();
-				if (commanderVisible && !SofiCommanderMinimized)
-				{
-					const ImVec2 imageSize = ImGui::GetContentRegionAvail();
-					// Fill the entire Commander content area, allowing aspect-ratio distortion.
-					if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+					commanderMinimizeClicked = minimizeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+					commanderRestoreClicked = restoreHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+					commanderCloseClicked = closeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+					titleDraw->PopClipRect();
+
+					if (commanderVisible)
 					{
-						ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
-							ImVec2(234.0f / 960.0f, 27.0f / 540.0f),
-							ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
-						SofiCommanderHovered = ImGui::IsItemHovered();
-						ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-							IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
+						const ImVec2 imageSize = ImGui::GetContentRegionAvail();
+						if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+						{
+							ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
+								ImVec2(234.0f / 960.0f, 27.0f / 540.0f),
+								ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
+							SofiCommanderHovered = ImGui::IsItemHovered();
+							ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+								IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
+						}
 					}
-				}
-				if (commanderMinimizeClicked)
-				{
-					SofiCommanderRestoreSize = windowSize;
-					SofiCommanderMinimized = true;
-					SofiCommanderApplyMinimized = true;
-				}
-				else if (commanderRestoreClicked)
-				{
-					if (SofiCommanderMinimized)
+
+					if (commanderMinimizeClicked)
 					{
-						SofiCommanderMinimized = false;
+						SofiCommanderMinimized = true;
+						SofiCommanderFocused = false;
 					}
+					else if (commanderRestoreClicked)
+					{
+						// Restore means return to the saved normal geometry, never maximize.
 						SofiCommanderApplyMinimized = true;
+					}
+					const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+					ImGui::End();
+
+					if (commanderCloseClicked)
+					{
+						SofiCommanderOpen = false;
+						SofiCommanderFocused = false;
+						SofiCommanderMinimized = false;
+						SofiCommanderApplyMinimized = false;
+					}
+					else if (commanderMinimizeClicked || commanderRestoreClicked)
+					{
+						SofiCommanderFocused = false;
+					}
+					else if (!commanderFocused && SofiCommanderFocused)
+					{
+						SofiCommanderOpen = false;
+						SofiCommanderFocused = false;
+					}
+					else SofiCommanderFocused = commanderFocused;
 				}
-				const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-				ImGui::End();
-				if (commanderCloseClicked)
-				{
-					SofiCommanderOpen = false;
-					SofiCommanderFocused = false;
-					SofiCommanderMinimized = false;
-				}
-				else if (commanderMinimizeClicked || commanderRestoreClicked)
-				{
-					SofiCommanderFocused = false;
-				}
-				else if (!commanderFocused && SofiCommanderFocused && !SofiCommanderMinimized)
-				{
-					SofiCommanderOpen = false;
-					SofiCommanderFocused = false;
-				}
-				else SofiCommanderFocused = commanderFocused;
 			}
 			else
 			{
 				SofiCommanderFocused = false;
 				SofiCommanderMinimized = false;
+				SofiCommanderApplyMinimized = false;
 			}
 
 			// Native application controls are drawn last so Commander cannot cover their hit targets.
