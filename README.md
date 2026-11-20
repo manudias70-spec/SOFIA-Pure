@@ -31,6 +31,10 @@ Para utilizar el soporte **Sound Blaster AWE32 / EMU8000**, DOSBox Pure requiere
 
 Para utilizar la emulación **Roland MT-32 / Sound Canvas y sus variantes**, los archivos ROM correspondientes deben estar en la carpeta `system`. Estos archivos tampoco se incluyen ni se distribuyen con SOFIA-Pure, y el proyecto no proporciona archivos ni enlaces para obtenerlos. Cada usuario debe conseguir sus propias ROMs por sus propios medios y respetar las condiciones de uso que correspondan.
 
+## Navegación de SOFI Space
+
+El botón **EXPLORADOR** abre SOFI Commander cuando está cerrado, lo restaura cuando está minimizado y lo cierra cuando está abierto. El botón de cierre de la propia ventana utiliza la misma acción.
+
 ## Identidad visual
 
 **SOFI Space** es la identidad visual principal: una estética retrofuturista que combina referencias a la informática clásica, la ciencia ficción y una interfaz de estilo espacial.
