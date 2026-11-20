@@ -33,7 +33,7 @@ Para utilizar la emulación **Roland MT-32 / Sound Canvas y sus variantes**, los
 
 ## Navegación de SOFI Space
 
-El botón **EXPLORADOR** abre SOFI Commander cuando está cerrado, lo restaura cuando está minimizado y lo cierra cuando está abierto. El botón de cierre de la propia ventana utiliza la misma acción.
+El botón **EXPLORADOR** abre SOFI Commander cuando está cerrado, lo restaura cuando está minimizado y lo cierra cuando está abierto. El botón de cierre de la propia ventana utiliza la misma acción. La detección de entrada excluye explícitamente el área de navegación del mecanismo de captura del mouse de Commander, para que los clics en EXPLORADOR lleguen a su botón aunque la ventana esté visible.
 
 ## Identidad visual
 
