@@ -2237,13 +2237,8 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
 			if (ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse))
 			{
-				const ImVec2 available = ImGui::GetContentRegionAvail();
-				const float imageAspect = 683.0f / 405.0f;
-				ImVec2 imageSize = available;
-				if (imageSize.x > imageSize.y * imageAspect)
-					imageSize.x = imageSize.y * imageAspect;
-				else
-					imageSize.y = imageSize.x / imageAspect;
+				const ImVec2 imageSize = ImGui::GetContentRegionAvail();
+				// Fill the entire Commander content area, allowing aspect-ratio distortion.
 				if (imageSize.x > 0.0f && imageSize.y > 0.0f)
 				{
 					ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
