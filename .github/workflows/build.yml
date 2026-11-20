@@ -98,3 +98,5 @@ jobs:
         path: main/Release-vs2026/DOSBoxPure.exe
 
 # Rebuild Commander maximize/restore toggle.
+
+# Commander geometry: full viewport maximize and bottom-anchored minimize.
