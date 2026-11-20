@@ -50,6 +50,10 @@ SOFIA-Pure reconoce expresamente los proyectos y autores cuyo trabajo constituye
 
 La sección de avisos de terceros detalla la procedencia conocida, los enlaces a las fuentes y las atribuciones específicas. Los avisos de copyright y licencia incluidos en cada archivo fuente prevalecen sobre este resumen.
 
+### Correcciones y solicitudes de atribución
+
+Hemos procurado identificar y acreditar correctamente a todas las personas y proyectos cuyo trabajo forma parte de SOFIA-Pure. Si alguna persona considera que una contribución propia no ha sido reconocida o que su autoría merece una mención adicional, le pedimos disculpas y agradecemos que nos lo comunique. Revisaremos la observación y, una vez verificada, incorporaremos el crédito correspondiente sin demora.
+
 ## Licencia y componentes de terceros
 
 El repositorio conserva el archivo `LICENSE` procedente de la base DOSBox Pure Unleashed. Los componentes incorporados pueden tener avisos y condiciones específicos. Antes de redistribuir el programa o sus binarios, deben revisarse conjuntamente la licencia del repositorio, los encabezados de los archivos y los avisos de terceros.
