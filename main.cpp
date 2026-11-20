@@ -2353,6 +2353,7 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 
 			// Explorer opens Commander at its saved normal size, restores it when minimized,
+			bool commanderLostFocus = false;
 			// and minimizes it when already visible.
 			SofiCommanderHovered = false;
 			if (SofiCommanderOpen)
@@ -2494,7 +2495,8 @@ static struct sDOSBoxPure : public ZL_Application
 					}
 					else if (!commanderFocused && SofiCommanderFocused)
 					{
-						SofiCommanderOpen = false;
+						// Defer closing until navigation has processed this frame's click.
+						commanderLostFocus = true;
 						SofiCommanderFocused = false;
 					}
 					else SofiCommanderFocused = commanderFocused;
@@ -2597,6 +2599,11 @@ static struct sDOSBoxPure : public ZL_Application
 				{
 					SofiCommanderMinimize();
 				}
+			}
+			if (commanderLostFocus && !explorerClicked)
+			{
+				SofiCommanderOpen = false;
+				SofiCommanderFocused = false;
 			}
 			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
