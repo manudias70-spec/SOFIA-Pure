@@ -20,10 +20,10 @@ This file records known upstream components and attribution information for SOFI
 ## Sound Blaster AWE32 / EMU8000
 
 - Integration patch: `patches/dosbox-pure-awe32-emu8k-core.patch`.
-- The patch adapts EMU8000 emulation to DOSBox Pure Unleashed and explicitly identifies `86Box snd_emu8k.c` as a technical reference, crediting Sarah Walker.
-- The 86Box README and its vcpkg manifest declare GPL-2.0-or-later. GitHub's repository badge/metadata may display the shorter GPL-2.0 identifier, so the explicit README and manifest statements are the more informative licensing references. The patch's own header also states GPL version 2 or (at the recipient's option) any later version.
-- DOSBox-X is acknowledged as a related implementation/reference for the AWE32/EMU8000 integration. This notice does not claim that every line of the patch originated from DOSBox-X.
-- References: [DOSBox-X](https://github.com/joncampbell123/dosbox-x), [86Box](https://github.com/86Box/86Box).
+- The EMU8000 core adapted in SOFIA-Pure is based on DOSBox-X `src/hardware/emu8k.cpp`. Its source header explicitly states that register I/O, 32 voices, DRAM, envelopes and cubic interpolation follow 86Box `snd_emu8k.c`, crediting Sarah Walker.
+- DOSBox-X's AWE32 support commit and release notes credit **cyberfox1** for adding AWE32 support and subsequent improvements to the original 86Box-derived EMU8K implementation.
+- The 86Box README declares GNU GPL version 2 or later. The DOSBox-X source file and the SOFIA-Pure integration patch also carry GPL version 2-or-later notices.
+- References: [DOSBox-X EMU8K source](https://github.com/joncampbell123/dosbox-x/blob/master/src/hardware/emu8k.cpp), [DOSBox-X AWE32 support commit](https://github.com/joncampbell123/dosbox-x/commit/ac3f80e14c616f35b12a534793ad1224bffd5350), [cyberfox1](https://github.com/cyberfox1), [86Box source](https://github.com/86Box/86Box/blob/master/src/sound/snd_emu8k.c), [86Box](https://github.com/86Box/86Box).
 
 ## Distribution notes
 
