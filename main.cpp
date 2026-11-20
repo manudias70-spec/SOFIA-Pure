@@ -2378,8 +2378,8 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				else
 				{
-					SofiCommanderMinimized = true;
-					SofiCommanderFocused = false;
+					// SOFI UI owns this click: close the visible Commander panel instead of minimizing it.
+					SofiCommanderOpen = false;
 				}
 			}
 			ImGui::PopStyleColor(4);
