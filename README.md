@@ -77,3 +77,7 @@ Consulta [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) para conocer las atrib
 ---
 
 SOFIA-Pure es un proyecto experimental en desarrollo. La documentación, los créditos y los avisos se actualizan a medida que se revisan e incorporan componentes.
+
+## SOFI Space: navegación y Commander
+
+El botón **EXPLORADOR** de SOFI Space abre SOFI Commander cuando está cerrado y lo cierra cuando está visible y la interfaz recibe el clic. El cierre utiliza el mismo estado de cierre que el control **X** de la ventana. La implementación interna de Commander, sus controles, captura del puntero y gestión de geometría permanecen independientes de esta acción.
