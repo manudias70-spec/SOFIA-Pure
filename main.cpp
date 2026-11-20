@@ -79,6 +79,12 @@ static bool SofiCommanderHovered = false, SofiNavigationHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
 static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
 static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
+
+static void SofiCommanderMinimize()
+{
+	SofiCommanderMinimized = true;
+	SofiCommanderFocused = false;
+}
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
 static ImVec2 SofiCommanderRestorePos(0.0f, 0.0f);
 // Commander keeps its normal geometry separately so maximizing never overwrites it in ImGui's ini.
@@ -2463,8 +2469,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 					if (commanderMinimizeClicked)
 					{
-						SofiCommanderMinimized = true;
-						SofiCommanderFocused = false;
+						SofiCommanderMinimize();
 					}
 					else if (commanderRestoreClicked)
 					{
@@ -2590,8 +2595,7 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				else
 				{
-					SofiCommanderMinimized = true;
-					SofiCommanderFocused = false;
+					SofiCommanderMinimize();
 				}
 			}
 			ImGui::PopStyleColor(4);
