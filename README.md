@@ -1,4 +1,100 @@
-# DOSBox Pure Unleashed
+# SOFIA-Pure
+### Una experiencia experimental para la emulación retro
+
+**SOFIA-Pure** es un proyecto independiente y experimental derivado de **DOSBox Pure Unleashed**, la versión de escritorio de DOSBox Pure. El objetivo es conservar la experiencia esencial de emulación y ampliar su entorno mediante modificaciones del core, un explorador rediseñado, herramientas propias y una interfaz con identidad visual propia.
+
+El desarrollo combina trabajo de integración y programación con asistencia de inteligencia artificial. No es un producto oficial de DOSBox Pure ni de DOSBox-X.
+
+## Origen y reconocimiento
+
+SOFIA-Pure parte del trabajo de **Bernhard Schelling**, autor de DOSBox Pure, y de la versión de escritorio **DOSBox Pure Unleashed**. Reconocemos y agradecemos el trabajo de sus autores y de la comunidad de DOSBox.
+
+- [DOSBox Pure — proyecto original (Codeberg)](https://codeberg.org/schelling/dosbox-pure)
+- [DOSBox Pure — repositorio de GitHub](https://github.com/schellingb/dosbox-pure)
+- [DOSBox Pure Unleashed — versión de escritorio](https://github.com/schellingb/dosbox-pure-unleashed)
+- [Bernhard Schelling — perfil de GitHub](https://github.com/schellingb)
+
+**SOFIA-Pure es un proyecto independiente, experimental y asistido por IA.** SOFI es una asistente experimental basada en inteligencia artificial que colabora en tareas de programación, arquitectura, diseño y documentación. La asistencia de IA no implica afiliación, respaldo ni soporte oficial por parte de los autores de DOSBox Pure, DOSBox Pure Unleashed o DOSBox-X.
+
+## ¿Qué aporta SOFIA-Pure?
+
+### Modificaciones técnicas y funcionales
+
+- Modificaciones e integraciones a nivel *core*.
+- Rediseño del explorador de DOSBox Pure.
+- Desarrollo de **SOFI Commander**, una herramienta propia para interactuar con la interfaz.
+- Conservación de los mecanismos esenciales de carga y ejecución de contenido, incluyendo juegos en archivos **ZIP** e imágenes de CD **ISO/CUE**.
+- Integración del filtro de escalado **xBRZ 4x**.
+- Integración de emulación **Sound Blaster AWE32 / EMU8000**.
+
+### Créditos del filtro xBRZ 4x
+
+El shader incorporado conserva los avisos de autoría de los componentes en los que se basa:
+
+- **Hyllian** — código xBR y mapeo de texeles. [Perfil y trabajos](https://github.com/Hyllian).
+- **Zenju** — filtro xBRZ y código/conceptos derivados de xBRZ. [Proyecto xBRZ](https://sourceforge.net/projects/xbrz/).
+
+Agradecemos a ambos autores por sus aportes al escalado de imágenes.
+
+### AWE32 / EMU8000: agradecimientos y procedencia
+
+La integración de AWE32 incorpora la implementación EMU8000 de **DOSBox-X**, adaptada al proyecto. El propio código de DOSBox-X identifica como referencia técnica a `86Box snd_emu8k.c`, de **Sarah Walker**.
+
+- [DOSBox-X — proyecto y código fuente](https://github.com/joncampbell123/dosbox-x)
+- [Jonathan Campbell — autor y mantenedor principal de DOSBox-X](https://github.com/joncampbell123)
+- [86Box — proyecto de emulación](https://github.com/86Box/86Box)
+
+Nuestro agradecimiento a Jonathan Campbell, a los colaboradores de DOSBox-X y a Sarah Walker por el trabajo de emulación EMU8000 que sirve de referencia a esta integración. Los avisos de copyright y licencia de los componentes originales se conservan en el código.
+
+## Identidad visual y personalización
+
+SOFIA-Pure desarrolla una identidad propia bajo el concepto **SOFI Space**: una interfaz retrofuturista, con elementos visuales inspirados en la informática clásica y la ciencia ficción.
+
+La personalización forma parte de la propuesta. El proyecto contempla skins para distintos gustos, entre ellas:
+
+- **SOFI Space**, la identidad visual principal.
+- **Sardinas Nochevieja**, skin especial.
+- **Sofi Soviética Espacial**, skin especial.
+- Futuras skins retro, minimalistas y diseños aportados por la comunidad.
+
+Las skins son una capa visual: no deben alterar la compatibilidad ni las funciones de emulación.
+
+## SOFI Commander
+
+**SOFI Commander** es una herramienta desarrollada para SOFIA-Pure. Su propósito es ampliar el control de la interfaz y ofrecer una ventana configurable, con controles propios y persistencia de sus preferencias.
+
+Su desarrollo continúa de forma incremental y experimental.
+
+## Etapas y nuevo rumbo
+
+La primera etapa del proyecto tendrá un último release de la versión clásica, que reunirá los cambios acumulados hasta la incorporación de **Dear ImGui**. Ese lanzamiento servirá como cierre documentado de esa fase.
+
+A continuación se anunciará formalmente la nueva etapa de SOFIA-Pure: una evolución centrada en la interfaz basada en ImGui, SOFI Commander, personalización, nuevas herramientas y funcionalidades propias.
+
+El trabajo anterior no se descarta: se documenta como la base sobre la que continúa el proyecto.
+
+## Créditos del proyecto
+
+- **Manu** — dirección y control del proyecto, pruebas y beta testing.
+- **SOFI** — asistente experimental basada en IA; colaboración en programación, arquitectura, diseño y documentación.
+- **Bernhard Schelling y colaboradores de DOSBox Pure** — proyecto de emulación original y versión de escritorio.
+- **Hyllian y Zenju** — aportes al código xBR y al filtro xBRZ.
+- **Jonathan Campbell y colaboradores de DOSBox-X** — implementación EMU8000 integrada y proyecto de referencia.
+- **Sarah Walker y colaboradores de 86Box** — trabajo de referencia para la emulación EMU8000.
+
+Los créditos específicos y avisos de licencia de cada componente prevalecen sobre este resumen. SOFIA-Pure no reclama autoría sobre tecnologías, código o recursos de terceros.
+
+## Comunidad y distribución
+
+El objetivo es publicar releases documentados, acompañados de capturas, demostraciones e información técnica. Cuando el proyecto alcance una etapa adecuada de madurez, queremos presentarlo en comunidades y sitios especializados en emulación retro, incluyendo **EmuCR**, y abrir la puerta a skins y contribuciones de la comunidad.
+
+---
+
+## Documentación de la base DOSBox Pure Unleashed
+
+La documentación original de DOSBox Pure Unleashed se conserva a continuación como referencia de las funciones heredadas de la versión de escritorio.
+
+# DOSBox Pure Unleashed — documentación de referencia
 DOSBox Pure is a fork of [DOSBox](https://www.dosbox.com/),
 an emulator for DOS games, aiming for simplicity and ease of use.
 This project is a standalone version for desktop platforms of the [libretro core](../dosbox-pure).
