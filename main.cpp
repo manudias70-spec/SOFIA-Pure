@@ -75,7 +75,7 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
-static bool SofiCommanderHovered = false;
+static bool SofiCommanderHovered = false, SofiNavigationHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
 static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
 static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
@@ -1542,7 +1542,7 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 
 	// A left click on the Commander image hands exclusive mouse ownership to Pure.
 	// Clicks on the title bar/frame remain available for moving and resizing the window.
-	if (e.button == ZL_BUTTON_LEFT && SofiCommanderHovered)
+	if (e.button == ZL_BUTTON_LEFT && SofiCommanderHovered && !SofiNavigationHovered)
 	{
 		SofiCommanderCaptured = true;
 		SofiSuppressMiddleRelease = false;
@@ -2571,7 +2571,9 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			SofiNavigationHovered = false;
 			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)))
+			SofiNavigationHovered = ImGui::IsItemHovered();
 			{
 				if (!SofiCommanderOpen)
 				{
