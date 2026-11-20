@@ -1553,9 +1553,18 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 		return;
 	}
 
+	// Navigation is drawn above Commander, but pointer events arrive before the
+	// next ImGui frame refreshes hover state. Use its fixed screen bounds here so
+	// a click on EXPLORADOR is never mistaken for a click on Commander's image.
+	const float pointerX = (float)e.x;
+	const float pointerY = (float)(ZLHEIGHT - e.y);
+	const bool pointerOverNavigation =
+		(pointerX >= 8.0f && pointerX <= 104.0f &&
+		 pointerY >= 104.0f && pointerY <= 424.0f);
+
 	// A left click on the Commander image hands exclusive mouse ownership to Pure.
-	// Clicks on the title bar/frame remain available for moving and resizing the window.
-	if (e.button == ZL_BUTTON_LEFT && SofiCommanderHovered && !SofiNavigationHovered)
+	// Clicks on navigation and on the title bar/frame remain available to SOFI.
+	if (e.button == ZL_BUTTON_LEFT && SofiCommanderHovered && !pointerOverNavigation)
 	{
 		SofiCommanderCaptured = true;
 		SofiSuppressMiddleRelease = false;
