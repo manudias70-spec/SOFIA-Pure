@@ -1487,6 +1487,15 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	ImGuiIO& io = ImGui::GetIO();
 
+	// With the SOFI layer hidden, a middle click over Commander restores it.
+	if (!SofiSpaceVisible && e.button == ZL_BUTTON_MIDDLE && SofiCommanderHovered)
+	{
+		SofiSpaceVisible = true;
+		SofiSuppressMiddleMenu = true;
+		SofiSuppressMiddleRelease = true;
+		return;
+	}
+
 	if (SofiCommanderCaptured)
 	{
 		if (e.button == ZL_BUTTON_MIDDLE)
