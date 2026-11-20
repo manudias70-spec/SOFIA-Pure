@@ -75,7 +75,7 @@ El trabajo anterior no se descarta: se documenta como la base sobre la que conti
 
 ## Créditos del proyecto
 
-- **Manu** — dirección y control del proyecto, pruebas y beta testing.
+- **Manu** — control del proyecto, pruebas y beta testing.
 - **SOFI** — asistente experimental basada en IA; colaboración en programación, arquitectura, diseño y documentación.
 - **Bernhard Schelling y colaboradores de DOSBox Pure** — proyecto de emulación original y versión de escritorio.
 - **Hyllian y Zenju** — aportes al código xBR y al filtro xBRZ.
