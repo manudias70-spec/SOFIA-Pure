@@ -96,3 +96,5 @@ jobs:
       with:
         name: dosbox-pure-unleashed_win32
         path: main/Release-vs2026/DOSBoxPure.exe
+
+# Rebuild Commander maximize/restore toggle.
