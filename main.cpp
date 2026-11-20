@@ -1887,7 +1887,9 @@ static void OnDraw()
 		// SOFI owns the visible interface: keep the system pointer available over it.
 		if (ImGuiReady)
 		{
-			SDL_ShowCursor(1);
+			// SOFI uses ImGui's software-drawn cursor across the entire interface.
+			// Hide the legacy SDL/Pure cursor to avoid showing two different pointers.
+			SDL_ShowCursor(SDL_DISABLE);
 			lastHiddenCursor = false;
 			doHideCursor = false;
 		}
@@ -2204,6 +2206,8 @@ static struct sDOSBoxPure : public ZL_Application
 			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui::NewFrame();
+			// Draw an ImGui-owned cursor so SOFI remains usable outside Commander.
+			io.MouseDrawCursor = true;
 
 			// SOFI Space - first visual layer. Drawn behind all interactive windows.
 			{
