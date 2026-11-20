@@ -76,7 +76,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
-static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
+static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
 static std::string SofiCommanderIniPath;
 
 static const retro_key ZLKtoRETROKEY[] =
@@ -2328,7 +2328,7 @@ static struct sDOSBoxPure : public ZL_Application
 					selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 				if (ImGui::Button(sofiSections[i], ImVec2(88.0f, 44.0f)))
 				{
-					if (i == 4) SofiCommanderOpen = true;
+					if (i == 4) { SofiCommanderOpen = true; SofiCommanderFocusRequested = true; }
 					else selectedSofiSection = i;
 				}
 				ImGui::PopStyleColor(4);
@@ -2344,7 +2344,11 @@ static struct sDOSBoxPure : public ZL_Application
 			{
 				ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
-				ImGui::SetNextWindowFocus();
+				if (SofiCommanderFocusRequested)
+				{
+					ImGui::SetNextWindowFocus();
+					SofiCommanderFocusRequested = false;
+				}
 				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
 				if (commanderVisible)
 				{
