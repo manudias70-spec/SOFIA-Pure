@@ -29,6 +29,8 @@ El proyecto evoluciona de manera incremental. Las funciones y su estado pueden c
 
 Para utilizar el soporte **Sound Blaster AWE32 / EMU8000**, DOSBox Pure requiere el archivo `awerom.raw` en el directorio raíz. Este archivo no se incluye ni se distribuye con SOFIA-Pure, y el proyecto no proporciona enlaces para obtenerlo. Cada usuario debe conseguirlo por sus propios medios y respetar las condiciones de uso que correspondan.
 
+Para utilizar la emulación **Roland MT-32 / Sound Canvas y sus variantes**, los archivos ROM correspondientes deben estar en la carpeta `system`. Estos archivos tampoco se incluyen ni se distribuyen con SOFIA-Pure, y el proyecto no proporciona archivos ni enlaces para obtenerlos. Cada usuario debe conseguir sus propias ROMs por sus propios medios y respetar las condiciones de uso que correspondan.
+
 ## Identidad visual
 
 **SOFI Space** es la identidad visual principal: una estética retrofuturista que combina referencias a la informática clásica, la ciencia ficción y una interfaz de estilo espacial.
