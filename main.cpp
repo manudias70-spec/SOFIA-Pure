@@ -2442,6 +2442,10 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiCommanderFocused = false;
 					SofiCommanderMinimized = false;
 				}
+				else if (commanderMinimizeClicked)
+				{
+					SofiCommanderFocused = false;
+				}
 				else if (!commanderFocused && SofiCommanderFocused && !SofiCommanderMinimized)
 				{
 					SofiCommanderOpen = false;
