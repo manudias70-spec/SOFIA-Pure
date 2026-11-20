@@ -38,13 +38,14 @@ Agradecemos a ambos autores por sus aportes al escalado de imágenes.
 
 ### AWE32 / EMU8000: agradecimientos y procedencia
 
-La integración de AWE32 adapta la emulación EMU8000 a DOSBox Pure Unleashed. El parche de integración identifica expresamente como referencia técnica a `snd_emu8k.c` de **86Box**, cuyo encabezado acredita a **Sarah Walker**. También reconocemos el trabajo de **DOSBox-X** en la implementación y adaptación del subsistema AWE32/EMU8000 que se utilizó como referencia para esta integración.
+La integración AWE32/EMU8000 de SOFIA-Pure adapta el código `emu8k.cpp` de **DOSBox-X**, cuya cabecera declara expresamente que la emulación de registros, voces, DRAM, envolventes e interpolación sigue a `snd_emu8k.c` de **86Box**. El historial de DOSBox-X atribuye la incorporación del soporte AWE32 y sus mejoras a **cyberfox1**; la implementación derivada de 86Box acredita a **Sarah Walker**.
 
-- [DOSBox-X — proyecto y código fuente](https://github.com/joncampbell123/dosbox-x)
-- [Jonathan Campbell — autor y mantenedor principal de DOSBox-X](https://github.com/joncampbell123)
-- [86Box — proyecto de emulación](https://github.com/86Box/86Box)
+- [DOSBox-X — código fuente](https://github.com/joncampbell123/dosbox-x)
+- [cyberfox1 — autor de la incorporación AWE32 en DOSBox-X](https://github.com/cyberfox1)
+- [86Box — proyecto y código fuente](https://github.com/86Box/86Box)
+- [Sarah Walker — créditos de la implementación de referencia 86Box](https://pcem-emulator.co.uk/)
 
-Agradecemos a Jonathan Campbell, a los colaboradores de DOSBox-X y a Sarah Walker por sus aportes al desarrollo de la emulación AWE32/EMU8000. Los avisos de copyright y licencia de los componentes originales se conservan en el código.
+Agradecemos a cyberfox1 por la implementación AWE32/EMU8000 en DOSBox-X y a Sarah Walker por el código de referencia de 86Box. Los avisos de copyright y licencia de los componentes originales se conservan en el código.
 
 ## Identidad visual y personalización
 
@@ -79,8 +80,8 @@ El trabajo anterior no se descarta: se documenta como la base sobre la que conti
 - **SOFI** — asistente experimental basada en IA; colaboración en programación, arquitectura, diseño y documentación.
 - **Bernhard Schelling y colaboradores de DOSBox Pure** — proyecto de emulación original y versión de escritorio.
 - **Hyllian y Zenju** — aportes al código xBR y al filtro xBRZ.
-- **Jonathan Campbell y colaboradores de DOSBox-X** — implementación EMU8000 integrada y proyecto de referencia.
-- **Sarah Walker y colaboradores de 86Box** — trabajo de referencia para la emulación EMU8000.
+- **cyberfox1 y colaboradores de DOSBox-X** — implementación AWE32/EMU8000 adaptada al proyecto.
+- **Sarah Walker y colaboradores de 86Box** — código de referencia en el que se basa la emulación EMU8000.
 
 Los créditos específicos y avisos de licencia de cada componente prevalecen sobre este resumen. SOFIA-Pure no reclama autoría sobre tecnologías, código o recursos de terceros.
 
