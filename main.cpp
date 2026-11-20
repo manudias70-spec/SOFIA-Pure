@@ -78,10 +78,38 @@ static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiS
 static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
 static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
+static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
 static ImVec2 SofiCommanderRestorePos(0.0f, 0.0f);
-// Commander minimize/restore uses a compact title bar while preserving saved geometry.
-static std::string SofiCommanderIniPath;
+// Commander keeps its normal geometry separately so maximizing never overwrites it in ImGui's ini.
+static std::string SofiCommanderIniPath, SofiCommanderGeometryPath;
+
+static void SofiCommanderLoadGeometry()
+{
+	if (SofiCommanderGeometryPath.empty()) return;
+	FILE* f = fopen_wrap(SofiCommanderGeometryPath.c_str(), "rb");
+	if (!f) return;
+	int maximized = 0;
+	float x = 0.0f, y = 0.0f, w = 0.0f, h = 0.0f;
+	if (fscanf(f, "%d %f %f %f %f", &maximized, &x, &y, &w, &h) == 5)
+	{
+		SofiCommanderMaximized = (maximized != 0);
+		SofiCommanderRestorePos = ImVec2(x, y);
+		SofiCommanderRestoreSize = ImVec2(w, h);
+	}
+	fclose(f);
+}
+
+static void SofiCommanderSaveGeometry()
+{
+	if (SofiCommanderGeometryPath.empty()) return;
+	FILE* f = fopen_wrap(SofiCommanderGeometryPath.c_str(), "wb");
+	if (!f) return;
+	fprintf(f, "%d %.3f %.3f %.3f %.3f\n", SofiCommanderMaximized ? 1 : 0,
+		SofiCommanderRestorePos.x, SofiCommanderRestorePos.y,
+		SofiCommanderRestoreSize.x, SofiCommanderRestoreSize.y);
+	fclose(f);
+}
 
 static const retro_key ZLKtoRETROKEY[] =
 {
@@ -2194,6 +2222,8 @@ static struct sDOSBoxPure : public ZL_Application
 		ZL_Application::SettingsInit(basePath.c_str());
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
 		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
+		SofiCommanderGeometryPath.assign(SofiCommanderIniPath).append(".geometry");
+		SofiCommanderLoadGeometry();
 		ZL_String customPathSaves = ZL_Application::SettingsGet("path_saves"), customPathSystem = ZL_Application::SettingsGet("path_system");
 		for (bool useCustomPathSaves = !customPathSaves.empty(), useCustomPathSystem = !customPathSystem.empty();;)
 		{
@@ -2345,6 +2375,7 @@ static struct sDOSBoxPure : public ZL_Application
 							SofiCommanderOpen = true;
 							SofiCommanderMinimized = false;
 							SofiCommanderApplyMinimized = true;
+							SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
 						}
 						else if (SofiCommanderMinimized)
 						{
@@ -2383,6 +2414,23 @@ static struct sDOSBoxPure : public ZL_Application
 					// persisted position and size after a full application restart.
 					if (SofiCommanderApplyMinimized)
 						SofiCommanderApplyMinimized = false;
+					if (SofiCommanderApplyGeometry)
+					{
+						if (SofiCommanderMaximized)
+						{
+							const ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+						const ImVec2 maxSize(735.0f, 980.0f);
+						ImGui::SetNextWindowPos(ImVec2((displaySize.x - maxSize.x) * 0.5f,
+							(displaySize.y - maxSize.y) * 0.5f), ImGuiCond_Always);
+						ImGui::SetNextWindowSize(maxSize, ImGuiCond_Always);
+						}
+						else if (SofiCommanderRestoreSize.x > 0.0f && SofiCommanderRestoreSize.y > 0.0f)
+						{
+							ImGui::SetNextWindowPos(SofiCommanderRestorePos, ImGuiCond_Always);
+							ImGui::SetNextWindowSize(SofiCommanderRestoreSize, ImGuiCond_Always);
+						}
+						SofiCommanderApplyGeometry = false;
+					}
 					ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 					ImGui::SetNextWindowSize(ImVec2(520.0f, 320.0f), ImGuiCond_FirstUseEver);
 					if (!SofiCommanderFocused)
@@ -2394,8 +2442,11 @@ static struct sDOSBoxPure : public ZL_Application
 					bool commanderCloseClicked = false;
 					const ImVec2 windowPos = ImGui::GetWindowPos();
 					const ImVec2 windowSize = ImGui::GetWindowSize();
-					SofiCommanderRestoreSize = windowSize;
-					SofiCommanderRestorePos = windowPos;
+					if (!SofiCommanderMaximized)
+					{
+						SofiCommanderRestoreSize = windowSize;
+						SofiCommanderRestorePos = windowPos;
+					}
 
 					// Compact title-bar controls, aligned to the right like SOFI Space.
 					const float titleBarHeight = ImGui::GetFrameHeight();
@@ -2425,8 +2476,16 @@ static struct sDOSBoxPure : public ZL_Application
 						ImVec2(minCx + 5.0f, minCy + 3.0f), IM_COL32(235, 248, 255, 255), 2.0f);
 					const float restoreCx = (restoreMin.x + restoreMax.x) * 0.5f;
 					const float restoreCy = (restoreMin.y + restoreMax.y) * 0.5f;
-					titleDraw->AddRect(ImVec2(restoreCx - 4.5f, restoreCy - 4.5f),
-						ImVec2(restoreCx + 4.5f, restoreCy + 4.5f), IM_COL32(235, 248, 255, 255), 0.0f, 0, 1.8f);
+					if (SofiCommanderMaximized)
+					{
+						titleDraw->AddRect(ImVec2(restoreCx - 3.0f, restoreCy - 5.0f),
+							ImVec2(restoreCx + 5.0f, restoreCy + 3.0f), IM_COL32(235, 248, 255, 255), 0.0f, 0, 1.6f);
+						titleDraw->AddRect(ImVec2(restoreCx - 5.0f, restoreCy - 3.0f),
+							ImVec2(restoreCx + 3.0f, restoreCy + 5.0f), IM_COL32(235, 248, 255, 255), 0.0f, 0, 1.6f);
+					}
+					else
+						titleDraw->AddRect(ImVec2(restoreCx - 4.5f, restoreCy - 4.5f),
+							ImVec2(restoreCx + 4.5f, restoreCy + 4.5f), IM_COL32(235, 248, 255, 255), 0.0f, 0, 1.8f);
 					const float closeCx = (closeMin.x + closeMax.x) * 0.5f;
 					const float closeCy = (closeMin.y + closeMax.y) * 0.5f;
 					titleDraw->AddLine(ImVec2(closeCx - 4.5f, closeCy - 4.5f),
@@ -2459,7 +2518,9 @@ static struct sDOSBoxPure : public ZL_Application
 					}
 					else if (commanderRestoreClicked)
 					{
-						// Restore means return to the saved normal geometry, never maximize.
+						// Toggle between the exact saved normal geometry and a centered 735x980 window.
+						SofiCommanderMaximized = !SofiCommanderMaximized;
+						SofiCommanderApplyGeometry = true;
 						SofiCommanderApplyMinimized = true;
 					}
 					const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
@@ -2554,7 +2615,8 @@ static struct sDOSBoxPure : public ZL_Application
 	{
 		if (ImGuiReady)
 		{
-			// Persist the final Commander position and size before destroying the ImGui context.
+			// Persist normal geometry and maximize state separately from ImGui's current window rectangle.
+			SofiCommanderSaveGeometry();
 			if (ImGui::GetIO().IniFilename) ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
 			ImGui_ImplOpenGL3_Shutdown();
 			ImGui::DestroyContext();
