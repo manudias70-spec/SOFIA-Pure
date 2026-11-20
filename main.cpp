@@ -2387,6 +2387,8 @@ static struct sDOSBoxPure : public ZL_Application
 				// Compact title-bar controls, aligned to the right like SOFI Space.
 					const ImVec2 windowPos = ImGui::GetWindowPos();
 					const ImVec2 windowSize = ImGui::GetWindowSize();
+					if (!SofiCommanderMinimized)
+						SofiCommanderRestoreSize = windowSize;
 					const float titleBarHeight = ImGui::GetFrameHeight();
 					const float buttonSize = 22.0f;
 					const float buttonY = windowPos.y + (titleBarHeight - buttonSize) * 0.5f;
