@@ -1537,6 +1537,14 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	ImGuiIO& io = ImGui::GetIO();
 
+	// Navigation is drawn above Commander. Detect its screen area directly because
+	// pointer events arrive before ImGui refreshes the previous frame's hover state.
+	const float pointerX = (float)e.x;
+	const float pointerY = (float)(ZLHEIGHT - e.y);
+	const bool pointerOverNavigation =
+		(pointerX >= 8.0f && pointerX <= 104.0f &&
+		 pointerY >= 104.0f && pointerY <= 424.0f);
+
 	if (SofiCommanderCaptured)
 	{
 		if (e.button == ZL_BUTTON_MIDDLE)
@@ -1549,18 +1557,22 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 			io.AddMouseButtonEvent(0, false);
 			io.AddMouseButtonEvent(1, false);
 			io.AddMouseButtonEvent(2, false);
+			return;
 		}
-		return;
+
+		// Forced Commander close: an Explorer click always takes mouse ownership
+		// back from Pure, then continues through ImGui as the same physical click.
+		if (e.button != ZL_BUTTON_LEFT || !pointerOverNavigation) return;
+		SofiCommanderCaptured = false;
+		SofiSuppressMiddleRelease = false;
+		ZL_Display::SetPointerLock(false);
+		io.AddMouseButtonEvent(0, false);
+		io.AddMouseButtonEvent(1, false);
+		io.AddMouseButtonEvent(2, false);
 	}
 
-	// Navigation is drawn above Commander, but pointer events arrive before the
-	// next ImGui frame refreshes hover state. Use its fixed screen bounds here so
-	// a click on EXPLORADOR is never mistaken for a click on Commander's image.
-	const float pointerX = (float)e.x;
-	const float pointerY = (float)(ZLHEIGHT - e.y);
-	const bool pointerOverNavigation =
-		(pointerX >= 8.0f && pointerX <= 104.0f &&
-		 pointerY >= 104.0f && pointerY <= 424.0f);
+	// A left click on the Commander image hands exclusive mouse ownership to Pure.
+	// Clicks on navigation and on the title bar/frame remain available to SOFI.
 
 	// A left click on the Commander image hands exclusive mouse ownership to Pure.
 	// Clicks on navigation and on the title bar/frame remain available to SOFI.
