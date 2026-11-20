@@ -2378,7 +2378,42 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				if (!SofiCommanderMinimized && !SofiCommanderFocused)
 					ImGui::SetNextWindowFocus();
-				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL);
+				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
+				bool commanderMinimizeClicked = false;
+				bool commanderCloseClicked = false;
+				if (commanderVisible)
+				{
+					// Compact title-bar controls, aligned to the right like SOFI Space.
+					const ImVec2 windowPos = ImGui::GetWindowPos();
+					const ImVec2 windowSize = ImGui::GetWindowSize();
+					const float titleBarHeight = ImGui::GetFrameHeight();
+					const float buttonSize = 22.0f;
+					const float buttonY = windowPos.y + (titleBarHeight - buttonSize) * 0.5f;
+					const float closeRight = windowPos.x + windowSize.x - 4.0f;
+					const ImVec2 closeMin(closeRight - buttonSize, buttonY);
+					const ImVec2 closeMax(closeRight, buttonY + buttonSize);
+					const ImVec2 minimizeMin(closeRight - buttonSize * 2.0f - 2.0f, buttonY);
+					const ImVec2 minimizeMax(closeRight - buttonSize - 2.0f, buttonY + buttonSize);
+					ImDrawList* titleDraw = ImGui::GetWindowDrawList();
+					const bool minimizeHovered = ImGui::IsMouseHoveringRect(minimizeMin, minimizeMax);
+					const bool closeHovered = ImGui::IsMouseHoveringRect(closeMin, closeMax);
+					titleDraw->AddRectFilled(minimizeMin, minimizeMax,
+						minimizeHovered ? IM_COL32(25, 115, 160, 255) : IM_COL32(18, 48, 72, 230), 4.0f);
+					titleDraw->AddRectFilled(closeMin, closeMax,
+						closeHovered ? IM_COL32(205, 38, 55, 255) : IM_COL32(110, 35, 48, 230), 4.0f);
+					const float minCx = (minimizeMin.x + minimizeMax.x) * 0.5f;
+					const float minCy = (minimizeMin.y + minimizeMax.y) * 0.5f;
+					titleDraw->AddLine(ImVec2(minCx - 5.0f, minCy + 3.0f),
+						ImVec2(minCx + 5.0f, minCy + 3.0f), IM_COL32(235, 248, 255, 255), 2.0f);
+					const float closeCx = (closeMin.x + closeMax.x) * 0.5f;
+					const float closeCy = (closeMin.y + closeMax.y) * 0.5f;
+					titleDraw->AddLine(ImVec2(closeCx - 4.5f, closeCy - 4.5f),
+						ImVec2(closeCx + 4.5f, closeCy + 4.5f), IM_COL32(255, 245, 245, 255), 2.0f);
+					titleDraw->AddLine(ImVec2(closeCx + 4.5f, closeCy - 4.5f),
+						ImVec2(closeCx - 4.5f, closeCy + 4.5f), IM_COL32(255, 245, 245, 255), 2.0f);
+					commanderMinimizeClicked = minimizeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+					commanderCloseClicked = closeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+				}
 				const bool commanderCollapsed = ImGui::IsWindowCollapsed();
 				if (commanderVisible)
 				{
@@ -2395,9 +2430,20 @@ static struct sDOSBoxPure : public ZL_Application
 					}
 				}
 				SofiCommanderMinimized = commanderCollapsed;
+				if (commanderMinimizeClicked)
+				{
+					SofiCommanderMinimized = true;
+					SofiCommanderApplyMinimized = true;
+				}
 				const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 				ImGui::End();
-				if (!commanderFocused && SofiCommanderFocused && !SofiCommanderMinimized)
+				if (commanderCloseClicked)
+				{
+					SofiCommanderOpen = false;
+					SofiCommanderFocused = false;
+					SofiCommanderMinimized = false;
+				}
+				else if (!commanderFocused && SofiCommanderFocused && !SofiCommanderMinimized)
 				{
 					SofiCommanderOpen = false;
 					SofiCommanderFocused = false;
