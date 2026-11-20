@@ -1929,6 +1929,9 @@ static void OnDraw()
 	else if (!SofiCommanderCaptured && UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
 
 	bool showOSD = DBPS_IsShowingOSD();
+	// Do not let the SOFI Space/Commander ImGui layer cover the running game.
+	// Keep pointer capture intact so Pure can continue receiving captured mouse input.
+	if (!showOSD) SofiCommanderHovered = false;
 	static bool doPointerLock, doHideCursor, lastHiddenCursor;
 	// The system cursor stays hidden: ImGui draws SOFI's cursor, while Pure's OSD
 	// cursor is rendered inside Commander only when Pure owns the captured pointer.
@@ -2254,7 +2257,7 @@ static struct sDOSBoxPure : public ZL_Application
 	virtual void AfterFrame()
 	{
 		OnDraw();
-		if (ImGuiReady && srfOSD.GetGLTexture())
+		if (ImGuiReady && srfOSD.GetGLTexture() && DBPS_IsShowingOSD())
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.DisplaySize = ImVec2((float)ZLWIDTH, (float)ZLHEIGHT);
