@@ -1889,7 +1889,7 @@ static void OnDraw()
 		{
 			// SOFI uses ImGui's software-drawn cursor across the entire interface.
 			// Hide the legacy SDL/Pure cursor to avoid showing two different pointers.
-			SDL_ShowCursor(SDL_DISABLE);
+			SDL_ShowCursor(0);
 			lastHiddenCursor = false;
 			doHideCursor = false;
 		}
