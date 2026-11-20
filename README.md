@@ -25,6 +25,10 @@ Entre las áreas de trabajo se encuentran:
 
 El proyecto evoluciona de manera incremental. Las funciones y su estado pueden cambiar entre builds; una característica experimental no debe interpretarse como garantía de compatibilidad universal.
 
+## Requisito externo: ROM de AWE
+
+Para utilizar el soporte **Sound Blaster AWE32 / EMU8000**, DOSBox Pure requiere el archivo `awerom.raw` en el directorio raíz. Este archivo no se incluye ni se distribuye con SOFIA-Pure, y el proyecto no proporciona enlaces para obtenerlo. Cada usuario debe conseguirlo por sus propios medios y respetar las condiciones de uso que correspondan.
+
 ## Identidad visual
 
 **SOFI Space** es la identidad visual principal: una estética retrofuturista que combina referencias a la informática clásica, la ciencia ficción y una interfaz de estilo espacial.
