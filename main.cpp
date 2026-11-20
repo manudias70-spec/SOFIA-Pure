@@ -76,6 +76,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
+static std::string SofiCommanderIniPath;
 
 static const retro_key ZLKtoRETROKEY[] =
 {
@@ -2116,7 +2117,7 @@ static void OnLoad(int argc, char *argv[])
 	shdrOSD = ZL_Shader(ZL_SHADER_SOURCE_HEADER(ZL_GLES_PRECISION_LOW) "uniform sampler2D u_texture; varying vec4 v_color; varying vec2 v_texcoord; void main() { gl_FragColor = v_color * texture2D(u_texture, v_texcoord); }");
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGui::GetIO().IniFilename = NULL;
+	ImGui::GetIO().IniFilename = SofiCommanderIniPath.empty() ? NULL : SofiCommanderIniPath.c_str();
 	ImGui::StyleColorsDark();
 	ImGuiReady = ImGui_ImplOpenGL3_Init("#version 130");
 	if (!ImGuiReady) ImGui::DestroyContext();
@@ -2181,6 +2182,8 @@ static struct sDOSBoxPure : public ZL_Application
 		}
 
 		ZL_Application::SettingsInit(basePath.c_str());
+		// Keep the Commander layout beside DOSBox Pure's own configuration file.
+		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
 		ZL_String customPathSaves = ZL_Application::SettingsGet("path_saves"), customPathSystem = ZL_Application::SettingsGet("path_system");
 		for (bool useCustomPathSaves = !customPathSaves.empty(), useCustomPathSystem = !customPathSystem.empty();;)
 		{
@@ -2363,6 +2366,8 @@ static struct sDOSBoxPure : public ZL_Application
 	{
 		if (ImGuiReady)
 		{
+			// Persist the final Commander position and size before destroying the ImGui context.
+			if (ImGui::GetIO().IniFilename) ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
 			ImGui_ImplOpenGL3_Shutdown();
 			ImGui::DestroyContext();
 			ImGuiReady = false;
