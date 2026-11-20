@@ -2378,14 +2378,13 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				else
 				{
+					// ImGui's ini file is the source of truth for Commander geometry.
+					// Do not force temporary coordinates here: that would overwrite the
+					// persisted position and size after a full application restart.
 					if (SofiCommanderApplyMinimized)
-					{
-						if (SofiCommanderRestoreSize.x <= 0.0f)
-							SofiCommanderRestoreSize = ImVec2(520.0f, 320.0f);
-						ImGui::SetNextWindowPos(SofiCommanderRestorePos, ImGuiCond_Always);
-						ImGui::SetNextWindowSize(SofiCommanderRestoreSize, ImGuiCond_Always);
 						SofiCommanderApplyMinimized = false;
-					}
+					ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
+					ImGui::SetNextWindowSize(ImVec2(520.0f, 320.0f), ImGuiCond_FirstUseEver);
 					if (!SofiCommanderFocused)
 						ImGui::SetNextWindowFocus();
 
