@@ -76,6 +76,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
+static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
 static std::string SofiCommanderIniPath;
 
 static const retro_key ZLKtoRETROKEY[] =
@@ -2305,43 +2306,20 @@ static struct sDOSBoxPure : public ZL_Application
 
 				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
 			}
-			// Commander now lives in a real ImGui window. Its default window behavior
-			// provides move/resize handling; the preview scales proportionally inside it.
-			ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
-			ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
-			const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
-			SofiCommanderHovered = false;
-			if (commanderVisible)
-			{
-				const ImVec2 imageSize = ImGui::GetContentRegionAvail();
-				// Fill the entire Commander content area, allowing aspect-ratio distortion.
-				if (imageSize.x > 0.0f && imageSize.y > 0.0f)
-				{
-					ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
-						ImVec2(234.0f / 960.0f, 27.0f / 540.0f),
-						ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
-					SofiCommanderHovered = ImGui::IsItemHovered();
-					ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-						IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
-				}
-			}
-			ImGui::End();
-
-			// SOFI Space navigation: real interactive buttons, kept independent
-			// from Commander and from the emulator's configuration dialogs.
+			// SOFI Space navigation: the Explorer button controls the auxiliary Commander window.
 			static int selectedSofiSection = -1;
-			const char* sofiSections[] = { "VIDEO", "AUDIO", "CORE", "SETTINGS" };
+			const char* sofiSections[] = { "VIDEO", "AUDIO", "CORE", "SETTINGS", "EXPLORADOR" };
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 270.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
-			for (int i = 0; i < 4; ++i)
+			for (int i = 0; i < 5; ++i)
 			{
-				const bool selected = (selectedSofiSection == i);
+				const bool selected = (i == 4 ? SofiCommanderOpen : selectedSofiSection == i);
 				ImGui::PushStyleColor(ImGuiCol_Button,
 					selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -2349,12 +2327,52 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::PushStyleColor(ImGuiCol_Border,
 					selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 				if (ImGui::Button(sofiSections[i], ImVec2(88.0f, 44.0f)))
-					selectedSofiSection = i;
+				{
+					if (i == 4) SofiCommanderOpen = true;
+					else selectedSofiSection = i;
+				}
 				ImGui::PopStyleColor(4);
-				if (i != 3) ImGui::Spacing();
+				if (i != 4) ImGui::Spacing();
 			}
 			ImGui::PopStyleVar(2);
 			ImGui::End();
+
+			// Commander starts hidden. Explorer restores it and gives it focus;
+			// moving focus to another ImGui window hides it again.
+			SofiCommanderHovered = false;
+			if (SofiCommanderOpen)
+			{
+				ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowFocus();
+				const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
+				if (commanderVisible)
+				{
+					const ImVec2 imageSize = ImGui::GetContentRegionAvail();
+					// Fill the entire Commander content area, allowing aspect-ratio distortion.
+					if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+					{
+						ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
+							ImVec2(234.0f / 960.0f, 27.0f / 540.0f),
+							ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
+						SofiCommanderHovered = ImGui::IsItemHovered();
+						ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+							IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
+					}
+				}
+				const bool commanderFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+				ImGui::End();
+				if (!commanderFocused && SofiCommanderFocused)
+				{
+					SofiCommanderOpen = false;
+					SofiCommanderFocused = false;
+				}
+				else SofiCommanderFocused = commanderFocused;
+			}
+			else
+			{
+				SofiCommanderFocused = false;
+			}
 
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
