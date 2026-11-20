@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui" ]
+    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/dos-cursor-alt178-from-331" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -39,6 +39,7 @@ jobs:
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
+        python main/tools/patch_osd_cursor.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -79,6 +80,7 @@ jobs:
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
+        python main/tools/patch_osd_cursor.py
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
