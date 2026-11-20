@@ -74,6 +74,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
+static bool SofiPointerCaptured = false, SofiCaptureButtonDown = false, SofiSuppressMiddleMenu = false;
 
 static const retro_key ZLKtoRETROKEY[] =
 {
@@ -1466,6 +1467,7 @@ static void OnJoyDeviceChange(bool added, int which)
 static void OnImGuiPointerMove(ZL_PointerMoveEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady) return;
+	if (SofiPointerCaptured) return;
 	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 }
 
@@ -1473,8 +1475,30 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	ImGuiIO& io = ImGui::GetIO();
-	// Update the pointer first so the press is always evaluated at its real location.
-	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	if (SofiPointerCaptured)
+	{
+		if (e.button == ZL_BUTTON_MIDDLE)
+		{
+			SofiPointerCaptured = false;
+			SofiSuppressMiddleMenu = true;
+			ZL_Display::SetPointerLock(false);
+			return;
+		}
+		io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
+		if (e.button == ZL_BUTTON_LEFT && SofiCaptureButtonDown) { SofiCaptureButtonDown = false; return; }
+	}
+	else
+	{
+		// Capture only when the click lands on the empty SOFI workspace, not a control/window.
+		if (e.button == ZL_BUTTON_LEFT && !io.WantCaptureMouse)
+		{
+			SofiPointerCaptured = true;
+			SofiCaptureButtonDown = true;
+			PointerLockPos = ZL_Vector((scalar)e.x, (scalar)e.y);
+			return;
+		}
+		io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	}
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
 	io.AddMouseButtonEvent(button, true);
 }
@@ -1483,7 +1507,12 @@ static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	ImGuiIO& io = ImGui::GetIO();
-	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	if (SofiPointerCaptured)
+	{
+		if (e.button == ZL_BUTTON_LEFT && SofiCaptureButtonDown) { SofiCaptureButtonDown = false; return; }
+		io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
+	}
+	else io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
 	io.AddMouseButtonEvent(button, false);
 }
@@ -1872,7 +1901,8 @@ static void OnDraw()
 {
 	SynchronizeSettings(false);
 
-	if (UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
+	if (SofiSuppressMiddleMenu) SofiSuppressMiddleMenu = false;
+	else if (!SofiPointerCaptured && UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
 
 	bool showOSD = DBPS_IsShowingOSD();
 	static bool doPointerLock, doHideCursor, lastHiddenCursor;
@@ -1884,10 +1914,14 @@ static void OnDraw()
 		lastHiddenCursor = false;
 		doHideCursor = false;
 	}
-	if (PointerLock && !showOSD && !ThrottlePaused)
+	if ((SofiPointerCaptured || (PointerLock && !showOSD)) && !ThrottlePaused)
 	{
-		if (!doPointerLock) { ZL_Display::SetPointerLock((doPointerLock = true)); PointerLockPos = ZL_Input::Pointer(); }
-		PointerLockPos = (showOSD ? osd_rec : core_rec).Clamp(PointerLockPos + ZL_Input::MouseDelta());
+		if (!doPointerLock)
+		{
+			ZL_Display::SetPointerLock((doPointerLock = true));
+			if (!SofiPointerCaptured) PointerLockPos = ZL_Input::Pointer();
+		}
+		PointerLockPos = (SofiPointerCaptured ? ZL_Rectf(0, 0, ZLWIDTH, ZLHEIGHT) : (showOSD ? osd_rec : core_rec)).Clamp(PointerLockPos + ZL_Input::MouseDelta());
 	}
 	else
 	{
@@ -2204,6 +2238,8 @@ static struct sDOSBoxPure : public ZL_Application
 			io.DeltaTime = (float)ZL_Application::Elapsed;
 			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
 			ImGui_ImplOpenGL3_NewFrame();
+			if (SofiPointerCaptured)
+				io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
 			ImGui::NewFrame();
 			// Draw an ImGui-owned cursor so SOFI remains usable outside Commander.
 			io.MouseDrawCursor = true;
