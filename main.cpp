@@ -1883,14 +1883,24 @@ static void OnDraw()
 	}
 	else
 	{
-		bool showCursorAgain = (doPointerLock && !showOSD && doHideCursor && lastHiddenCursor); // show when pausing or disabling pointer lock
 		if (doPointerLock) ZL_Display::SetPointerLock((doPointerLock = false));
-		if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
-		if ((doHideCursor && lastHiddenCursor != ((showOSD ? osd_rec : core_rec) + 10).Contains(ZL_Input::Pointer())) || showCursorAgain)
+		// SOFI owns the visible interface: keep the system pointer available over it.
+		if (ImGuiReady)
 		{
-			SDL_ShowCursor((int)lastHiddenCursor);
-			lastHiddenCursor ^= true;
-			if (showCursorAgain) doHideCursor = false;
+			SDL_ShowCursor(1);
+			lastHiddenCursor = false;
+			doHideCursor = false;
+		}
+		else
+		{
+			bool showCursorAgain = (doPointerLock && !showOSD && doHideCursor && lastHiddenCursor); // show when pausing or disabling pointer lock
+			if (!doHideCursor && ZL_Input::Held()) doHideCursor = true; // start hiding cursor from the first click
+			if ((doHideCursor && lastHiddenCursor != ((showOSD ? osd_rec : core_rec) + 10).Contains(ZL_Input::Pointer())) || showCursorAgain)
+			{
+				SDL_ShowCursor((int)lastHiddenCursor);
+				lastHiddenCursor ^= true;
+				if (showCursorAgain) doHideCursor = false;
+			}
 		}
 	}
 
