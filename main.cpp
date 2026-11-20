@@ -2292,7 +2292,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowSize(ImVec2(460.0f, 320.0f), ImGuiCond_FirstUseEver);
 			const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
-			SofiCommanderHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+			SofiCommanderHovered = false;
 			if (commanderVisible)
 			{
 				const ImVec2 imageSize = ImGui::GetContentRegionAvail();
@@ -2302,6 +2302,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::Image((ImTextureID)srfOSD.GetGLTexture(), imageSize,
 						ImVec2(234.0f / 960.0f, 27.0f / 540.0f),
 						ImVec2(917.0f / 960.0f, 432.0f / 540.0f));
+					SofiCommanderHovered = ImGui::IsItemHovered();
 					ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
 						IM_COL32(70, 190, 255, 255), 0.0f, 0, 2.0f);
 				}
