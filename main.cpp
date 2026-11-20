@@ -2346,9 +2346,7 @@ static struct sDOSBoxPure : public ZL_Application
 				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
 			}
 
-			// SOFI Space navigation: the Explorer button controls the auxiliary Commander window.
-			static int selectedSofiSection = -1;
-			const char* sofiSections[] = { "VIDEO", "AUDIO", "CORE", "SETTINGS", "EXPLORADOR" };
+			// SOFI Space navigation: keep Explorer as the only visible navigation button.
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
 			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
@@ -2357,42 +2355,34 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
-			for (int i = 0; i < 5; ++i)
+			const bool selected = SofiCommanderOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)))
 			{
-				const bool selected = (i == 4 ? SofiCommanderOpen : selectedSofiSection == i);
-				ImGui::PushStyleColor(ImGuiCol_Button,
-					selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-				ImGui::PushStyleColor(ImGuiCol_Border,
-					selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-				if (ImGui::Button(sofiSections[i], ImVec2(88.0f, 44.0f)))
+				if (!SofiCommanderOpen)
 				{
-					if (i == 4)
-					{
-						if (!SofiCommanderOpen)
-						{
-							SofiCommanderOpen = true;
-							SofiCommanderMinimized = false;
-							SofiCommanderApplyMinimized = true;
-							SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
-						}
-						else if (SofiCommanderMinimized)
-						{
-							SofiCommanderMinimized = false;
-							SofiCommanderApplyMinimized = true;
-						}
-						else
-						{
-							SofiCommanderMinimized = true;
-							SofiCommanderFocused = false;
-						}
-					}
-					else selectedSofiSection = i;
+					SofiCommanderOpen = true;
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = true;
+					SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
 				}
-				ImGui::PopStyleColor(4);
-				if (i != 4) ImGui::Spacing();
+				else if (SofiCommanderMinimized)
+				{
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = true;
+				}
+				else
+				{
+					SofiCommanderMinimized = true;
+					SofiCommanderFocused = false;
+				}
 			}
+			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
