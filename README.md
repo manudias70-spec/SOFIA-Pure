@@ -77,3 +77,9 @@ Consulta [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) para conocer las atrib
 ---
 
 SOFIA-Pure es un proyecto experimental en desarrollo. La documentación, los créditos y los avisos se actualizan a medida que se revisan e incorporan componentes.
+
+## SOFI UI — comportamiento de EXPLORADOR
+
+En la rama experimental `experiment/explorer-close-visible-commander`, el botón **EXPLORADOR** conserva sus acciones de apertura y restauración. Cuando SOFI UI recibe un nuevo clic mientras SOFI Commander está visible y no minimizado, el botón cierra el panel Commander en lugar de minimizarlo.
+
+Este ajuste está limitado a la acción del botón EXPLORADOR en la interfaz SOFI UI. No modifica la implementación interna de Commander, sus controles, el foco, la captura del mouse, el clic del medio ni la gestión de geometría y maximización/restauración.
