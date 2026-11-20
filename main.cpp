@@ -2394,8 +2394,8 @@ static struct sDOSBoxPure : public ZL_Application
 					const ImVec2 minimizeMax(closeRight - buttonSize - 2.0f, buttonY + buttonSize);
 				ImDrawList* titleDraw = ImGui::GetWindowDrawList();
 				titleDraw->PushClipRect(windowPos, ImVec2(windowPos.x + windowSize.x, windowPos.y + titleBarHeight), false);
-				const bool minimizeHovered = ImGui::IsMouseHoveringRect(minimizeMin, minimizeMax);
-					const bool closeHovered = ImGui::IsMouseHoveringRect(closeMin, closeMax);
+				const bool minimizeHovered = ImGui::IsMouseHoveringRect(minimizeMin, minimizeMax, false);
+					const bool closeHovered = ImGui::IsMouseHoveringRect(closeMin, closeMax, false);
 					titleDraw->AddRectFilled(minimizeMin, minimizeMax,
 						minimizeHovered ? IM_COL32(25, 115, 160, 255) : IM_COL32(18, 48, 72, 230), 4.0f);
 					titleDraw->AddRectFilled(closeMin, closeMax,
