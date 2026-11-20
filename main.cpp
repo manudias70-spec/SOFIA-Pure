@@ -2219,16 +2219,6 @@ static struct sDOSBoxPure : public ZL_Application
 				bg->AddText(ImVec2(60, 19), IM_COL32(225, 245, 255, 255), "SOFI-PURE");
 				bg->AddText(ImVec2(61, 43), muted, "SPACE INTERFACE");
 
-				const char* items[] = { "HOME", "CORE", "MEDIA", "TOOLS", "SETTINGS" };
-				for (int i = 0; i < 5; ++i)
-				{
-					const float y = 112.0f + i * 62.0f;
-					bg->AddRectFilled(ImVec2(12, y), ImVec2(100, y + 44),
-						i == 0 ? IM_COL32(12, 65, 105, 220) : IM_COL32(10, 28, 48, 190), 5.0f);
-					bg->AddRect(ImVec2(12, y), ImVec2(100, y + 44),
-						i == 0 ? cyan : IM_COL32(35, 105, 145, 130), 5.0f, 0, 1.0f);
-					bg->AddText(ImVec2(25, y + 15), i == 0 ? IM_COL32(225, 250, 255, 255) : muted, items[i]);
-				}
 				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
 			}
 			// Commander now lives in a real ImGui window. Its default window behavior
@@ -2249,6 +2239,36 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 			ImGui::End();
+
+			// SOFI Space navigation: real interactive buttons, kept independent
+			// from Commander and from the emulator's configuration dialogs.
+			static int selectedSofiSection = -1;
+			const char* sofiSections[] = { "VIDEO", "AUDIO", "CORE", "SETTINGS" };
+			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 270.0f), ImGuiCond_Always);
+			ImGui::Begin("SOFI Navigation", NULL,
+				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
+			for (int i = 0; i < 4; ++i)
+			{
+				const bool selected = (selectedSofiSection == i);
+				ImGui::PushStyleColor(ImGuiCol_Button,
+					selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+				ImGui::PushStyleColor(ImGuiCol_Border,
+					selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+				if (ImGui::Button(sofiSections[i], ImVec2(88.0f, 44.0f)))
+					selectedSofiSection = i;
+				ImGui::PopStyleColor(4);
+				if (i != 3) ImGui::Spacing();
+			}
+			ImGui::PopStyleVar(2);
+			ImGui::End();
+
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
