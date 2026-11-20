@@ -79,6 +79,7 @@ static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
 static bool SofiCommanderMinimized = false, SofiCommanderMaximizeOnOpen = false, SofiCommanderApplyMinimized = false;
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
+// Commander minimize/restore uses a compact title bar while preserving saved geometry.
 static std::string SofiCommanderIniPath;
 
 static const retro_key ZLKtoRETROKEY[] =
