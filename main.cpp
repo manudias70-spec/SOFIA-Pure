@@ -85,6 +85,13 @@ static void SofiCommanderMinimize()
 	SofiCommanderMinimized = true;
 	SofiCommanderFocused = false;
 }
+static void SofiCommanderClose()
+{
+	SofiCommanderOpen = false;
+	SofiCommanderFocused = false;
+	SofiCommanderMinimized = false;
+	SofiCommanderApplyMinimized = false;
+}
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
 static ImVec2 SofiCommanderRestorePos(0.0f, 0.0f);
 // Commander keeps its normal geometry separately so maximizing never overwrites it in ImGui's ini.
@@ -2484,10 +2491,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 					if (commanderCloseClicked)
 					{
-						SofiCommanderOpen = false;
-						SofiCommanderFocused = false;
-						SofiCommanderMinimized = false;
-						SofiCommanderApplyMinimized = false;
+						SofiCommanderClose();
 					}
 					else if (commanderMinimizeClicked || commanderRestoreClicked)
 					{
@@ -2597,7 +2601,7 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				else
 				{
-					SofiCommanderMinimize();
+					SofiCommanderClose();
 				}
 			}
 			if (commanderLostFocus && !explorerClicked)
