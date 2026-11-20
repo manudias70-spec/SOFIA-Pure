@@ -2572,8 +2572,9 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			SofiNavigationHovered = false;
-			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)))
+			const bool explorerClicked = ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f));
 			SofiNavigationHovered = ImGui::IsItemHovered();
+			if (explorerClicked)
 			{
 				if (!SofiCommanderOpen)
 				{
