@@ -2046,10 +2046,6 @@ static void OnLoad(int argc, char *argv[])
 	ImGui::CreateContext();
 	ImGui::GetIO().IniFilename = NULL;
 	ImGui::StyleColorsDark();
-	// Restore SOFI Commander geometry from the application's persistent settings.
-	const std::string savedCommanderIni = ZL_Application::SettingsGet("sofi_commander_imgui_ini");
-	if (!savedCommanderIni.empty())
-		ImGui::LoadIniSettingsFromMemory(savedCommanderIni.c_str(), savedCommanderIni.size());
 	ImGuiReady = ImGui_ImplOpenGL3_Init("#version 130");
 	if (!ImGuiReady) ImGui::DestroyContext();
 	DoApplyGeometry = DoApplyInterfaceOptions = true;
@@ -2279,19 +2275,6 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::End();
 
 			ImGui::Render();
-			// Persist ImGui window geometry through SOFIA-Pure settings (not a cwd imgui.ini).
-			size_t commanderIniSize = 0;
-			const char* commanderIniData = ImGui::SaveIniSettingsToMemory(&commanderIniSize);
-			if (commanderIniData)
-			{
-				const std::string commanderIni(commanderIniData, commanderIniSize);
-				ImGui::MemFree((void*)commanderIniData);
-				if (ZL_Application::SettingsGet("sofi_commander_imgui_ini") != commanderIni)
-				{
-					ZL_Application::SettingsSet("sofi_commander_imgui_ini", commanderIni);
-					DirtySettings();
-				}
-			}
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 		if (npcb && (server.IsOpened() || my_client_id)) npcb->poll();
