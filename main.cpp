@@ -2414,15 +2414,17 @@ static struct sDOSBoxPure : public ZL_Application
 					// persisted position and size after a full application restart.
 					if (SofiCommanderApplyMinimized)
 						SofiCommanderApplyMinimized = false;
+					ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
+					ImGui::SetNextWindowSize(ImVec2(520.0f, 320.0f), ImGuiCond_FirstUseEver);
 					if (SofiCommanderApplyGeometry)
 					{
 						if (SofiCommanderMaximized)
 						{
 							const ImVec2 displaySize = ImGui::GetIO().DisplaySize;
-						const ImVec2 maxSize(735.0f, 980.0f);
-						ImGui::SetNextWindowPos(ImVec2((displaySize.x - maxSize.x) * 0.5f,
-							(displaySize.y - maxSize.y) * 0.5f), ImGuiCond_Always);
-						ImGui::SetNextWindowSize(maxSize, ImGuiCond_Always);
+							const ImVec2 maxSize(735.0f, 980.0f);
+							ImGui::SetNextWindowPos(ImVec2((displaySize.x - maxSize.x) * 0.5f,
+								(displaySize.y - maxSize.y) * 0.5f), ImGuiCond_Always);
+							ImGui::SetNextWindowSize(maxSize, ImGuiCond_Always);
 						}
 						else if (SofiCommanderRestoreSize.x > 0.0f && SofiCommanderRestoreSize.y > 0.0f)
 						{
@@ -2431,8 +2433,6 @@ static struct sDOSBoxPure : public ZL_Application
 						}
 						SofiCommanderApplyGeometry = false;
 					}
-					ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
-					ImGui::SetNextWindowSize(ImVec2(520.0f, 320.0f), ImGuiCond_FirstUseEver);
 					if (!SofiCommanderFocused)
 						ImGui::SetNextWindowFocus();
 
