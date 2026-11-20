@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up" ]
+    branches: [ "main", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/dos-cursor-alt178" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
