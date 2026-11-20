@@ -38,13 +38,13 @@ Agradecemos a ambos autores por sus aportes al escalado de imágenes.
 
 ### AWE32 / EMU8000: agradecimientos y procedencia
 
-La integración de AWE32 incorpora la implementación EMU8000 de **DOSBox-X**, adaptada al proyecto. El propio código de DOSBox-X identifica como referencia técnica a `86Box snd_emu8k.c`, de **Sarah Walker**.
+La integración de AWE32 adapta la emulación EMU8000 a DOSBox Pure Unleashed. El parche de integración identifica expresamente como referencia técnica a `snd_emu8k.c` de **86Box**, cuyo encabezado acredita a **Sarah Walker**. También reconocemos el trabajo de **DOSBox-X** en la implementación y adaptación del subsistema AWE32/EMU8000 que se utilizó como referencia para esta integración.
 
 - [DOSBox-X — proyecto y código fuente](https://github.com/joncampbell123/dosbox-x)
 - [Jonathan Campbell — autor y mantenedor principal de DOSBox-X](https://github.com/joncampbell123)
 - [86Box — proyecto de emulación](https://github.com/86Box/86Box)
 
-Nuestro agradecimiento a Jonathan Campbell, a los colaboradores de DOSBox-X y a Sarah Walker por el trabajo de emulación EMU8000 que sirve de referencia a esta integración. Los avisos de copyright y licencia de los componentes originales se conservan en el código.
+Agradecemos a Jonathan Campbell, a los colaboradores de DOSBox-X y a Sarah Walker por sus aportes al desarrollo de la emulación AWE32/EMU8000. Los avisos de copyright y licencia de los componentes originales se conservan en el código.
 
 ## Identidad visual y personalización
 
@@ -83,6 +83,12 @@ El trabajo anterior no se descarta: se documenta como la base sobre la que conti
 - **Sarah Walker y colaboradores de 86Box** — trabajo de referencia para la emulación EMU8000.
 
 Los créditos específicos y avisos de licencia de cada componente prevalecen sobre este resumen. SOFIA-Pure no reclama autoría sobre tecnologías, código o recursos de terceros.
+
+## Licencia y componentes de terceros
+
+La distribución combinada de SOFIA-Pure se ofrece bajo **GNU GPL versión 3**. La base DOSBox Pure / DOSBox Pure Unleashed declara expresamente GPL versión 2 o cualquier versión posterior; por ello, esta distribución selecciona GPLv3 para combinarla con el shader derivado de xBRZ, cuyo aviso de origen especifica GPL-3.0. Los componentes con licencias o avisos propios conservan sus atribuciones y condiciones, detalladas en [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md). El texto GPLv2 original se conserva en `LICENSES/GPL-2.0.txt` como referencia para los avisos heredados.
+
+Esta selección se basa en los avisos disponibles en los repositorios y archivos fuente consultados. Antes de distribuir binarios, debe comprobarse que cada paquete incluya el código fuente correspondiente, los avisos y los materiales exigidos por las licencias aplicables.
 
 ## Comunidad y distribución
 
