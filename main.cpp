@@ -2353,8 +2353,8 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 
 			// Explorer opens Commander at its saved normal size, restores it when minimized,
-			bool commanderLostFocus = false;
 			// and minimizes it when already visible.
+			bool commanderLostFocus = false;
 			SofiCommanderHovered = false;
 			if (SofiCommanderOpen)
 			{
