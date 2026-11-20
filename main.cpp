@@ -74,7 +74,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
-static bool SofiPointerCaptured = false, SofiCaptureButtonDown = false, SofiSuppressMiddleMenu = false;
+static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
 
 static const retro_key ZLKtoRETROKEY[] =
@@ -1201,6 +1201,14 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 		return (id < RETROK_LAST ? (int16_t)RETROKDown[id] : 0);
 	}
 
+	if (ImGuiReady && (device == RETRO_DEVICE_MOUSE || device == RETRO_DEVICE_POINTER))
+	{
+		// Pure receives mouse input only while Commander explicitly owns the pointer.
+		if (!SofiCommanderCaptured) return 0;
+		// The middle button is the exclusive release gesture, never a game/OSD click.
+		if (device == RETRO_DEVICE_MOUSE && id == RETRO_DEVICE_ID_MOUSE_MIDDLE) return 0;
+	}
+
 	if (device == RETRO_DEVICE_MOUSE && (!CaptureJoyBind || id != RETRO_DEVICE_ID_MOUSE_RIGHT))
 	{
 		if (id == RETRO_DEVICE_ID_MOUSE_X)         return (int16_t)ZL_Input::MouseDelta().x;
@@ -1216,14 +1224,14 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 	{
 		if (id == RETRO_DEVICE_ID_POINTER_X)
 		{
-			scalar x = ((PointerLock && !DBPS_IsShowingOSD()) ? PointerLockPos.x : (SDL_GetMouseFocus() ? ZL_Input::Pointer().x : ZLHALFW));
+			scalar x = ((SofiCommanderCaptured || (PointerLock && !DBPS_IsShowingOSD())) ? PointerLockPos.x : (SDL_GetMouseFocus() ? ZL_Input::Pointer().x : ZLHALFW));
 			if (x <= core_rec.left) return -0x7fff;
 			if (x >= core_rec.right) return 0x7fff;
 			return (int16_t)((x - core_rec.left) / core_rec.Width() * 65534.99f - 32767.495f);
 		}
 		if (id == RETRO_DEVICE_ID_POINTER_Y)
 		{
-			scalar y = ((PointerLock && !DBPS_IsShowingOSD()) ? PointerLockPos.y : (SDL_GetMouseFocus() ? ZL_Input::Pointer().y : ZLHALFH));
+			scalar y = ((SofiCommanderCaptured || (PointerLock && !DBPS_IsShowingOSD())) ? PointerLockPos.y : (SDL_GetMouseFocus() ? ZL_Input::Pointer().y : ZLHALFH));
 			if (y <= core_rec.low) return 0x7fff;
 			if (y >= core_rec.high) return -0x7fff;
 			return (int16_t)((y - core_rec.low) / core_rec.Height() * -65534.99f - 32767.495f);
@@ -1309,7 +1317,7 @@ bool DBPS_GetJoyBind(unsigned port, unsigned device, unsigned index, unsigned id
 void DBPS_GetMouse(short& mx, short& my, bool osd)
 {
 	extern ZL_Vector ZL_SdlQueryMousePos();
-	const ZL_Vector p = ((PointerLock && !DBPS_IsShowingOSD()) ? PointerLockPos : (SDL_GetMouseFocus() ? ZL_SdlQueryMousePos() : ZLCENTER));
+	const ZL_Vector p = (SofiCommanderCaptured ? PointerLockPos : (ImGuiReady ? ZL_Vector(-1, -1) : ((PointerLock && !DBPS_IsShowingOSD()) ? PointerLockPos : (SDL_GetMouseFocus() ? ZL_SdlQueryMousePos() : ZLCENTER))));
 	const ZL_Rectf& rec = (osd ? osd_rec : core_rec);
 	mx = ((p.x <= rec.left) ? (int16_t)-0x7fff : ((p.x >= rec.right) ? (int16_t)0x7fff : (int16_t)((p.x - rec.left) / rec.Width() * 65534.99f - 32767.495f)));
 	my = ((p.y <= rec.low)  ? (int16_t)0x7fff : ((p.y >= rec.high)  ? (int16_t)-0x7fff : (int16_t)((p.y - rec.low) / rec.Height() * -65534.99f - 32767.495f)));
@@ -1468,8 +1476,7 @@ static void OnJoyDeviceChange(bool added, int which)
 // origin, while ImGui expects top-left screen coordinates.
 static void OnImGuiPointerMove(ZL_PointerMoveEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady) return;
-	if (SofiPointerCaptured) return;
+	if (e.which != 0 || !ImGuiReady || SofiCommanderCaptured) return;
 	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 }
 
@@ -1477,30 +1484,37 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	ImGuiIO& io = ImGui::GetIO();
-	if (SofiPointerCaptured)
+
+	if (SofiCommanderCaptured)
 	{
 		if (e.button == ZL_BUTTON_MIDDLE)
 		{
-			SofiPointerCaptured = false;
+			// Middle click releases Pure's relative-mode capture and returns ownership to SOFI.
+			SofiCommanderCaptured = false;
 			SofiSuppressMiddleMenu = true;
+			SofiSuppressMiddleRelease = true;
 			ZL_Display::SetPointerLock(false);
-			return;
+			io.AddMouseButtonEvent(0, false);
+			io.AddMouseButtonEvent(1, false);
+			io.AddMouseButtonEvent(2, false);
 		}
-		io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
-		if (e.button == ZL_BUTTON_LEFT && SofiCaptureButtonDown) { SofiCaptureButtonDown = false; return; }
+		return;
 	}
-	else
+
+	// A left click on the Commander image hands exclusive mouse ownership to Pure.
+	// Clicks on the title bar/frame remain available for moving and resizing the window.
+	if (e.button == ZL_BUTTON_LEFT && SofiCommanderHovered)
 	{
-		// Capture only when the click lands on the empty SOFI workspace, not a control/window.
-		if (e.button == ZL_BUTTON_LEFT && !io.WantCaptureMouse)
-		{
-			SofiPointerCaptured = true;
-			SofiCaptureButtonDown = true;
-			PointerLockPos = ZL_Vector((scalar)e.x, (scalar)e.y);
-			return;
-		}
-		io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+		SofiCommanderCaptured = true;
+		SofiSuppressMiddleRelease = false;
+		PointerLockPos = ZL_Vector((scalar)e.x, (scalar)e.y);
+		io.AddMouseButtonEvent(0, false);
+		io.AddMouseButtonEvent(1, false);
+		io.AddMouseButtonEvent(2, false);
+		return;
 	}
+
+	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
 	io.AddMouseButtonEvent(button, true);
 }
@@ -1508,20 +1522,22 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
-	ImGuiIO& io = ImGui::GetIO();
-	if (SofiPointerCaptured)
+	if (e.button == ZL_BUTTON_MIDDLE && SofiSuppressMiddleRelease)
 	{
-		if (e.button == ZL_BUTTON_LEFT && SofiCaptureButtonDown) { SofiCaptureButtonDown = false; return; }
-		io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
+		SofiSuppressMiddleRelease = false;
+		return;
 	}
-	else io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	if (SofiCommanderCaptured) return;
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
 	io.AddMouseButtonEvent(button, false);
 }
 
 static void OnImGuiMouseWheel(ZL_MouseWheelEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady) return;
+	if (e.which != 0 || !ImGuiReady || SofiCommanderCaptured) return;
 	ImGui::GetIO().AddMouseWheelEvent((float)e.x, (float)e.y);
 }
 
@@ -1532,6 +1548,12 @@ static void OnImGuiWindowActivated(ZL_WindowActivateEvent& e)
 		// A focus transition must never turn a held OS button into a fresh ImGui click.
 		// Park the pointer until the next real motion event and clear every supported button.
 		ImGuiIO& io = ImGui::GetIO();
+		if (SofiCommanderCaptured)
+		{
+			SofiCommanderCaptured = false;
+			ZL_Display::SetPointerLock(false);
+		}
+		SofiSuppressMiddleRelease = false;
 		io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
 		io.AddMouseButtonEvent(0, false);
 		io.AddMouseButtonEvent(1, false);
@@ -1904,36 +1926,26 @@ static void OnDraw()
 	SynchronizeSettings(false);
 
 	if (SofiSuppressMiddleMenu) SofiSuppressMiddleMenu = false;
-	else if (!SofiPointerCaptured && UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
+	else if (!SofiCommanderCaptured && UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
 
 	bool showOSD = DBPS_IsShowingOSD();
 	static bool doPointerLock, doHideCursor, lastHiddenCursor;
-	// SOFI owns the visible pointer in every mode, including pointer-lock mode.
-	// Enforce this outside the legacy pointer-lock visibility branch.
+	// The system cursor stays hidden: ImGui draws SOFI's cursor, while Pure's OSD
+	// cursor is rendered inside Commander only when Pure owns the captured pointer.
 	if (ImGuiReady)
 	{
 		SDL_ShowCursor(0);
 		lastHiddenCursor = false;
 		doHideCursor = false;
 	}
-	if (SofiCommanderHovered && SofiPointerCaptured)
-	{
-		// Hand pointer ownership to Commander/Pure when the virtual SOFI pointer enters it.
-		SofiPointerCaptured = false;
-		SofiCaptureButtonDown = false;
-		ZL_Display::SetPointerLock(false);
-		doPointerLock = false;
-		if (SDL_Window* window = SDL_GetMouseFocus())
-			SDL_WarpMouseInWindow(window, (int)PointerLockPos.x, (int)(ZLHEIGHT - PointerLockPos.y));
-	}
-	if ((SofiPointerCaptured || (PointerLock && !showOSD)) && !SofiCommanderHovered && !ThrottlePaused)
+	if ((SofiCommanderCaptured || (!ImGuiReady && PointerLock && !showOSD)) && !ThrottlePaused)
 	{
 		if (!doPointerLock)
 		{
 			ZL_Display::SetPointerLock((doPointerLock = true));
-			if (!SofiPointerCaptured) PointerLockPos = ZL_Input::Pointer();
+			if (!SofiCommanderCaptured) PointerLockPos = ZL_Input::Pointer();
 		}
-		PointerLockPos = (SofiPointerCaptured ? ZL_Rectf(0, 0, ZLWIDTH, ZLHEIGHT) : (showOSD ? osd_rec : core_rec)).Clamp(PointerLockPos + ZL_Input::MouseDelta());
+		PointerLockPos = (showOSD ? osd_rec : core_rec).Clamp(PointerLockPos + ZL_Input::MouseDelta());
 	}
 	else
 	{
@@ -2250,11 +2262,11 @@ static struct sDOSBoxPure : public ZL_Application
 			io.DeltaTime = (float)ZL_Application::Elapsed;
 			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
 			ImGui_ImplOpenGL3_NewFrame();
-			if (SofiPointerCaptured)
+			if (SofiCommanderCaptured)
 				io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
 			ImGui::NewFrame();
 			// Exactly one software cursor owner: SOFI outside Commander, Pure inside it.
-			io.MouseDrawCursor = !SofiCommanderHovered;
+			io.MouseDrawCursor = !SofiCommanderCaptured;
 
 			// SOFI Space - first visual layer. Drawn behind all interactive windows.
 			{
