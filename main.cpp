@@ -2368,17 +2368,23 @@ static struct sDOSBoxPure : public ZL_Application
 			{
 				if (SofiCommanderApplyMinimized || SofiCommanderApplyMaximized)
 				{
+					const ImGuiViewport* commanderViewport = ImGui::GetMainViewport();
+					const ImVec2 viewportPos = commanderViewport->Pos;
+					const ImVec2 viewportSize = commanderViewport->Size;
 					const float titleHeight = ImGui::GetFrameHeight() + ImGui::GetStyle().WindowPadding.y * 2.0f;
 					if (SofiCommanderMinimized)
 					{
 						if (SofiCommanderRestoreSize.x <= 0.0f) SofiCommanderRestoreSize = ImVec2(520.0f, 320.0f);
-						ImGui::SetNextWindowPos(SofiCommanderRestorePos, ImGuiCond_Always);
+						// Keep the compact Commander bar attached to the bottom edge of SOFI Space.
+						ImGui::SetNextWindowPos(ImVec2(SofiCommanderRestorePos.x,
+							viewportPos.y + viewportSize.y - titleHeight), ImGuiCond_Always);
 						ImGui::SetNextWindowSize(ImVec2(SofiCommanderRestoreSize.x, titleHeight), ImGuiCond_Always);
 					}
 					else if (SofiCommanderMaximized)
 					{
-						ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiCond_Always);
-						ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_Always);
+						// Use the complete main viewport, not its work area, so Commander covers the SOFI header and footer too.
+						ImGui::SetNextWindowPos(viewportPos, ImGuiCond_Always);
+						ImGui::SetNextWindowSize(viewportSize, ImGuiCond_Always);
 					}
 					else
 					{
