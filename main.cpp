@@ -1472,17 +1472,20 @@ static void OnImGuiPointerMove(ZL_PointerMoveEvent& e)
 static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	ImGuiIO& io = ImGui::GetIO();
+	// Update the pointer first so the press is always evaluated at its real location.
+	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
-	ImGui::GetIO().AddMouseButtonEvent(button, true);
-	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	io.AddMouseButtonEvent(button, true);
 }
 
 static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
-	ImGui::GetIO().AddMouseButtonEvent(button, false);
-	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	io.AddMouseButtonEvent(button, false);
 }
 
 static void OnImGuiMouseWheel(ZL_MouseWheelEvent& e)
@@ -1493,8 +1496,10 @@ static void OnImGuiMouseWheel(ZL_MouseWheelEvent& e)
 
 static void OnImGuiWindowActivated(ZL_WindowActivateEvent& e)
 {
-	if (ImGuiReady && !e.mouse_focus)
+	if (ImGuiReady)
 	{
+		// A focus transition must never turn a held OS button into a fresh ImGui click.
+		// Park the pointer until the next real motion event and clear every supported button.
 		ImGuiIO& io = ImGui::GetIO();
 		io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
 		io.AddMouseButtonEvent(0, false);
@@ -2041,6 +2046,10 @@ static void OnLoad(int argc, char *argv[])
 	ImGui::CreateContext();
 	ImGui::GetIO().IniFilename = NULL;
 	ImGui::StyleColorsDark();
+	// Restore SOFI Commander geometry from the application's persistent settings.
+	const std::string savedCommanderIni = ZL_Application::SettingsGet("sofi_commander_imgui_ini");
+	if (!savedCommanderIni.empty())
+		ImGui::LoadIniSettingsFromMemory(savedCommanderIni.c_str(), savedCommanderIni.size());
 	ImGuiReady = ImGui_ImplOpenGL3_Init("#version 130");
 	if (!ImGuiReady) ImGui::DestroyContext();
 	DoApplyGeometry = DoApplyInterfaceOptions = true;
@@ -2270,6 +2279,19 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::End();
 
 			ImGui::Render();
+			// Persist ImGui window geometry through SOFIA-Pure settings (not a cwd imgui.ini).
+			size_t commanderIniSize = 0;
+			const char* commanderIniData = ImGui::SaveIniSettingsToMemory(&commanderIniSize);
+			if (commanderIniData)
+			{
+				const std::string commanderIni(commanderIniData, commanderIniSize);
+				ImGui::MemFree((void*)commanderIniData);
+				if (ZL_Application::SettingsGet("sofi_commander_imgui_ini") != commanderIni)
+				{
+					ZL_Application::SettingsSet("sofi_commander_imgui_ini", commanderIni);
+					DirtySettings();
+				}
+			}
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 		if (npcb && (server.IsOpened() || my_client_id)) npcb->poll();
