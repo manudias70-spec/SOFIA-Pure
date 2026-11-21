@@ -32,6 +32,10 @@ jobs:
         perl -0pi -e 's/"sb16", "gb"/"sb16", "awe32", "gb"/; s/Type of Soundblaster to emulate\. gb is Gameblaster\./Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster./' dosbox-pure/src/dosbox.cpp
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
+        git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-midi-manual-override.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply manual MIDI override core patch" }
+        if (-not (Select-String -Path dosbox-pure/dosbox_pure_libretro.cpp -Pattern 'manual_midi_override' -Quiet)) { throw "Manual MIDI override was not installed" }
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
         if (-not (Select-String -Path dosbox-pure/core_options.h -Pattern 'SoundBlaster AWE32' -Quiet)) { throw "AWE32 core option was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'AWE32_OpenROMBesideExe' -Quiet)) { throw "AWE32 ROM loader was not added" }
@@ -74,6 +78,10 @@ jobs:
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
         perl -0pi -e 's/"sb16", "gb"/"sb16", "awe32", "gb"/; s/Type of Soundblaster to emulate\. gb is Gameblaster\./Type of Soundblaster to emulate. awe32 enables the EMU8000 wavetable when awe32.raw is available; gb is Gameblaster./' dosbox-pure/src/dosbox.cpp
         git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-awe32-emu8k-core.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
+        git -C dosbox-pure apply --recount --ignore-whitespace "$env:GITHUB_WORKSPACE/main/patches/dosbox-pure-midi-manual-override.patch"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to apply manual MIDI override core patch" }
+        if (-not (Select-String -Path dosbox-pure/dosbox_pure_libretro.cpp -Pattern 'manual_midi_override' -Quiet)) { throw "Manual MIDI override was not installed" }
         if ($LASTEXITCODE -ne 0) { throw "Failed to apply EMU8000/AWE32 core patch" }
         if (-not (Select-String -Path dosbox-pure/src/hardware/sblaster.cpp -Pattern 'SBT_AWE32' -Quiet)) { throw "AWE32 Sound Blaster integration was not added" }
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib

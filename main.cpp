@@ -579,7 +579,12 @@ static const char* GetSetting(const char* key, const char* defaultval = NULL)
 static void SofiVideoSetSetting(const char* key, const char* value)
 {
 	mtxCoreOptions.Lock();
-	if (ConfigOverrides.HasKey(key))
+	if (!strcmp(key, "dosbox_pure_midi"))
+	{
+		ConfigOverrides.Erase(key);
+		ZL_Application::SettingsSet(key, value);
+	}
+	else if (ConfigOverrides.HasKey(key))
 		ConfigOverrides[key].SetString(value);
 	else
 		ZL_Application::SettingsSet(key, value);
@@ -677,7 +682,7 @@ bool DBPS_ApplyConfigOverrides(const std::string& json)
 			crc ^= ZL_Checksum::CRC32(key, strlen(key), ZL_Checksum::CRC32(val, strlen(val), crc)); // XOR to ignore order
 			affect_interface = (loop != 0 && (affect_interface || IsInterfaceConfigKey(key)));
 		}
-		if (loop == 0) { oldcrc = crc; ConfigOverrides = ZL_Json(json); }
+		if (loop == 0) { oldcrc = crc; ConfigOverrides = ZL_Json(json); ConfigOverrides.Erase("dosbox_pure_midi"); }
 		else if (oldcrc == crc) return false;
 		else { ConfigCache.Clear(); DoApplyInterfaceOptions |= affect_interface; return true; }
 	}

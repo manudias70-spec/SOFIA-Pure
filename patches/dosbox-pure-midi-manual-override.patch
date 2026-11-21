@@ -1,0 +1,24 @@
+diff --git a/dosbox_pure_libretro.cpp b/dosbox_pure_libretro.cpp
+--- a/dosbox_pure_libretro.cpp
++++ b/dosbox_pure_libretro.cpp
+@@ -2209,9 +2209,13 @@
+ 	if (prop->IsFixed())
+ 	{
+-		if (!user_modified) return false;
+-		static Bit32u lastwarnframe;
+-		if (dbp_framecount == lastwarnframe) return false;
+-		lastwarnframe = dbp_framecount;
+-		retro_notify(0, RETRO_LOG_WARN, "Unable to change setting which was fixed with game configuration");
+-		return false;
++		const bool manual_midi_override = user_modified &&
++			(!strcmp(var_name, "midiconfig") || !strcmp(var_name, "mpu401"));
++		if (!manual_midi_override)
++		{
++			if (!user_modified) return false;
++			static Bit32u lastwarnframe;
++			if (dbp_framecount == lastwarnframe) return false;
++			lastwarnframe = dbp_framecount;
++			retro_notify(0, RETRO_LOG_WARN, "Unable to change setting which was fixed with game configuration");
++			return false;
++		}
+ 	}

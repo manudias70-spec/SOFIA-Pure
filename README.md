@@ -133,3 +133,10 @@ Se retira la instrumentación temporal de diagnóstico MIDI y deja de generarse 
 El objetivo de esta build es comprobar de forma directa si, con el Splash desactivado, la selección MIDI de SOFI AUDIO produce un cambio audible entre las salidas disponibles. La compilación por sí sola no confirma el resultado: la prueba funcional definitiva es escuchar el módulo seleccionado.
 
 No se modifican los demás controles de AUDIO, VIDEO, EXPLORADOR, SOFI UI ni SOFI Commander.
+
+
+## Preferencia MIDI manual y ROM autodetectada
+
+La detección automática de archivos como `ROM1.BIN` o las ROM de MT-32 puede marcar `midiconfig` y `mpu401` como propiedades fijas dentro de DOSBox Pure. En ese estado, el core rechaza los cambios de MIDI solicitados por el frontend. Esta build aplica un parche acotado: permite que una selección manual de SOFI AUDIO reemplace esa fijación automática y reinicialice la salida MIDI.
+
+La selección manual de `dosbox_pure_midi` se guarda como preferencia global, fuera de `ConfigOverrides`, para que una configuración por juego antigua no vuelva a imponer Roland SC-55. La detección automática sigue siendo el punto de partida cuando no existe una preferencia manual. La prueba definitiva sigue siendo audible: seleccionar otra salida y comprobar que cambia realmente el sintetizador.
