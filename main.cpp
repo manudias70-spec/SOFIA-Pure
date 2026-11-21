@@ -2524,6 +2524,13 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiAudioCombo("SoundBlaster Type", &sbTypeSelected, sbTypeItems, IM_ARRAYSIZE(sbTypeItems));
 					SofiAudioCombo("SoundBlaster Adlib/FM Mode", &fmModeSelected, fmModeItems, IM_ARRAYSIZE(fmModeItems));
 					SofiAudioCombo("SoundBlaster Adlib Provider", &adlibProviderSelected, adlibProviderItems, IM_ARRAYSIZE(adlibProviderItems));
+
+					static int awe32Selected = 0;
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AWE32 / EMU8000");
+					SofiAudioCombo("Enable AWE32 / EMU8000 (restart required)", &awe32Selected, onOffItems, IM_ARRAYSIZE(onOffItems));
+					ImGui::TextDisabled("Requires awerom.raw in the frontend system directory.");
+
 					SofiAudioCombo("Enable Gravis Ultrasound (restart required)", &gusSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
 					SofiAudioCombo("Enable Tandy Sound Device (restart required)", &tandySelected, onOffItems, IM_ARRAYSIZE(onOffItems));
 					SofiAudioCombo("Swap Stereo Channels", &swapStereoSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
