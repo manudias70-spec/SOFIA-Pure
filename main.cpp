@@ -74,7 +74,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
-static bool SofiVideoPanelOpen = false;
+static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
@@ -601,6 +601,13 @@ static void SofiVideoCombo(const char* label, const char* key,
 	ImGui::SetNextItemWidth(260.0f);
 	if (ImGui::Combo(label, &selected, items, count))
 		SofiVideoSetSetting(key, values[selected]);
+}
+
+// AUDIO mock controls: local selections only. They intentionally do not read or write core settings.
+static void SofiAudioCombo(const char* label, int* selected, const char* const* items, int count)
+{
+	ImGui::SetNextItemWidth(300.0f);
+	ImGui::Combo(label, selected, items, count);
 }
 
 bool DBPS_IsConfigOverride(const char* key)
@@ -2427,8 +2434,104 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
 				SofiVideoPanelOpen = !SofiVideoPanelOpen;
 			ImGui::PopStyleColor(4);
+			const bool audioSelected = SofiAudioPanelOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				audioSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				audioSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
+				SofiAudioPanelOpen = !SofiAudioPanelOpen;
+			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
 			ImGui::End();
+
+			// AUDIO is a visual prototype: all selections remain local and are not connected to DOSBox Pure.
+			if (SofiAudioPanelOpen)
+			{
+				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				if (ImGui::Begin("SOFI AUDIO", &SofiAudioPanelOpen,
+					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+				{
+					ImGui::TextDisabled("PROTOTIPO VISUAL  //  SIN CONEXIÓN CON EL EMULADOR");
+					ImGui::Separator();
+					ImGui::BeginChild("##SofiAudioOptions", ImVec2(0.0f, 0.0f), false,
+						ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+					static const char* sampleRateItems[] = { "48000 Hz", "44100 Hz", "32000 Hz", "22050 Hz", "16000 Hz", "11025 Hz", "8000 Hz", "49716 Hz" };
+					static int sampleRateSelected = 0;
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AUDIO");
+					SofiAudioCombo("Audio Sample Rate (restart required)", &sampleRateSelected, sampleRateItems, IM_ARRAYSIZE(sampleRateItems));
+
+					static const char* sbConfigItems[] = {
+						"Port 0x220, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5",
+						"Port 0x220, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5",
+						"Port 0x240, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5",
+						"Port 0x240, IRQ 7, 8-Bit DMA 3, 16-bit DMA 7",
+						"Port 0x240, IRQ 2, 8-Bit DMA 3, 16-bit DMA 7",
+						"Port 0x240, IRQ 5, 8-Bit DMA 3, 16-bit DMA 5",
+						"Port 0x240, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5",
+						"Port 0x240, IRQ 10, 8-Bit DMA 3, 16-bit DMA 7",
+						"Port 0x280, IRQ 10, 8-Bit DMA 0, 16-bit DMA 6",
+						"Port 0x280, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5"
+					};
+					static int sbConfigSelected = 0;
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "SOUNDBLASTER");
+					SofiAudioCombo("SoundBlaster Settings", &sbConfigSelected, sbConfigItems, IM_ARRAYSIZE(sbConfigItems));
+
+					static const char* midiItems[] = {
+						"Frontend MIDI driver",
+						"Disabled",
+						"SoundFont / ROM (if present in system directory)"
+					};
+					static int midiSelected = 0;
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MIDI OUTPUT");
+					SofiAudioCombo("MIDI Output", &midiSelected, midiItems, IM_ARRAYSIZE(midiItems));
+					ImGui::TextDisabled("SoundFonts and device ROMs are discovered from the frontend system directory.");
+
+					static const char* volumeItems[] = {
+						"5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%",
+						"55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%",
+						"110%", "120%", "130%", "140%", "150%", "160%", "170%", "180%", "190%", "200%",
+						"225%", "250%", "275%", "300%", "325%", "350%", "375%", "400%", "425%", "450%", "475%", "500%"
+					};
+					static int volumeSB = 19, volumeMIDI = 19, volumeAdlib = 19, volumeSpeaker = 19, volumeCD = 19, volumeOther = 19;
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "VOLUMEN");
+					SofiAudioCombo("Sound Blaster", &volumeSB, volumeItems, IM_ARRAYSIZE(volumeItems));
+					SofiAudioCombo("MIDI Synthesizer", &volumeMIDI, volumeItems, IM_ARRAYSIZE(volumeItems));
+					SofiAudioCombo("Adlib", &volumeAdlib, volumeItems, IM_ARRAYSIZE(volumeItems));
+					SofiAudioCombo("PC-Speaker", &volumeSpeaker, volumeItems, IM_ARRAYSIZE(volumeItems));
+					SofiAudioCombo("CD-ROM Audio", &volumeCD, volumeItems, IM_ARRAYSIZE(volumeItems));
+					SofiAudioCombo("Other Devices", &volumeOther, volumeItems, IM_ARRAYSIZE(volumeItems));
+
+					static const char* sbTypeItems[] = { "SoundBlaster 16 (default)", "SoundBlaster Pro 2", "SoundBlaster Pro", "SoundBlaster 2.0", "SoundBlaster 1.0", "GameBlaster", "none" };
+					static int sbTypeSelected = 0;
+					static const char* fmModeItems[] = { "Auto (based on SoundBlaster type)", "CMS (Creative Music System / GameBlaster)", "OPL-2 (AdLib / Yamaha 3812)", "Dual OPL-2 (stereo)", "OPL-3 (Yamaha YMF262)", "OPL-3 Gold (AdLib Gold)", "Disabled" };
+					static int fmModeSelected = 0;
+					static const char* adlibProviderItems[] = { "Default", "High quality Nuked OPL3" };
+					static int adlibProviderSelected = 0;
+					static const char* onOffItems[] = { "Off (default)", "On" };
+					static int gusSelected = 0, tandySelected = 0, swapStereoSelected = 0;
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AVANZADO");
+					SofiAudioCombo("SoundBlaster Type", &sbTypeSelected, sbTypeItems, IM_ARRAYSIZE(sbTypeItems));
+					SofiAudioCombo("SoundBlaster Adlib/FM Mode", &fmModeSelected, fmModeItems, IM_ARRAYSIZE(fmModeItems));
+					SofiAudioCombo("SoundBlaster Adlib Provider", &adlibProviderSelected, adlibProviderItems, IM_ARRAYSIZE(adlibProviderItems));
+					SofiAudioCombo("Enable Gravis Ultrasound (restart required)", &gusSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
+					SofiAudioCombo("Enable Tandy Sound Device (restart required)", &tandySelected, onOffItems, IM_ARRAYSIZE(onOffItems));
+					SofiAudioCombo("Swap Stereo Channels", &swapStereoSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
+
+					ImGui::EndChild();
+				}
+				ImGui::End();
+			}
 
 			// VIDEO controls read the active DOSBox Pure settings and write changes back
 			// through the same settings path used by the Libretro environment callbacks.
