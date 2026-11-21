@@ -2446,7 +2446,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("3dfx Voodoo Gamma Correction", &gammaValue, gammaItems, IM_ARRAYSIZE(gammaItems));
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "PRESENTACIÓN DE IMAGEN");
-					static const char* scalingItems[] = { "Sharp Scaling (default)", "Simple Scaling (nearest neighbor)", "Bilinear Scaling", "Integer Scaling" };
+					static const char* scalingItems[] = { "Sharp Scaling (default)", "Simple Scaling (nearest neighbor)", "Bilinear Scaling", "Integer Scaling", "xBRZ 4x" };
 					static int scalingValue = 0;
 					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("Scaling", &scalingValue, scalingItems, IM_ARRAYSIZE(scalingItems));
 					static const char* crtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
