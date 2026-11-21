@@ -127,3 +127,19 @@ Temporary DOSBOX diagnostic mode now releases pointer capture and bypasses SOFI'
 ## Prueba de aislamiento MIDI
 
 La integración del selector MIDI de SOFI UI está temporalmente desconectada. El panel muestra un aviso en lugar de un control interactivo; no mantiene un puntero a las definiciones dinámicas del core ni lee o escribe `dosbox_pure_midi`. El resto de AUDIO permanece conectado y sin cambios. Esta versión sirve para comprobar si la selección MIDI vuelve a comportarse correctamente usando únicamente la configuración original de DOSBox Pure.
+
+
+## Temporary MIDI diagnostic build
+
+The diagnostic log is `DOSBoxPure.sofi_midi.log`, beside the active
+`DOSBoxPure.cfg`. It records the effective `dosbox_pure_midi` value and its
+source (cache, content override, persistent settings, or default), MIDI core
+option registration and available values, Libretro GET/SET variable calls,
+variable-update notifications, and core initialization/game-load/unload
+boundaries.
+
+Each record is flushed immediately. Repeated false `GET_VARIABLE_UPDATE`
+polls are counted and included with the next true update to avoid flooding.
+The logger does not change MIDI selections, overrides, or core behavior.
+Reproduce the problem once and send the complete log. This instrumentation is
+temporary and should be removed after diagnosis.
