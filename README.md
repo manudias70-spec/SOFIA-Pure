@@ -77,3 +77,6 @@ Consulta [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) para conocer las atrib
 ---
 
 SOFIA-Pure es un proyecto experimental en desarrollo. La documentación, los créditos y los avisos se actualizan a medida que se revisan e incorporan componentes.
+## Prueba experimental: botón EXPLORADOR
+
+En esta build de diagnóstico, si SOFI Commander ya está abierto, el botón **EXPLORADOR** no ejecuta ninguna acción. Si Commander está cerrado, el botón conserva su función de abrirlo. Esta modificación temporal permite aislar si la acción del botón interviene en el cierre inesperado de Commander. No modifica el código interno, la captura del mouse ni la geometría de Commander.
