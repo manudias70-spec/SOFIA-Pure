@@ -76,6 +76,7 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false;
+static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
@@ -2409,6 +2410,8 @@ static struct sDOSBoxPure : public ZL_Application
 			// Exactly one software cursor owner: SOFI outside Commander, Pure inside it.
 			io.MouseDrawCursor = !SofiCommanderCaptured;
 
+			if (SofiUIVisible)
+			{
 			// SOFI Space - first visual layer. Drawn behind all interactive windows.
 			{
 				ImDrawList* bg = ImGui::GetBackgroundDrawList();
@@ -2478,6 +2481,17 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiCommanderMinimized = true;
 					SofiCommanderFocused = false;
 				}
+			}
+			ImGui::PopStyleColor(4);
+			ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("DOSBOX", ImVec2(88.0f, 44.0f)))
+			{
+				SofiUIVisible = false;
+				SofiAudioPanelOpen = false;
+				SofiVideoPanelOpen = false;
 			}
 			ImGui::PopStyleColor(4);
 			const bool videoSelected = SofiVideoPanelOpen;
@@ -2895,6 +2909,23 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleColor(3);
 			ImGui::PopStyleVar(2);
 			ImGui::End();
+
+			}
+			else
+			{
+				// Keep only a small return control so the original DOSBox Pure OSD
+				// remains visible and interactive beneath SOFI Space.
+				ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 154.0f, 12.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(146.0f, 42.0f), ImGuiCond_Always);
+				ImGui::Begin("##SofiDOSBoxReturn", NULL,
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+					ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
+					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+				if (ImGui::Button("VOLVER A SOFI UI", ImVec2(138.0f, 32.0f)))
+					SofiUIVisible = true;
+				ImGui::End();
+			}
 
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
