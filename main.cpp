@@ -603,26 +603,11 @@ static void SofiVideoCombo(const char* label, const char* key,
 		SofiVideoSetSetting(key, values[selected]);
 }
 
-// AUDIO controls are still local-only except for the AWE32 selector, which writes the core SoundBlaster type.
+// AUDIO prototype controls are local-only; the SoundBlaster Type selector is connected to the core.
 static void SofiAudioCombo(const char* label, int* selected, const char* const* items, int count)
 {
 	ImGui::SetNextItemWidth(300.0f);
 	ImGui::Combo(label, selected, items, count);
-}
-
-static void SofiAudioAwe32Toggle(const char* label)
-{
-	static const char* items[] = { "Off (Sound Blaster 16)", "On (Sound Blaster AWE32)" };
-	int selected = 0;
-	{
-		mtxCoreOptions.Lock();
-		const char* active = GetSetting("dosbox_pure_sblaster_type", "sb16");
-		selected = (active && !strcmp(active, "awe32")) ? 1 : 0;
-		mtxCoreOptions.Unlock();
-	}
-	ImGui::SetNextItemWidth(300.0f);
-	if (ImGui::Combo(label, &selected, items, IM_ARRAYSIZE(items)))
-		SofiVideoSetSetting("dosbox_pure_sblaster_type", selected ? "awe32" : "sb16");
 }
 
 bool DBPS_IsConfigOverride(const char* key)
@@ -2526,8 +2511,8 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiAudioCombo("CD-ROM Audio", &volumeCD, volumeItems, IM_ARRAYSIZE(volumeItems));
 					SofiAudioCombo("Other Devices", &volumeOther, volumeItems, IM_ARRAYSIZE(volumeItems));
 
-					static const char* sbTypeItems[] = { "SoundBlaster 16 (default)", "SoundBlaster Pro 2", "SoundBlaster Pro", "SoundBlaster 2.0", "SoundBlaster 1.0", "GameBlaster", "none" };
-					static int sbTypeSelected = 0;
+					static const char* sbTypeItems[] = { "SoundBlaster 16 (default)", "SoundBlaster AWE32 / EMU8000", "SoundBlaster Pro 2", "SoundBlaster Pro", "SoundBlaster 2.0", "SoundBlaster 1.0", "GameBlaster", "none" };
+					static const char* sbTypeValues[] = { "sb16", "awe32", "sbpro2", "sbpro1", "sb2", "sb1", "gb", "none" };
 					static const char* fmModeItems[] = { "Auto (based on SoundBlaster type)", "CMS (Creative Music System / GameBlaster)", "OPL-2 (AdLib / Yamaha 3812)", "Dual OPL-2 (stereo)", "OPL-3 (Yamaha YMF262)", "OPL-3 Gold (AdLib Gold)", "Disabled" };
 					static int fmModeSelected = 0;
 					static const char* adlibProviderItems[] = { "Default", "High quality Nuked OPL3" };
@@ -2536,14 +2521,18 @@ static struct sDOSBoxPure : public ZL_Application
 					static int gusSelected = 0, tandySelected = 0, swapStereoSelected = 0;
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AVANZADO");
-					SofiAudioCombo("SoundBlaster Type", &sbTypeSelected, sbTypeItems, IM_ARRAYSIZE(sbTypeItems));
+					SofiVideoCombo("SoundBlaster Type (restart required)", "dosbox_pure_sblaster_type", sbTypeItems, sbTypeValues, IM_ARRAYSIZE(sbTypeItems), "sb16");
+					{
+						mtxCoreOptions.Lock();
+						const char* activeType = GetSetting("dosbox_pure_sblaster_type", "sb16");
+						const bool awe32Active = activeType && !strcmp(activeType, "awe32");
+						mtxCoreOptions.Unlock();
+						if (awe32Active)
+							ImGui::TextDisabled("Requires awe32.raw beside DOSBoxPure.exe.");
+					}
 					SofiAudioCombo("SoundBlaster Adlib/FM Mode", &fmModeSelected, fmModeItems, IM_ARRAYSIZE(fmModeItems));
 					SofiAudioCombo("SoundBlaster Adlib Provider", &adlibProviderSelected, adlibProviderItems, IM_ARRAYSIZE(adlibProviderItems));
 
-					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AWE32 / EMU8000");
-					SofiAudioAwe32Toggle("Enable AWE32 / EMU8000 (restart required)");
-					ImGui::TextDisabled("Requires awe32.raw beside DOSBoxPure.exe.");
 
 					SofiAudioCombo("Enable Gravis Ultrasound (restart required)", &gusSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
 					SofiAudioCombo("Enable Tandy Sound Device (restart required)", &tandySelected, onOffItems, IM_ARRAYSIZE(onOffItems));
