@@ -23,6 +23,8 @@ Entre las áreas de trabajo se encuentran:
 - Integración experimental de emulación **Sound Blaster AWE32 / EMU8000**.
 - Una interfaz visual propia, desarrollada bajo el concepto **SOFI Space**.
 
+El botón **EXPLORADOR** permite abrir SOFI Commander, restaurarlo si está minimizado o minimizarlo si está visible. La interacción del botón no debe provocar que Commander se cierre por una pérdida de foco transitoria.
+
 El proyecto evoluciona de manera incremental. Las funciones y su estado pueden cambiar entre builds; una característica experimental no debe interpretarse como garantía de compatibilidad universal.
 
 ## Requisito externo: ROM de AWE
