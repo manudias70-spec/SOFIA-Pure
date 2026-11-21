@@ -2529,7 +2529,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AWE32 / EMU8000");
 					SofiAudioCombo("Enable AWE32 / EMU8000 (restart required)", &awe32Selected, onOffItems, IM_ARRAYSIZE(onOffItems));
-					ImGui::TextDisabled("Requires awerom.raw in the frontend system directory.");
+					ImGui::TextDisabled("Requires awerom.raw in the root directory.");
 
 					SofiAudioCombo("Enable Gravis Ultrasound (restart required)", &gusSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
 					SofiAudioCombo("Enable Tandy Sound Device (restart required)", &tandySelected, onOffItems, IM_ARRAYSIZE(onOffItems));
