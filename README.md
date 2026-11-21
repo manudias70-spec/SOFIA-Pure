@@ -227,6 +227,19 @@ Crónica ficticia sobre los orígenes de SOFIA-Pure y el nacimiento de su interf
 
 
 
+## Base funcional — Build #438
+
+**Build #438 queda establecida como la nueva base de trabajo de SOFIA-Pure.** Rama: `experiment/sofi-osd-button`. Commit de código: `6ada90e1668bd9a6dc0fe898dfcb4ddf6a9ce30e`. GitHub Actions: [run 44935234897](https://github.com/manudias70-spec/SOFIA-Pure/actions/runs/44935234897). Las compilaciones **Win32 y Win64 finalizaron correctamente** y Manu confirmó la prueba funcional: **«Siiiiii perfecto»**.
+
+Esta base incluye:
+- Panel SOFI OSD integrado y las seis opciones GENERAL conectadas al Core.
+- Hotkey Modifier, Fast Forward / Slow Motion Mode, Fast Forward Limit, Slow Motion Rate, Force Output FPS y Use Strict Mode.
+- Hotkeys F1, F2, F3, F5, F7 y F9 conservadas; F11 y F12 sin sus funciones internas originales.
+- MIDI NEXT por Scroll Lock y como alternativa por Hotkey Modifier + F12; F12 sola se envía al programa DOS.
+- Funcionamiento previamente validado de SOFI UI, VIDEO, AUDIO, CORE, SOFI Commander y MIDI.
+
+**Estado: base aprobada y validada funcionalmente por el usuario.** Los próximos cambios deben partir de esta versión, en pasos pequeños y verificables. Cada build futura debe incluir su README correspondiente.
+
 ## SOFI OSD — opciones GENERAL conectadas
 
 El panel **SOFI OSD** contiene y administra las seis opciones GENERAL aprobadas, conectadas a los ajustes reales de DOSBox Pure:
@@ -248,4 +261,4 @@ Se desactivaron en el procesamiento interno del frontend las hotkeys originales 
 
 Se conservan **F1** (pausa), **F2** (cámara lenta), **F3** (avance rápido), **F5** (guardado rápido), **F7** (pantalla completa) y **F9** (carga rápida), sujetas al modificador elegido en *Hotkey Modifier*. **Scroll Lock** permanece reservado a **MIDI NEXT**, se procesa antes del modificador y no requiere combinación alguna. Como alternativa para teclados compactos, **Hotkey Modifier + F12** ejecuta también MIDI NEXT; F12 sin modificador se reenvía al programa emulado.
 
-Esta intervención no elimina la capacidad general de captura del mouse ni modifica el funcionamiento de SOFI Commander. El panel SOFI OSD continúa en etapa estructural; la incorporación de las seis opciones aprobadas se realizará en una etapa posterior.
+Esta intervención no elimina la capacidad general de captura del mouse ni modifica el funcionamiento de SOFI Commander. La combinación **Hotkey Modifier + F12** es una segunda vía permanente para MIDI NEXT; F12 sola sigue llegando al programa DOS.
