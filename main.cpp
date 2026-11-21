@@ -66,6 +66,7 @@ static float FastRate = 5.0f, SlowRate = 0.3f;
 static std::string PathSaves, PathSystem;
 static ZL_Vector PointerLockPos;
 static ZL_Json ConfigCache, ConfigOverrides;
+static const retro_core_option_v2_definition* SofiCoreOptionDefinitions = NULL;
 enum { FAST_FPS_LIMIT = 200 };
 
 static ZL_Surface srfCore, srfOSD;
@@ -603,6 +604,46 @@ static void SofiVideoCombo(const char* label, const char* key,
 		SofiVideoSetSetting(key, values[selected]);
 }
 
+// Uses the live option list supplied by DOSBox Pure (needed for MIDI ROM/SoundFont discovery).
+static void SofiAudioDynamicCombo(const char* label, const char* key, const char* defaultValue)
+{
+	const retro_core_option_v2_definition* definitions = SofiCoreOptionDefinitions;
+	const retro_core_option_v2_definition* option = NULL;
+	if (definitions)
+		for (const retro_core_option_v2_definition* it = definitions; it->key; ++it)
+			if (!strcmp(it->key, key)) { option = it; break; }
+	if (!option) { ImGui::TextDisabled("%s: core options not available", label); return; }
+
+	const char* active = NULL;
+	{
+		mtxCoreOptions.Lock();
+		active = GetSetting(key, defaultValue);
+		ImGui::SetNextItemWidth(300.0f);
+		const char* preview = active ? active : defaultValue;
+		for (const retro_core_option_value* v = option->values; v->value; ++v)
+			if (!strcmp(v->value, preview)) { preview = v->label ? v->label : v->value; break; }
+		if (ImGui::BeginCombo(label, preview))
+		{
+			for (const retro_core_option_value* v = option->values; v->value; ++v)
+			{
+				const char* itemLabel = v->label ? v->label : v->value;
+				const bool selected = active && !strcmp(active, v->value);
+				if (ImGui::Selectable(itemLabel, selected))
+				{
+					const char* chosen = v->value;
+					ImGui::EndCombo();
+					mtxCoreOptions.Unlock();
+					SofiVideoSetSetting(key, chosen);
+					return;
+				}
+				if (selected) ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+		mtxCoreOptions.Unlock();
+	}
+}
+
 // AUDIO prototype controls are local-only; the SoundBlaster Type selector is connected to the core.
 static void SofiAudioCombo(const char* label, int* selected, const char* const* items, int count)
 {
@@ -1088,6 +1129,7 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			*(unsigned*)data = 2;
 			return true;
 		case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
+			SofiCoreOptionDefinitions = ((retro_core_options_v2*)data)->definitions;
 			mtxCoreOptions.Lock();
 			for (const retro_core_option_v2_definition *it = ((retro_core_options_v2*)data)->definitions; it->key; it++)
 			{
@@ -2447,7 +2489,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
-			// AUDIO is mostly a visual prototype; the AWE32 selector is connected to the core SoundBlaster type.
+			// AUDIO uses the same live settings path as VIDEO; MIDI uses the core's dynamic list.
 			if (SofiAudioPanelOpen)
 			{
 				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
@@ -2457,68 +2499,58 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
 				{
-					ImGui::TextDisabled("AWE32 CONECTADA  //  RESTO DE AUDIO: PROTOTIPO VISUAL");
+					ImGui::TextDisabled("CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR");
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiAudioOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-					static const char* sampleRateItems[] = { "48000 Hz", "44100 Hz", "32000 Hz", "22050 Hz", "16000 Hz", "11025 Hz", "8000 Hz", "49716 Hz" };
-					static int sampleRateSelected = 0;
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AUDIO");
-					SofiAudioCombo("Audio Sample Rate (restart required)", &sampleRateSelected, sampleRateItems, IM_ARRAYSIZE(sampleRateItems));
+					static const char* latencyItems[] = { "10 ms", "15 ms", "20 ms", "25 ms", "30 ms", "35 ms", "40 ms", "45 ms", "50 ms", "55 ms", "60 ms", "65 ms", "70 ms", "75 ms", "80 ms", "85 ms", "90 ms", "95 ms", "100 ms" };
+					static const char* latencyValues[] = { "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100" };
+					SofiVideoCombo("Audio Latency", "interface_audiolatency", latencyItems, latencyValues, IM_ARRAYSIZE(latencyItems), "25");
+					ImGui::TextDisabled("Standalone build: sample rate is fixed by the build; latency is configurable.");
 
-					static const char* sbConfigItems[] = {
-						"Port 0x220, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5",
-						"Port 0x220, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5",
-						"Port 0x240, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5",
-						"Port 0x240, IRQ 7, 8-Bit DMA 3, 16-bit DMA 7",
-						"Port 0x240, IRQ 2, 8-Bit DMA 3, 16-bit DMA 7",
-						"Port 0x240, IRQ 5, 8-Bit DMA 3, 16-bit DMA 5",
-						"Port 0x240, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5",
-						"Port 0x240, IRQ 10, 8-Bit DMA 3, 16-bit DMA 7",
-						"Port 0x280, IRQ 10, 8-Bit DMA 0, 16-bit DMA 6",
-						"Port 0x280, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5"
-					};
-					static int sbConfigSelected = 0;
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "SOUNDBLASTER");
-					SofiAudioCombo("SoundBlaster Settings", &sbConfigSelected, sbConfigItems, IM_ARRAYSIZE(sbConfigItems));
-
-					static const char* midiItems[] = {
-						"Frontend MIDI driver",
-						"Disabled",
-						"SoundFont / ROM (if present in system directory)"
+					static const char* sbConfigItems[] = {
+						"Port 0x220, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5", "Port 0x220, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5",
+						"Port 0x240, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5", "Port 0x240, IRQ 7, 8-Bit DMA 3, 16-bit DMA 7",
+						"Port 0x240, IRQ 2, 8-Bit DMA 3, 16-bit DMA 7", "Port 0x240, IRQ 5, 8-Bit DMA 3, 16-bit DMA 5",
+						"Port 0x240, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5", "Port 0x240, IRQ 10, 8-Bit DMA 3, 16-bit DMA 7",
+						"Port 0x280, IRQ 10, 8-Bit DMA 0, 16-bit DMA 6", "Port 0x280, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5"
 					};
-					static int midiSelected = 0;
+					static const char* sbConfigValues[] = { "A220 I7 D1 H5", "A220 I5 D1 H5", "A240 I7 D1 H5", "A240 I7 D3 H7", "A240 I2 D3 H7", "A240 I5 D3 H5", "A240 I5 D1 H5", "A240 I10 D3 H7", "A280 I10 D0 H6", "A280 I5 D1 H5" };
+					SofiVideoCombo("SoundBlaster Settings", "dosbox_pure_sblaster_conf", sbConfigItems, sbConfigValues, IM_ARRAYSIZE(sbConfigItems), "A220 I7 D1 H5");
+
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MIDI OUTPUT");
-					SofiAudioCombo("MIDI Output", &midiSelected, midiItems, IM_ARRAYSIZE(midiItems));
-					ImGui::TextDisabled("SoundFonts and device ROMs are discovered from the frontend system directory.");
+					SofiAudioDynamicCombo("MIDI Output", "dosbox_pure_midi", "disabled");
+					ImGui::TextDisabled("SoundFonts and ROMs are discovered from the DOSBox Pure system directory.");
 
-					static const char* volumeItems[] = {
-						"5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%",
-						"55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%",
-						"110%", "120%", "130%", "140%", "150%", "160%", "170%", "180%", "190%", "200%",
-						"225%", "250%", "275%", "300%", "325%", "350%", "375%", "400%", "425%", "450%", "475%", "500%"
-					};
-					static int volumeSB = 19, volumeMIDI = 19, volumeAdlib = 19, volumeSpeaker = 19, volumeCD = 19, volumeOther = 19;
+					static const char* volumeItems[] = { "5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%", "110%", "120%", "130%", "140%", "150%", "160%", "170%", "180%", "190%", "200%", "225%", "250%", "275%", "300%", "325%", "350%", "375%", "400%", "425%", "450%", "475%", "500%" };
+					static const char* volumeValues[] = { "0.05", "0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75", "4.0", "4.25", "4.5", "4.75", "5.0" };
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "VOLUMEN");
-					SofiAudioCombo("Sound Blaster", &volumeSB, volumeItems, IM_ARRAYSIZE(volumeItems));
-					SofiAudioCombo("MIDI Synthesizer", &volumeMIDI, volumeItems, IM_ARRAYSIZE(volumeItems));
-					SofiAudioCombo("Adlib", &volumeAdlib, volumeItems, IM_ARRAYSIZE(volumeItems));
-					SofiAudioCombo("PC-Speaker", &volumeSpeaker, volumeItems, IM_ARRAYSIZE(volumeItems));
-					SofiAudioCombo("CD-ROM Audio", &volumeCD, volumeItems, IM_ARRAYSIZE(volumeItems));
-					SofiAudioCombo("Other Devices", &volumeOther, volumeItems, IM_ARRAYSIZE(volumeItems));
+					SofiVideoCombo("Sound Blaster", "dosbox_pure_volume_sb", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
+					SofiVideoCombo("MIDI Synthesizer", "dosbox_pure_volume_midi", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
+					SofiVideoCombo("Adlib", "dosbox_pure_volume_adlib", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
+					SofiVideoCombo("PC-Speaker", "dosbox_pure_volume_speaker", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
+					SofiVideoCombo("CD-ROM Audio", "dosbox_pure_volume_cdrom", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
+					SofiVideoCombo("Other Devices", "dosbox_pure_volume_other", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
 
 					static const char* sbTypeItems[] = { "SoundBlaster 16 (default)", "SoundBlaster AWE32 / EMU8000", "SoundBlaster Pro 2", "SoundBlaster Pro", "SoundBlaster 2.0", "SoundBlaster 1.0", "GameBlaster", "none" };
 					static const char* sbTypeValues[] = { "sb16", "awe32", "sbpro2", "sbpro1", "sb2", "sb1", "gb", "none" };
-					static const char* fmModeItems[] = { "Auto (based on SoundBlaster type)", "CMS (Creative Music System / GameBlaster)", "OPL-2 (AdLib / Yamaha 3812)", "Dual OPL-2 (stereo)", "OPL-3 (Yamaha YMF262)", "OPL-3 Gold (AdLib Gold)", "Disabled" };
-					static int fmModeSelected = 0;
+					static const char* fmModeItems[] = { "Auto (based on SoundBlaster type)", "CMS (Creative Music System / GameBlaster)", "OPL-2", "Dual OPL-2", "OPL-3", "OPL-3 Gold", "Disabled" };
+					static const char* fmModeValues[] = { "auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none" };
 					static const char* adlibProviderItems[] = { "Default", "High quality Nuked OPL3" };
-					static int adlibProviderSelected = 0;
-					static const char* onOffItems[] = { "Off (default)", "On" };
-					static int gusSelected = 0, tandySelected = 0, swapStereoSelected = 0;
+					static const char* adlibProviderValues[] = { "default", "nuked" };
+					static const char* gusItems[] = { "Off (default)", "On" };
+					static const char* gusValues[] = { "false", "true" };
+					static const char* tandyItems[] = { "Off (default)", "On" };
+					static const char* tandyValues[] = { "auto", "on" };
+					static const char* stereoItems[] = { "Off (default)", "On" };
+					static const char* stereoValues[] = { "false", "true" };
+
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AVANZADO");
 					SofiVideoCombo("SoundBlaster Type (restart required)", "dosbox_pure_sblaster_type", sbTypeItems, sbTypeValues, IM_ARRAYSIZE(sbTypeItems), "sb16");
@@ -2527,16 +2559,13 @@ static struct sDOSBoxPure : public ZL_Application
 						const char* activeType = GetSetting("dosbox_pure_sblaster_type", "sb16");
 						const bool awe32Active = activeType && !strcmp(activeType, "awe32");
 						mtxCoreOptions.Unlock();
-						if (awe32Active)
-							ImGui::TextDisabled("Requires awe32.raw beside DOSBoxPure.exe.");
+						if (awe32Active) ImGui::TextDisabled("Requires awe32.raw beside DOSBoxPure.exe.");
 					}
-					SofiAudioCombo("SoundBlaster Adlib/FM Mode", &fmModeSelected, fmModeItems, IM_ARRAYSIZE(fmModeItems));
-					SofiAudioCombo("SoundBlaster Adlib Provider", &adlibProviderSelected, adlibProviderItems, IM_ARRAYSIZE(adlibProviderItems));
-
-
-					SofiAudioCombo("Enable Gravis Ultrasound (restart required)", &gusSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
-					SofiAudioCombo("Enable Tandy Sound Device (restart required)", &tandySelected, onOffItems, IM_ARRAYSIZE(onOffItems));
-					SofiAudioCombo("Swap Stereo Channels", &swapStereoSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
+					SofiVideoCombo("SoundBlaster Adlib/FM Mode", "dosbox_pure_sblaster_adlib_mode", fmModeItems, fmModeValues, IM_ARRAYSIZE(fmModeItems), "auto");
+					SofiVideoCombo("SoundBlaster Adlib Provider", "dosbox_pure_sblaster_adlib_emu", adlibProviderItems, adlibProviderValues, IM_ARRAYSIZE(adlibProviderItems), "default");
+					SofiVideoCombo("Enable Gravis Ultrasound (restart required)", "dosbox_pure_gus", gusItems, gusValues, IM_ARRAYSIZE(gusItems), "false");
+					SofiVideoCombo("Enable Tandy Sound Device (restart required)", "dosbox_pure_tandysound", tandyItems, tandyValues, IM_ARRAYSIZE(tandyItems), "auto");
+					SofiVideoCombo("Swap Stereo Channels", "dosbox_pure_swapstereo", stereoItems, stereoValues, IM_ARRAYSIZE(stereoItems), "false");
 
 					ImGui::EndChild();
 				}
