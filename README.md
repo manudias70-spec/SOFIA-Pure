@@ -142,6 +142,49 @@ La detección automática de archivos como `ROM1.BIN` o las ROM de MT-32 puede m
 La selección manual de `dosbox_pure_midi` se guarda como preferencia global, fuera de `ConfigOverrides`, para que una configuración por juego antigua no vuelva a imponer Roland SC-55. La detección automática sigue siendo el punto de partida cuando no existe una preferencia manual. La prueba definitiva sigue siendo audible: seleccionar otra salida y comprobar que cambia realmente el sintetizador.
 
 
+## Nombres y detección de ROMs MIDI
+
+La detección automática de MIDI de DOSBox Pure depende del **nombre del archivo**, no solamente de que el contenido sea una ROM válida. Por eso, una ROM puede estar presente y aun así no aparecer como candidata si su nombre no coincide con los patrones que busca el escáner.
+
+### SoundFonts General MIDI
+
+- El escáner reconoce archivos cuyo sufijo final tiene la forma `.SF?`: los tres caracteres `.SF` seguidos de un carácter de extensión. Los ejemplos habituales son `.SF2` y `.SF3`.
+- El archivo SoundFont debe conservar una extensión reconocible; cambiarla por otra puede impedir la detección.
+
+### Roland MT-32 / CM-32L
+
+- **Archivo que dispara la detección:** cualquier nombre que termine exactamente en `_CONTROL.ROM` (la comparación no distingue mayúsculas de minúsculas). Ejemplo: `MT32_CONTROL.ROM`.
+- **Archivo complementario requerido por el conjunto:** `MT32_PCM.ROM`, con el mismo prefijo y en el mismo directorio.
+- `_PCM.ROM` no es un disparador independiente del escáner: tener solamente ese archivo no hace que aparezca la opción MT-32.
+- Conviene conservar los nombres completos y la pareja correspondiente; no basta con que ambos archivos tengan la extensión `.ROM`.
+
+### Roland Sound Canvas SC-55 y variantes
+
+- **Archivo que dispara la detección:** `ROM1.BIN`. El escáner busca ese sufijo y excluye expresamente `WAVEROM1.BIN`; por eso, WAVEROM1 no sustituye a ROM1.
+- Archivos auxiliares que el cargador puede necesitar en el mismo conjunto/directorio:
+  - `ROM2.BIN` — ROM principal complementaria.
+  - `ROM2_ST.BIN` — alternativa de ROM2 en determinadas variantes.
+  - `ROM_SM.BIN` — ROM adicional opcional, según la variante.
+  - `WAVEROM1.BIN`
+  - `WAVEROM2.BIN`
+  - `WAVEROM3.BIN`
+- Los nombres, tamaños y combinación de ROMs deben corresponder a la misma variante de hardware. No mezclar archivos de conjuntos distintos.
+- Los archivos auxiliares no son entradas MIDI independientes: `ROM1.BIN` es el punto de entrada que permite reconocer el conjunto.
+
+### Comprobación rápida
+
+| Lo que hay en la carpeta | ¿Activa la detección? |
+|---|---|
+| `MT32_CONTROL.ROM` | Sí, patrón `_CONTROL.ROM` |
+| `MT32_PCM.ROM` solamente | No |
+| `ROM1.BIN` | Sí |
+| `WAVEROM1.BIN` solamente | No |
+| `ROM2.BIN` o `WAVEROM2.BIN` solamente | No |
+| Archivo `DOSBOX.SF2` | Sí, patrón SoundFont |
+
+**Importante:** detección y carga correcta son dos pasos distintos. Que el archivo principal active una opción no garantiza que el sintetizador pueda inicializarse: también deben estar presentes los archivos auxiliares compatibles, con sus nombres esperados y en la ubicación correspondiente. Esta sección documenta los patrones del escáner y los requisitos conocidos del cargador; no distribuye ROMs ni proporciona archivos protegidos.
+
+
 ## MIDI NEXT — atajo experimental
 
 La build experimental incorpora **Ctrl + Alt + M** para avanzar a la siguiente salida de la lista dinámica `dosbox_pure_midi` registrada por DOSBox Pure. Cada pulsación aplica el valor mediante la misma ruta de configuración utilizada por SOFI AUDIO, actualiza la preferencia global y muestra el nombre de la salida seleccionada. La combinación se consume en SOFIA-Pure y no se envía al teclado emulado. El atajo recorre la lista completa y vuelve al primer elemento al llegar al final.
