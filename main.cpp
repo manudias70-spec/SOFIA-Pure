@@ -2462,7 +2462,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
-			// AUDIO is a visual prototype: all selections remain local and are not connected to DOSBox Pure.
+			// AUDIO is mostly a visual prototype; the AWE32 selector is connected to the core SoundBlaster type.
 			if (SofiAudioPanelOpen)
 			{
 				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
