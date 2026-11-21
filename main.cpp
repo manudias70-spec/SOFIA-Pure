@@ -76,6 +76,7 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false;
+static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
@@ -2056,7 +2057,6 @@ static bool DrawIntro()
 
 static void OnDraw()
 {
-	static bool sofiAudioPanelWasOpen = false;
 	SynchronizeSettings(false);
 
 	if (SofiSuppressMiddleMenu) SofiSuppressMiddleMenu = false;
