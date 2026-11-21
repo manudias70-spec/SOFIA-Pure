@@ -113,3 +113,8 @@ El panel **SOFI AUDIO** utiliza el mismo mecanismo de configuración que SOFI VI
 En la compilación **standalone** de SOFIA-Pure, DOSBox Pure no expone el selector Audio Sample Rate: la frecuencia de muestreo queda determinada por la compilación. Por eso el panel presenta **Audio Latency**, conectada a `interface_audiolatency`, que sí es configurable en esta versión. Los ajustes marcados como *restart required* necesitan reiniciar el core para entrar en vigor.
 
 AWE32 / EMU8000 permanece como una opción exclusiva dentro de SoundBlaster Type, sin interruptor separado. Requiere `awe32.raw` junto a `DOSBoxPure.exe`; los recursos de puerto, IRQ y DMA se comparten con la familia SoundBlaster.
+
+
+## Alternar entre SOFI UI y DOSBox Pure
+
+El botón **DOSBOX** de la navegación oculta temporalmente la capa visual de SOFI UI y deja visible e interactivo el OSD original de DOSBox Pure que permanece debajo. En ese modo queda disponible un pequeño botón **VOLVER A SOFI UI** para restaurar la interfaz propia. El cambio afecta únicamente a la presentación: no cierra el OSD, no reinicia el core ni modifica la configuración del emulador.
