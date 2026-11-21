@@ -75,7 +75,7 @@ static unsigned long SofiMidiUpdateFalseCount = 0;
 static void SofiMidiLog(const char* format, ...)
 {
 	if (!SofiMidiLogFile) return;
-	fprintf(SofiMidiLogFile, "[%06lu][%10u] ", ++SofiMidiLogSequence, (unsigned)SDL_GetTicks());
+	fprintf(SofiMidiLogFile, "[%06lu][%10u] ", ++SofiMidiLogSequence, (unsigned)ZLTICKS);
 	va_list args; va_start(args, format); vfprintf(SofiMidiLogFile, format, args); va_end(args);
 	fputc('\n', SofiMidiLogFile); fflush(SofiMidiLogFile);
 }
