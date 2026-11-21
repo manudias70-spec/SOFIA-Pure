@@ -191,4 +191,6 @@ La función MIDI NEXT se activa con **Scroll Lock (Bloq Despl)**, sin combinacio
 
 La pulsación se procesa una sola vez aunque la tecla permanezca presionada: es necesario soltarla y volver a pulsarla para avanzar otra posición. Al llegar al último dispositivo, la rotación vuelve al primero.
 
-**Estado: experimental, pendiente de prueba funcional.** Debe verificarse que cada pulsación cambie realmente el sintetizador audible y que el selector MIDI de SOFI AUDIO refleje el mismo valor.
+**Cambio de sintetizador en caliente:** MIDI NEXT permite alternar entre las salidas MIDI disponibles mientras el juego sigue ejecutándose, sin reiniciar el core ni volver al menú. El cambio se aplica en tiempo real y permite comparar los sintetizadores durante la misma sesión. La selección manual de SOFI AUDIO y MIDI NEXT utilizan la misma lista dinámica y la misma ruta de configuración.
+
+**Estado: verificado funcionalmente.** Se confirmó durante una sesión de juego el cambio audible en caliente entre sintetizadores mediante Scroll Lock.
