@@ -2727,8 +2727,8 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::End();
 			}
 
-			// SOFI OSD shows the approved GENERAL options as read-only placeholders.
-			// They are intentionally not connected to Core settings in this stage.
+			// SOFI OSD owns the approved GENERAL controls and writes through the
+			// same settings/update path used by the DOSBox Pure core options.
 			if (SofiOSDPanelOpen)
 			{
 				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
@@ -2738,36 +2738,41 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
 				{
-					ImGui::TextDisabled("GENERAL  //  OPCIONES EN PREPARACIÓN");
+					ImGui::TextDisabled("GENERAL  //  CONFIGURACIÓN");
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiOSDOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");
-					ImGui::Text("Hotkey Modifier");
-					ImGui::TextDisabled("CTRL  |  ALT  |  SHIFT  |  CTRL+ALT  |  CTRL+SHIFT  |  ALT+SHIFT  |  CTRL+ALT+SHIFT  |  WIN  |  MENU  |  None");
-					ImGui::Spacing();
-					ImGui::Text("Fast Forward / Slow Motion Mode");
-					ImGui::TextDisabled("Toggle  |  Hold");
-					ImGui::Spacing();
-					ImGui::Text("Fast Forward Limit");
-					ImGui::TextDisabled("110%  |  120%  |  130%  |  150%  |  175%  |  200%  |  250%  |  300%  |  400%  |  500%  |  600%  |  700%  |  800%  |  900%  |  1000%  |  Maximum speed");
-					ImGui::Spacing();
-					ImGui::Text("Slow Motion Rate");
-					ImGui::TextDisabled("10%  |  20%  |  30%  |  40%  |  50%  |  60%  |  70%  |  75%  |  80%  |  85%  |  90%  |  95%");
-					ImGui::Spacing();
-					ImGui::Text("Force Output FPS");
-					ImGui::TextDisabled("Off  |  10  |  15  |  20  |  30  |  35  |  50  |  60  |  70  |  90  |  120  |  144  |  240  |  360 FPS");
-					ImGui::Spacing();
-					ImGui::Text("Use Strict Mode");
-					ImGui::TextDisabled("Off  |  On");
+					static const char* hotkeyItems[] = { "CTRL", "ALT", "SHIFT", "CTRL+ALT", "CTRL+SHIFT", "ALT+SHIFT", "CTRL+ALT+SHIFT", "WIN", "MENU", "None" };
+					static const char* hotkeyValues[] = { "1", "2", "4", "3", "5", "6", "7", "8", "16", "0" };
+					SofiVideoCombo("Hotkey Modifier", "interface_hotkeymod", hotkeyItems, hotkeyValues, IM_ARRAYSIZE(hotkeyItems), "1");
+
+					static const char* speedModeItems[] = { "Toggle", "Hold" };
+					static const char* speedModeValues[] = { "toggle", "hold" };
+					SofiVideoCombo("Fast Forward / Slow Motion Mode", "interface_speedtoggle", speedModeItems, speedModeValues, IM_ARRAYSIZE(speedModeItems), "toggle");
+
+					static const char* fastItems[] = { "110%", "120%", "130%", "150%", "175%", "200%", "250%", "300%", "400%", "500%", "600%", "700%", "800%", "900%", "1000%", "Maximum speed" };
+					static const char* fastValues[] = { "1.1", "1.2", "1.3", "1.5", "1.75", "2", "2.5", "3", "4", "5", "6", "7", "8", "9", "10", "0" };
+					SofiVideoCombo("Fast Forward Limit", "interface_fastrate", fastItems, fastValues, IM_ARRAYSIZE(fastItems), "5");
+
+					static const char* slowItems[] = { "10%", "20%", "30%", "40%", "50%", "60%", "70%", "75%", "80%", "85%", "90%", "95%" };
+					static const char* slowValues[] = { "0.1", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95" };
+					SofiVideoCombo("Slow Motion Rate", "interface_slowrate", slowItems, slowValues, IM_ARRAYSIZE(slowItems), "0.3");
+
+					static const char* fpsItems[] = { "Off", "10 FPS", "15 FPS", "20 FPS", "30 FPS", "35 FPS", "50 FPS", "60 FPS", "70 FPS", "90 FPS", "120 FPS", "144 FPS", "240 FPS", "360 FPS" };
+					static const char* fpsValues[] = { "false", "10", "15", "20", "30", "35", "50", "true", "70", "90", "120", "144", "240", "360" };
+					SofiVideoCombo("Force Output FPS", "dosbox_pure_force60fps", fpsItems, fpsValues, IM_ARRAYSIZE(fpsItems), "false");
+
+					static const char* strictItems[] = { "Off", "On" };
+					static const char* strictValues[] = { "false", "true" };
+					SofiVideoCombo("Use Strict Mode", "dosbox_pure_strict_mode", strictItems, strictValues, IM_ARRAYSIZE(strictItems), "false");
+
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ATAJOS");
 					ImGui::Text("F1  Pausa  |  F2  Cámara lenta  |  F3  Avance rápido");
 					ImGui::Text("F5  Guardado rápido  |  F7  Pantalla completa  |  F9  Carga rápida");
 					ImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
 					ImGui::TextDisabled("F12 sin modificador se envía al programa DOS.");
-					ImGui::Separator();
-					ImGui::TextDisabled("VISTA PREVIA: controles y valores aún no conectados al Core.");
 					ImGui::EndChild();
 				}
 				ImGui::End();

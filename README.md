@@ -227,10 +227,20 @@ Crónica ficticia sobre los orígenes de SOFIA-Pure y el nacimiento de su interf
 
 
 
-## SOFI OSD — panel inicial
+## SOFI OSD — opciones GENERAL conectadas
 
-Se incorporó el botón **SOFI OSD** a la navegación de SOFI Space y su panel independiente. El panel muestra, como vista previa de solo lectura y sin conexión al Core, las seis opciones GENERAL aprobadas: Hotkey Modifier, Fast Forward / Slow Motion Mode, Fast Forward Limit, Slow Motion Rate, Force Output FPS y Use Strict Mode. También incluye la referencia de atajos actualizada. Los controles no modifican ni guardan ajustes; su conexión se realizará en una etapa posterior.
+El panel **SOFI OSD** contiene y administra las seis opciones GENERAL aprobadas, conectadas a los ajustes reales de DOSBox Pure:
 
+- **Hotkey Modifier** — CTRL, ALT, SHIFT, sus combinaciones, WIN, MENU o None.
+- **Fast Forward / Slow Motion Mode** — Toggle o Hold.
+- **Fast Forward Limit** — 110% a 1000% o velocidad máxima.
+- **Slow Motion Rate** — 10% a 95%.
+- **Force Output FPS** — Off, 10, 15, 20, 30, 35, 50, 60, 70, 90, 120, 144, 240 o 360 FPS.
+- **Use Strict Mode** — Off u On.
+
+Los controles escriben en las claves originales del Core mediante la ruta de configuración de SOFIA-Pure. Los cambios de Hotkey Modifier y de velocidad se aplican en caliente; Force Output FPS y Strict Mode se notifican al Core mediante su mecanismo de actualización de variables. El valor de 60 FPS usa el valor interno `true` que define DOSBox Pure. El modo estricto puede requerir reiniciar el contenido para que se refleje todo su alcance.
+
+Las opciones GENERAL que se decidió retirar no se incorporan a este panel. La UI propia sigue siendo la autoridad de configuración; no se restaura un camino alternativo de edición desde el OSD original.
 
 ## SOFI OSD — primera intervención de teclado
 
