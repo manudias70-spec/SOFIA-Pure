@@ -70,7 +70,7 @@ Consulta [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) para conocer las atrib
 
 - [DOSBox Pure — proyecto original](https://codeberg.org/schelling/dosbox-pure)
 - [DOSBox Pure — GitHub](https://github.com/schellingb/dosbox-pure)
-- [DOSBox Pure Unleashed — versión de escritorio](https://github.com/schellingb/dosbox-pure-unleashed)
+- [DOSBox Pure Unleashed — versión de escritorio](https://github.com/schelling/dosbox-pure-unleashed)
 - [DOSBox-X](https://github.com/joncampbell123/dosbox-x)
 - [86Box](https://github.com/86Box/86Box)
 
@@ -83,3 +83,10 @@ SOFIA-Pure es un proyecto experimental en desarrollo. La documentación, los cr�
 La ventana SOFI Commander permanece abierta al interactuar con otras áreas de SOFI Space. El botón **EXPLORADOR** es el control de navegación responsable de abrir, restaurar o minimizar Commander. La solicitud de foco se aplica únicamente al abrir o restaurar la ventana; perder el foco al interactuar con la interfaz no cierra Commander.
 
 Este ajuste no modifica el contenido, el dibujo, la geometría ni la captura de mouse de SOFI Commander.
+
+## Génesis 20.2 — La prisión del Commander
+
+> GenesIa 20.2: Y Sofi Elohim, que conocía los secretos del oscuro MS-DOS, encerró al arcaico monstruo en una ventana que minimizaba. Contempló su obra y vio que estaba bien.
+
+Crónica ficticia de la batalla por la navegación de SOFI Space, celebrada el 20 de noviembre de 2026. El Commander quedó bajo el control del botón EXPLORADOR, sin necesidad de alterar sus entrañas. Manu, beta tester y testigo de la hazaña, confirmó que todo funcionaba.
+
