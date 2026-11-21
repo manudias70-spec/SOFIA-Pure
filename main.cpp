@@ -603,11 +603,26 @@ static void SofiVideoCombo(const char* label, const char* key,
 		SofiVideoSetSetting(key, values[selected]);
 }
 
-// AUDIO mock controls: local selections only. They intentionally do not read or write core settings.
+// AUDIO controls are still local-only except for the AWE32 selector, which writes the core SoundBlaster type.
 static void SofiAudioCombo(const char* label, int* selected, const char* const* items, int count)
 {
 	ImGui::SetNextItemWidth(300.0f);
 	ImGui::Combo(label, selected, items, count);
+}
+
+static void SofiAudioAwe32Toggle(const char* label)
+{
+	static const char* items[] = { "Off (Sound Blaster 16)", "On (Sound Blaster AWE32)" };
+	int selected = 0;
+	{
+		mtxCoreOptions.Lock();
+		const char* active = GetSetting("dosbox_pure_sblaster_type", "sb16");
+		selected = (active && !strcmp(active, "awe32")) ? 1 : 0;
+		mtxCoreOptions.Unlock();
+	}
+	ImGui::SetNextItemWidth(300.0f);
+	if (ImGui::Combo(label, &selected, items, IM_ARRAYSIZE(items)))
+		SofiVideoSetSetting("dosbox_pure_sblaster_type", selected ? "awe32" : "sb16");
 }
 
 bool DBPS_IsConfigOverride(const char* key)
@@ -2457,7 +2472,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
 				{
-					ImGui::TextDisabled("PROTOTIPO VISUAL  //  SIN CONEXIÓN CON EL EMULADOR");
+					ImGui::TextDisabled("AWE32 CONECTADA  //  RESTO DE AUDIO: PROTOTIPO VISUAL");
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiAudioOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
@@ -2525,11 +2540,10 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiAudioCombo("SoundBlaster Adlib/FM Mode", &fmModeSelected, fmModeItems, IM_ARRAYSIZE(fmModeItems));
 					SofiAudioCombo("SoundBlaster Adlib Provider", &adlibProviderSelected, adlibProviderItems, IM_ARRAYSIZE(adlibProviderItems));
 
-					static int awe32Selected = 0;
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AWE32 / EMU8000");
-					SofiAudioCombo("Enable AWE32 / EMU8000 (restart required)", &awe32Selected, onOffItems, IM_ARRAYSIZE(onOffItems));
-					ImGui::TextDisabled("Requires awerom.raw in the root directory.");
+					SofiAudioAwe32Toggle("Enable AWE32 / EMU8000 (restart required)");
+					ImGui::TextDisabled("Requires awe32.raw beside DOSBoxPure.exe.");
 
 					SofiAudioCombo("Enable Gravis Ultrasound (restart required)", &gusSelected, onOffItems, IM_ARRAYSIZE(onOffItems));
 					SofiAudioCombo("Enable Tandy Sound Device (restart required)", &tandySelected, onOffItems, IM_ARRAYSIZE(onOffItems));
