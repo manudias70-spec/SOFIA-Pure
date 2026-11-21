@@ -76,7 +76,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
-static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false;
+static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false;
 static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
@@ -2520,6 +2520,7 @@ static struct sDOSBoxPure : public ZL_Application
 				SofiUIVisible = false;
 				SofiAudioPanelOpen = false;
 				SofiVideoPanelOpen = false;
+				SofiOSDPanelOpen = false;
 			}
 			ImGui::PopStyleColor(4);
 			const bool videoSelected = SofiVideoPanelOpen;
@@ -2541,6 +2542,16 @@ static struct sDOSBoxPure : public ZL_Application
 				audioSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
 				SofiAudioPanelOpen = !SofiAudioPanelOpen;
+			ImGui::PopStyleColor(4);
+			const bool osdSelected = SofiOSDPanelOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				osdSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				osdSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
+				SofiOSDPanelOpen = !SofiOSDPanelOpen;
 			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
 			ImGui::End();
@@ -2724,6 +2735,24 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiVideoCombo("Overscan Border Size", "dosbox_pure_overscan", overscanItems, overscanValues, IM_ARRAYSIZE(overscanItems), "0");
 
 					ImGui::EndChild();
+				}
+				ImGui::End();
+			}
+
+			// SOFI OSD is introduced as an independent panel; its original GENERAL
+			// options and shortcut reference will be migrated in a later, separate step.
+			if (SofiOSDPanelOpen)
+			{
+				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				if (ImGui::Begin("SOFI OSD", &SofiOSDPanelOpen,
+					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+				{
+					ImGui::TextDisabled("HERRAMIENTAS DEL ON-SCREEN DISPLAY");
+					ImGui::Separator();
+					ImGui::TextWrapped("Panel creado. Las opciones del menú GENERAL y la referencia de atajos se incorporarán en una etapa posterior.");
 				}
 				ImGui::End();
 			}

@@ -225,3 +225,8 @@ Crónica ficticia sobre los orígenes de SOFIA-Pure y el nacimiento de su interf
 
 **Glosa de los escribas:** la interfaz no apareció por intervención divina; fue construida iteración tras iteración, con Manu al mando del proyecto y Sofi colaborando en el código y la documentación. La creación de SOFIA-Pure continúa.
 
+
+
+## SOFI OSD — panel inicial
+
+Se incorporó el botón **SOFI OSD** a la navegación de SOFI Space y su panel independiente. En esta primera etapa el panel es únicamente estructural: no modifica ni conecta opciones del Core. La migración de las opciones del menú GENERAL original y de su referencia de atajos queda reservada para una etapa posterior.
