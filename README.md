@@ -77,3 +77,9 @@ Consulta [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) para conocer las atrib
 ---
 
 SOFIA-Pure es un proyecto experimental en desarrollo. La documentación, los créditos y los avisos se actualizan a medida que se revisan e incorporan componentes.
+
+## SOFI Commander y navegación
+
+La ventana SOFI Commander permanece abierta al interactuar con otras áreas de SOFI Space. El botón **EXPLORADOR** es el control de navegación responsable de abrir, restaurar o minimizar Commander. La solicitud de foco se aplica únicamente al abrir o restaurar la ventana; perder el foco al interactuar con la interfaz no cierra Commander.
+
+Este ajuste no modifica el contenido, el dibujo, la geometría ni la captura de mouse de SOFI Commander.
