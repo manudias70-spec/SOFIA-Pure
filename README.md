@@ -185,8 +185,10 @@ La detección automática de MIDI de DOSBox Pure depende del **nombre del archiv
 **Importante:** detección y carga correcta son dos pasos distintos. Que el archivo principal active una opción no garantiza que el sintetizador pueda inicializarse: también deben estar presentes los archivos auxiliares compatibles, con sus nombres esperados y en la ubicación correspondiente. Esta sección documenta los patrones del escáner y los requisitos conocidos del cargador; no distribuye ROMs ni proporciona archivos protegidos.
 
 
-## MIDI NEXT — atajo experimental
+## MIDI NEXT — tecla dedicada
 
-La build experimental incorpora **Ctrl + Alt + M** para avanzar a la siguiente salida de la lista dinámica `dosbox_pure_midi` registrada por DOSBox Pure. Cada pulsación aplica el valor mediante la misma ruta de configuración utilizada por SOFI AUDIO, actualiza la preferencia global y muestra el nombre de la salida seleccionada. La combinación se consume en SOFIA-Pure y no se envía al teclado emulado. El atajo recorre la lista completa y vuelve al primer elemento al llegar al final.
+La función MIDI NEXT se activa con **Scroll Lock (Bloq Despl)**, sin combinaciones de modificadores. Cada pulsación avanza a la siguiente salida de la lista dinámica `dosbox_pure_midi` registrada por DOSBox Pure. Cada cambio aplica el valor mediante la misma ruta de configuración utilizada por SOFI AUDIO, actualiza la preferencia global y muestra el nombre de la salida seleccionada. La tecla se consume en SOFIA-Pure y no se envía al teclado emulado.
 
-**Estado: experimental, pendiente de prueba funcional.** Debe verificarse que cada pulsación cambie realmente el sintetizador audible y que el selector MIDI de SOFI AUDIO refleje el mismo valor. Si la rotación funciona de forma fiable, el atajo podrá conservarse como función permanente.
+La pulsación se procesa una sola vez aunque la tecla permanezca presionada: es necesario soltarla y volver a pulsarla para avanzar otra posición. Al llegar al último dispositivo, la rotación vuelve al primero.
+
+**Estado: experimental, pendiente de prueba funcional.** Debe verificarse que cada pulsación cambie realmente el sintetizador audible y que el selector MIDI de SOFI AUDIO refleje el mismo valor.
