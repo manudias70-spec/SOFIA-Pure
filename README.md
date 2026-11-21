@@ -104,3 +104,8 @@ La rama `experiment/video-panel-visual` incorpora un primer prototipo visual del
 **Estado: controles conectados a la configuración.** SOFI VIDEO lee los valores activos desde la configuración que utiliza DOSBox Pure y refleja la selección real al abrir el panel. Al cambiar una opción, escribe el valor correspondiente en la configuración del emulador y notifica la actualización mediante el mecanismo de variables de Libretro. Los ajustes propios de la interfaz (Scaling y filtros CRT) solicitan además la reaplicación de sus efectos; Aspect Ratio Correction actualiza la geometría de presentación.
 
 El selector Scaling incluye **xBRZ 4x**, vinculado al valor `xbrz` incorporado en las opciones del core durante la compilación. Las opciones que DOSBox Pure identifica como «restart required» conservan esa limitación: el cambio queda guardado, pero requiere reiniciar el core para entrar en vigor.
+
+
+## Estado de SOFI AUDIO
+
+El menú **SOFI AUDIO** se encuentra en etapa de prototipo visual. Presenta las opciones de audio documentadas por DOSBox Pure (frecuencia de muestreo, configuración SoundBlaster, salida MIDI, volúmenes y opciones avanzadas), pero sus selecciones son locales a la interfaz y **todavía no modifican la configuración del emulador**. Las opciones MIDI que dependen de SoundFonts o ROMs disponibles se representan de forma genérica; la lista real depende de los archivos presentes en el directorio `system` del frontend.
