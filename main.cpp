@@ -66,7 +66,6 @@ static float FastRate = 5.0f, SlowRate = 0.3f;
 static std::string PathSaves, PathSystem;
 static ZL_Vector PointerLockPos;
 static ZL_Json ConfigCache, ConfigOverrides;
-static const retro_core_option_v2_definition* SofiCoreOptionDefinitions = NULL;
 enum { FAST_FPS_LIMIT = 200 };
 
 static ZL_Surface srfCore, srfOSD;
@@ -590,19 +589,6 @@ static void SofiVideoSetSetting(const char* key, const char* value)
 	mtxCoreOptions.Unlock();
 }
 
-// MIDI selection must persist as a global preference even when a per-game override exists.
-static void SofiAudioSetMidiSetting(const char* key, const char* value)
-{
-	mtxCoreOptions.Lock();
-	ZL_Application::SettingsSet(key, value);
-	if (ConfigOverrides.HasKey(key))
-		ConfigOverrides[key].SetString(value);
-	ConfigCache.Erase(key);
-	DirtySettings();
-	VariablesUpdated = true;
-	mtxCoreOptions.Unlock();
-}
-
 static void SofiVideoCombo(const char* label, const char* key,
 	const char* const* items, const char* const* values, int count, const char* defaultValue)
 {
@@ -617,46 +603,6 @@ static void SofiVideoCombo(const char* label, const char* key,
 	ImGui::SetNextItemWidth(260.0f);
 	if (ImGui::Combo(label, &selected, items, count))
 		SofiVideoSetSetting(key, values[selected]);
-}
-
-// Uses the live option list supplied by DOSBox Pure (needed for MIDI ROM/SoundFont discovery).
-static void SofiAudioDynamicCombo(const char* label, const char* key, const char* defaultValue)
-{
-	const retro_core_option_v2_definition* definitions = SofiCoreOptionDefinitions;
-	const retro_core_option_v2_definition* option = NULL;
-	if (definitions)
-		for (const retro_core_option_v2_definition* it = definitions; it->key; ++it)
-			if (!strcmp(it->key, key)) { option = it; break; }
-	if (!option) { ImGui::TextDisabled("%s: core options not available", label); return; }
-
-	const char* active = NULL;
-	{
-		mtxCoreOptions.Lock();
-		active = GetSetting(key, defaultValue);
-		ImGui::SetNextItemWidth(300.0f);
-		const char* preview = active ? active : defaultValue;
-		for (const retro_core_option_value* v = option->values; v->value; ++v)
-			if (!strcmp(v->value, preview)) { preview = v->label ? v->label : v->value; break; }
-		if (ImGui::BeginCombo(label, preview))
-		{
-			for (const retro_core_option_value* v = option->values; v->value; ++v)
-			{
-				const char* itemLabel = v->label ? v->label : v->value;
-				const bool selected = active && !strcmp(active, v->value);
-				if (ImGui::Selectable(itemLabel, selected))
-				{
-					const char* chosen = v->value;
-					ImGui::EndCombo();
-					mtxCoreOptions.Unlock();
-					SofiAudioSetMidiSetting(key, chosen);
-					return;
-				}
-				if (selected) ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndCombo();
-		}
-		mtxCoreOptions.Unlock();
-	}
 }
 
 // AUDIO prototype controls are local-only; the SoundBlaster Type selector is connected to the core.
@@ -1144,7 +1090,6 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			*(unsigned*)data = 2;
 			return true;
 		case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
-			SofiCoreOptionDefinitions = ((retro_core_options_v2*)data)->definitions;
 			mtxCoreOptions.Lock();
 			for (const retro_core_option_v2_definition *it = ((retro_core_options_v2*)data)->definitions; it->key; it++)
 			{
@@ -2555,9 +2500,8 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiVideoCombo("SoundBlaster Settings", "dosbox_pure_sblaster_conf", sbConfigItems, sbConfigValues, IM_ARRAYSIZE(sbConfigItems), "A220 I7 D1 H5");
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MIDI OUTPUT");
-					SofiAudioDynamicCombo("MIDI Output", "dosbox_pure_midi", "disabled");
-					ImGui::TextDisabled("SoundFonts and ROMs are discovered from the DOSBox Pure system directory.");
+ 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MIDI OUTPUT");
+					ImGui::TextDisabled("MIDI selector temporarily disconnected for isolation testing.");
 
 					static const char* volumeItems[] = { "5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%", "110%", "120%", "130%", "140%", "150%", "160%", "170%", "180%", "190%", "200%", "225%", "250%", "275%", "300%", "325%", "350%", "375%", "400%", "425%", "450%", "475%", "500%" };
 					static const char* volumeValues[] = { "0.05", "0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75", "4.0", "4.25", "4.5", "4.75", "5.0" };
