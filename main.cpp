@@ -2362,25 +2362,13 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)))
+			const bool commanderWasOpenBeforeExplorerClick = SofiCommanderOpen;
+			if (ImGui::Button("EXPLORADOR", ImVec2(88.0f, 44.0f)) && !commanderWasOpenBeforeExplorerClick)
 			{
-				if (!SofiCommanderOpen)
-				{
-					SofiCommanderOpen = true;
-					SofiCommanderMinimized = false;
-					SofiCommanderApplyMinimized = true;
-					SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
-				}
-				else if (SofiCommanderMinimized)
-				{
-					SofiCommanderMinimized = false;
-					SofiCommanderApplyMinimized = true;
-				}
-				else
-				{
-					SofiCommanderMinimized = true;
-					SofiCommanderFocused = false;
-				}
+				SofiCommanderOpen = true;
+				SofiCommanderMinimized = false;
+				SofiCommanderApplyMinimized = true;
+				SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
 			}
 			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
