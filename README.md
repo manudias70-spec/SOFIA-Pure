@@ -143,3 +143,10 @@ polls are counted and included with the next true update to avoid flooding.
 The logger does not change MIDI selections, overrides, or core behavior.
 Reproduce the problem once and send the complete log. This instrumentation is
 temporary and should be removed after diagnosis.
+
+
+## Build de diagnóstico MIDI sin SOFI Splash
+
+Esta variante de diagnóstico omite por completo la presentación SOFI Splash: DOSBox inicia directamente y no espera una tecla para continuar. La rutina de Splash y su recurso gráfico se conservan en el código; solo se desactiva su ejecución en esta build. El objetivo es aislar si la presentación o su espera intervienen indirectamente en la sincronización tardía de `ConfigOverrides` observada durante el diagnóstico MIDI.
+
+El resto de la interfaz y de las funciones del core permanece sin cambios. Esta modificación es temporal y específica de la rama `diagnostic/midi-no-splash`.
