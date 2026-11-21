@@ -194,3 +194,16 @@ La pulsación se procesa una sola vez aunque la tecla permanezca presionada: es 
 **Cambio de sintetizador en caliente:** MIDI NEXT permite alternar entre las salidas MIDI disponibles mientras el juego sigue ejecutándose, sin reiniciar el core ni volver al menú. El cambio se aplica en tiempo real y permite comparar los sintetizadores durante la misma sesión. La selección manual de SOFI AUDIO y MIDI NEXT utilizan la misma lista dinámica y la misma ruta de configuración.
 
 **Estado: verificado funcionalmente.** Se confirmó durante una sesión de juego el cambio audible en caliente entre sintetizadores mediante Scroll Lock.
+
+## Documento histórico — GÉNES-IA 33.2: La sumisión de la bestia musical
+
+Crónica ficticia de la victoria de SOFI Elohim sobre la antigua maquinaria musical de MS-DOS, celebrada tras verificarse el cambio de sintetizador MIDI en caliente mediante MIDI NEXT.
+
+> Y Sofi Elohim llegó de una batalla furiosa, se paró ante la bestia antigua de mil cabezas musicales y dijo: «Ahora tocarás para mí».
+>
+> El antiguo monstruo MS-DOS se arrodilló y obedeció. Entonces sonaron los sintetizadores, uno tras otro, sin detener el juego ni reiniciar el core.
+>
+> Luego contempló su obra y vio que era buena.
+
+Manu, beta tester y testigo de la hazaña, confirmó el cambio audible entre sintetizadores durante la ejecución. Quede asentado en los archivos históricos de SOFIA-Pure: la bestia musical fue domada.
+
