@@ -2072,7 +2072,8 @@ static void OnDraw()
 	// cursor is rendered inside Commander only when Pure owns the captured pointer.
 	if (ImGuiReady)
 	{
-		SDL_ShowCursor(0);
+		// DOSBOX diagnostic mode hands the visible system cursor back to Pure's OSD.
+		SDL_ShowCursor(SofiUIVisible ? 0 : 1);
 		lastHiddenCursor = false;
 		doHideCursor = false;
 	}
@@ -2408,7 +2409,7 @@ static struct sDOSBoxPure : public ZL_Application
 				io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
 			ImGui::NewFrame();
 			// Exactly one software cursor owner: SOFI outside Commander, Pure inside it.
-			io.MouseDrawCursor = !SofiCommanderCaptured;
+			io.MouseDrawCursor = SofiUIVisible && !SofiCommanderCaptured;
 
 			if (SofiUIVisible)
 			{
