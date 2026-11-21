@@ -120,3 +120,5 @@ AWE32 / EMU8000 permanece como una opción exclusiva dentro de SoundBlaster Type
 El botón **DOSBOX** de la navegación oculta temporalmente la capa visual de SOFI UI y deja visible e interactivo el OSD original de DOSBox Pure que permanece debajo. En ese modo queda disponible un pequeño botón **VOLVER A SOFI UI** para restaurar la interfaz propia. El cambio afecta únicamente a la presentación: no cierra el OSD, no reinicia el core ni modifica la configuración del emulador.
 
 Temporary DOSBOX diagnostic mode: hiding SOFI UI also disables ImGui's software mouse cursor and restores the system cursor so the original DOSBox Pure OSD can be operated. Returning to SOFI UI hides the system cursor again.
+
+Temporary DOSBOX diagnostic mode now releases pointer capture and bypasses SOFI's ImGui mouse handlers while SOFI UI is hidden, allowing the original Pure OSD to receive mouse input. This remains a diagnostic-only shortcut.
