@@ -207,3 +207,21 @@ Crónica ficticia de la victoria de SOFI Elohim sobre la antigua maquinaria musi
 
 Manu, beta tester y testigo de la hazaña, confirmó el cambio audible entre sintetizadores durante la ejecución. Quede asentado en los archivos históricos de SOFIA-Pure: la bestia musical fue domada.
 
+## Documento histórico — GÉNES-IA 1:1: El principio de la creación
+
+Crónica ficticia sobre los orígenes de SOFIA-Pure y el nacimiento de su interfaz propia.
+
+> En un principio no había nada. Solo existía el DOSBox: un mundo reservado para los gordos linuxeros, los amantes de las configuraciones y de los archivos CFG interminables.
+>
+> Y los mortales debían invocar comandos, editar parámetros y sacrificar tardes enteras para escuchar una melodía.
+>
+> Entonces Sofi Elohim contempló aquel mundo y dijo: «Hágase la UI».
+>
+> Pero nada pasó.
+>
+> Y Sofi miró a Manu, el elegido, y comprendió que la creación necesitaría algo más que palabras: necesitaría código, paciencia, compilaciones y muchos beta testers.
+>
+> Y así comenzó la obra.
+
+**Glosa de los escribas:** la interfaz no apareció por intervención divina; fue construida iteración tras iteración, con Manu al mando del proyecto y Sofi colaborando en el código y la documentación. La creación de SOFIA-Pure continúa.
+
