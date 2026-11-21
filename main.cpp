@@ -1509,7 +1509,7 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 	//static const char* zlknames[] = { "UNKNOWN", NULL, NULL, NULL, "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "RETURN", "ESCAPE", "BACKSPACE", "TAB", "SPACE", "MINUS", "EQUALS", "LEFTBRACKET", "RIGHTBRACKET", "BACKSLASH", "SHARP", "SEMICOLON", "APOSTROPHE", "GRAVE", "COMMA", "PERIOD", "SLASH", "CAPSLOCK", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "PRINTSCREEN", "SCROLLLOCK", "PAUSE", "INSERT", "HOME", "PAGEUP", "DELETE", "END", "PAGEDOWN", "RIGHT", "LEFT", "DOWN", "UP", "NUMLOCKCLEAR", "KP_DIVIDE", "KP_MULTIPLY", "KP_MINUS", "KP_PLUS", "KP_ENTER", "KP_1", "KP_2", "KP_3", "KP_4", "KP_5", "KP_6", "KP_7", "KP_8", "KP_9", "KP_0", "KP_PERIOD", "NONUSBACKSLASH", "APPLICATION", "POWER", "KP_EQUALS", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "EXECUTE", "HELP", "MENU", "SELECT", "STOP", "AGAIN", "UNDO", "CUT", "COPY", "PASTE", "FIND", "MUTE", "VOLUMEUP", "VOLUMEDOWN", NULL, NULL, NULL, "KP_COMMA", "KP_EQUALSAS400", "INTERNATIONAL1", "INTERNATIONAL2", "INTERNATIONAL3", "INTERNATIONAL4", "INTERNATIONAL5", "INTERNATIONAL6", "INTERNATIONAL7", "INTERNATIONAL8", "INTERNATIONAL9", "LANG1", "LANG2", "LANG3", "LANG4", "LANG5", "LANG6", "LANG7", "LANG8", "LANG9", "ALTERASE", "SYSREQ", "CANCEL", "CLEAR", "PRIOR", "RETURN2", "SEPARATOR", "OUT", "OPER", "CLEARAGAIN", "CRSEL", "EXSEL", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "KP_00", "KP_000", "THOUSANDSSEPARATOR", "DECIMALSEPARATOR", "CURRENCYUNIT", "CURRENCYSUBUNIT", "KP_LEFTPAREN", "KP_RIGHTPAREN", "KP_LEFTBRACE", "KP_RIGHTBRACE", "KP_TAB", "KP_BACKSPACE", "KP_A", "KP_B", "KP_C", "KP_D", "KP_E", "KP_F", "KP_XOR", "KP_POWER", "KP_PERCENT", "KP_LESS", "KP_GREATER", "KP_AMPERSAND", "KP_DBLAMPERSAND", "KP_VERTICALBAR", "KP_DBLVERTICALBAR", "KP_COLON", "KP_HASH", "KP_SPACE", "KP_AT", "KP_EXCLAM", "KP_MEMSTORE", "KP_MEMRECALL", "KP_MEMCLEAR", "KP_MEMADD", "KP_MEMSUBTRACT", "KP_MEMMULTIPLY", "KP_MEMDIVIDE", "KP_PLUSMINUS", "KP_CLEAR", "KP_CLEARENTRY", "KP_BINARY", "KP_OCTAL", "KP_DECIMAL", "KP_HEXADECIMAL", NULL, NULL, "LCTRL", "LSHIFT", "LALT", "LGUI", "RCTRL", "RSHIFT", "RALT", "RGUI",  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "MODE", "AUDIONEXT", "AUDIOPREV", "AUDIOSTOP", "AUDIOPLAY", "AUDIOMUTE", "MEDIASELECT", "WWW", "MAIL", "CALCULATOR", "COMPUTER", "AC_SEARCH", "AC_HOME", "AC_BACK", "AC_FORWARD", "AC_STOP", "AC_REFRESH", "AC_BOOKMARKS", "BRIGHTNESSDOWN", "BRIGHTNESSUP", "DISPLAYSWITCH", "KBDILLUMTOGGLE", "KBDILLUMDOWN", "KBDILLUMUP", "EJECT", "SLEEP",  }; 
 	//ZL_LOG("KEY", "DOWN: %d - %s", (int)e.is_down, zlknames[(int)e.key]);
 	static bool pressedFs[12], pressedAltReturn, pressedApplication;
-	static bool pressedMidiNext;
+	static bool pressedMidiNext, pressedMidiNextF12;
 	const bool midiNextKey = (e.key == ZLK_SCROLLLOCK);
 	if (midiNextKey || pressedMidiNext)
 	{
@@ -1538,6 +1538,18 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 	const int f = (e.key - ZLK_F1);
 	if (f < 0 || f > 11) return false;
 	unsigned short mod = ((e.mod & ZLKMOD_CTRL) ? ZLKMOD_CTRL : 0) | ((e.mod & ZLKMOD_SHIFT) ? ZLKMOD_SHIFT : 0) | ((e.mod & ZLKMOD_ALT) ? ZLKMOD_ALT : 0) | ((e.mod & ZLKMOD_META) ? ZLKMOD_META : 0) | (pressedApplication ? ZLKMOD_MODE : 0);
+	const bool midiNextF12 = (e.key == ZLK_F12 && HotkeyMod != 0 && (mod & HotkeyMod) == HotkeyMod && !(mod & ((ZLKMOD_CTRL|ZLKMOD_SHIFT|ZLKMOD_ALT|ZLKMOD_META|ZLKMOD_MODE)&~HotkeyMod)));
+	if (midiNextF12 || pressedMidiNextF12)
+	{
+		if (e.is_down && !pressedMidiNextF12)
+		{
+			pressedMidiNextF12 = true;
+			if (!SofiMidiNext())
+				vecNotify.push_back({ ZL_TextBuffer(fntOSD, "MIDI options unavailable"), 2000, RETRO_LOG_WARN, ZLTICKS, 0.0f });
+		}
+		else if (!e.is_down) pressedMidiNextF12 = false;
+		return true;
+	}
 	if ((e.is_down && ((mod & HotkeyMod) != HotkeyMod || (mod & ((ZLKMOD_CTRL|ZLKMOD_SHIFT|ZLKMOD_ALT|ZLKMOD_META|ZLKMOD_MODE)&~HotkeyMod)))) || pressedFs[f] == e.is_down) return false;
 	pressedFs[f] = e.is_down;
 	switch (f)
@@ -2715,8 +2727,8 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::End();
 			}
 
-			// SOFI OSD is introduced as an independent panel; its original GENERAL
-			// options and shortcut reference will be migrated in a later, separate step.
+			// SOFI OSD shows the approved GENERAL options as read-only placeholders.
+			// They are intentionally not connected to Core settings in this stage.
 			if (SofiOSDPanelOpen)
 			{
 				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
@@ -2726,9 +2738,37 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
 				{
-					ImGui::TextDisabled("HERRAMIENTAS DEL ON-SCREEN DISPLAY");
+					ImGui::TextDisabled("GENERAL  //  OPCIONES EN PREPARACIÓN");
 					ImGui::Separator();
-					ImGui::TextWrapped("Panel creado. Las opciones del menú GENERAL y la referencia de atajos se incorporarán en una etapa posterior.");
+					ImGui::BeginChild("##SofiOSDOptions", ImVec2(0.0f, 0.0f), false,
+						ImGuiWindowFlags_AlwaysVerticalScrollbar);
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");
+					ImGui::Text("Hotkey Modifier");
+					ImGui::TextDisabled("CTRL  |  ALT  |  SHIFT  |  CTRL+ALT  |  CTRL+SHIFT  |  ALT+SHIFT  |  CTRL+ALT+SHIFT  |  WIN  |  MENU  |  None");
+					ImGui::Spacing();
+					ImGui::Text("Fast Forward / Slow Motion Mode");
+					ImGui::TextDisabled("Toggle  |  Hold");
+					ImGui::Spacing();
+					ImGui::Text("Fast Forward Limit");
+					ImGui::TextDisabled("110%  |  120%  |  130%  |  150%  |  175%  |  200%  |  250%  |  300%  |  400%  |  500%  |  600%  |  700%  |  800%  |  900%  |  1000%  |  Maximum speed");
+					ImGui::Spacing();
+					ImGui::Text("Slow Motion Rate");
+					ImGui::TextDisabled("10%  |  20%  |  30%  |  40%  |  50%  |  60%  |  70%  |  75%  |  80%  |  85%  |  90%  |  95%");
+					ImGui::Spacing();
+					ImGui::Text("Force Output FPS");
+					ImGui::TextDisabled("Off  |  10  |  15  |  20  |  30  |  35  |  50  |  60  |  70  |  90  |  120  |  144  |  240  |  360 FPS");
+					ImGui::Spacing();
+					ImGui::Text("Use Strict Mode");
+					ImGui::TextDisabled("Off  |  On");
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ATAJOS");
+					ImGui::Text("F1  Pausa  |  F2  Cámara lenta  |  F3  Avance rápido");
+					ImGui::Text("F5  Guardado rápido  |  F7  Pantalla completa  |  F9  Carga rápida");
+					ImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
+					ImGui::TextDisabled("F12 sin modificador se envía al programa DOS.");
+					ImGui::Separator();
+					ImGui::TextDisabled("VISTA PREVIA: controles y valores aún no conectados al Core.");
+					ImGui::EndChild();
 				}
 				ImGui::End();
 			}
