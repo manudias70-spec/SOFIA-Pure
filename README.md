@@ -230,3 +230,12 @@ Crónica ficticia sobre los orígenes de SOFIA-Pure y el nacimiento de su interf
 ## SOFI OSD — panel inicial
 
 Se incorporó el botón **SOFI OSD** a la navegación de SOFI Space y su panel independiente. En esta primera etapa el panel es únicamente estructural: no modifica ni conecta opciones del Core. La migración de las opciones del menú GENERAL original y de su referencia de atajos queda reservada para una etapa posterior.
+
+
+## SOFI OSD — primera intervención de teclado
+
+Se desactivaron en el procesamiento interno del frontend las hotkeys originales **F11** (bloqueo/liberación del mouse) y **F12** (mostrar/ocultar el OSD y avanzar un cuadro durante la pausa). Ya no ejecutan acciones internas de DOSBox Pure; las teclas se reenvían como entradas normales al programa emulado.
+
+Se conservan **F1** (pausa), **F2** (cámara lenta), **F3** (avance rápido), **F5** (guardado rápido), **F7** (pantalla completa) y **F9** (carga rápida), sujetas al modificador elegido en *Hotkey Modifier*. **Scroll Lock** permanece reservado a **MIDI NEXT**, se procesa antes del modificador y no requiere combinación alguna.
+
+Esta intervención no elimina la capacidad general de captura del mouse ni modifica el funcionamiento de SOFI Commander. El panel SOFI OSD continúa en etapa estructural; la incorporación de las seis opciones aprobadas se realizará en una etapa posterior.

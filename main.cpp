@@ -51,9 +51,7 @@ enum EHotkeyFKeys
 	HOTKEY_F_FASTFORWARD =  3,
 	HOTKEY_F_QUICKSAVE   =  5,
 	HOTKEY_F_FULLSCREEN  =  7,
-	HOTKEY_F_QUICKLOAD   =  9,
-	HOTKEY_F_LOCKMOUSE   = 11,
-	HOTKEY_F_TOGGLEOSD   = 12,
+	HOTKEY_F_QUICKLOAD   =  9;
 };
 static unsigned short HotkeyMod;
 static unsigned char ThrottleMode, LastAudioThrottleMode;
@@ -1536,22 +1534,6 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 			return true;
 		}
 	}
-	static bool pressedAltF12;
-	if (e.key == ZLK_F12)
-	{
-		const bool altF12 = (e.mod & ZLKMOD_ALT) && !(e.mod & (ZLKMOD_CTRL|ZLKMOD_SHIFT|ZLKMOD_META|ZLKMOD_MODE));
-		if (altF12 || pressedAltF12)
-		{
-			if (e.is_down && !pressedAltF12)
-			{
-				pressedAltF12 = true;
-				if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING) ThrottlePaused = false;
-				else DBPS_ToggleOSD();
-			}
-			else if (!e.is_down) pressedAltF12 = false;
-			return true;
-		}
-	}
 	if (e.key == ZLK_APPLICATION) pressedApplication = e.is_down;
 	const int f = (e.key - ZLK_F1);
 	if (f < 0 || f > 11) return false;
@@ -1563,16 +1545,10 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 		case (HOTKEY_F_QUICKSAVE-1):   if (e.is_down) RunSave(); return true;
 		case (HOTKEY_F_QUICKLOAD-1):   if (e.is_down) RunLoad(); return true;
 		case (HOTKEY_F_FULLSCREEN-1):  if (e.is_down) ZL_Display::ToggleFullscreen(); return true;
-		case (HOTKEY_F_LOCKMOUSE-1):   if (e.is_down) { PointerLock ^= true; vecNotify.push_back({ ZL_TextBuffer(fntOSD, (PointerLock ? "Locked mouse pointer" : "Unlocked mouse pointer")), 500, RETRO_LOG_INFO, ZLTICKS, 0.0f }); } return true;
 		case (HOTKEY_F_PAUSE-1):
 			if (!e.is_down) return true;
 			if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING) ApplyFPSLimit(RETRO_THROTTLE_NONE, true);
 			else ApplyFPSLimit(RETRO_THROTTLE_FRAME_STEPPING);
-			return true;
-		case (HOTKEY_F_TOGGLEOSD-1):
-			if (!e.is_down) return true;
-			if (ThrottleMode == RETRO_THROTTLE_FRAME_STEPPING) ThrottlePaused = false;
-			else DBPS_ToggleOSD();
 			return true;
 		case (HOTKEY_F_SLOWMOTION-1):
 		case (HOTKEY_F_FASTFORWARD-1):
