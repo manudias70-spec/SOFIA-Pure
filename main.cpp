@@ -51,7 +51,7 @@ enum EHotkeyFKeys
 	HOTKEY_F_FASTFORWARD =  3,
 	HOTKEY_F_QUICKSAVE   =  5,
 	HOTKEY_F_FULLSCREEN  =  7,
-	HOTKEY_F_QUICKLOAD   =  9;
+	HOTKEY_F_QUICKLOAD   =  9
 };
 static unsigned short HotkeyMod;
 static unsigned char ThrottleMode, LastAudioThrottleMode;
