@@ -1512,7 +1512,7 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 	//ZL_LOG("KEY", "DOWN: %d - %s", (int)e.is_down, zlknames[(int)e.key]);
 	static bool pressedFs[12], pressedAltReturn, pressedApplication;
 	static bool pressedMidiNext;
-	const bool midiNextKey = (e.key == ZLK_m) &&
+	const bool midiNextKey = (e.key == ZLK_M) &&
 		((e.mod & (ZLKMOD_CTRL | ZLKMOD_ALT)) == (ZLKMOD_CTRL | ZLKMOD_ALT)) &&
 		!(e.mod & (ZLKMOD_SHIFT | ZLKMOD_META | ZLKMOD_MODE));
 	if (midiNextKey || pressedMidiNext)
