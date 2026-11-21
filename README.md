@@ -70,7 +70,7 @@ Consulta [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) para conocer las atrib
 
 - [DOSBox Pure — proyecto original](https://codeberg.org/schelling/dosbox-pure)
 - [DOSBox Pure — GitHub](https://github.com/schellingb/dosbox-pure)
-- [DOSBox Pure Unleashed — versión de escritorio](https://github.com/schelling/dosbox-pure-unleashed)
+- [DOSBox Pure Unleashed — versión de escritorio](https://github.com/dosbox-pure/dosbox-pure-unleashed)
 - [DOSBox-X](https://github.com/joncampbell123/dosbox-x)
 - [86Box](https://github.com/86Box/86Box)
 
@@ -90,3 +90,8 @@ Este ajuste no modifica el contenido, el dibujo, la geometría ni la captura de 
 
 Crónica ficticia de la batalla por la navegación de SOFI Space, celebrada el 20 de noviembre de 2026. El Commander quedó bajo el control del botón EXPLORADOR, sin necesidad de alterar sus entrañas. Manu, beta tester y testigo de la hazaña, confirmó que todo funcionaba.
 
+## Evangelio del Mono — capítulo 1, versículo 1
+
+> Y el mono, sin conocimientos de C++, tocó el fondo con su dedo. Y el Commander perdió la compostura. Entonces Sofi examinó las escrituras del código y halló la condición maldita.
+
+El mono no resolvió el bug: encontró cómo reproducirlo. Su clic reveló el comportamiento extraño que permitió investigar el conflicto de foco y separar la solicitud de foco del estado real de la ventana. Quede asentado que una observación sencilla puede abrir el camino hacia la causa de un problema difícil.
