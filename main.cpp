@@ -59,7 +59,7 @@ enum EHotkeyFKeys
 static unsigned short HotkeyMod;
 static unsigned char ThrottleMode, LastAudioThrottleMode;
 static bool ThrottlePaused, SpeedModHold, DisableSystemALT, UseMiddleMouseMenu, PointerLock, DrawStretched, VariablesUpdated;
-static bool IntroActive = true, IntroDismissRequested;
+static bool IntroActive = false, IntroDismissRequested;
 static bool DrawCoreShader, DoApplyInterfaceOptions, DoApplyGeometry, DoSave, DoLoad, AudioSkip, DefaultPointerLock;
 static char Scaling;
 static int CRTFilter, AudioLatency;
@@ -2220,7 +2220,8 @@ static void OnDraw()
 	if (ui_last_audio_stretch) ui_last_audio_stretch = ZL_Math::Lerp(ui_last_audio_stretch, 1.0f, 0.1f);
 	#endif
 
-	static bool introdone;
+	// Diagnostic build: skip SOFI Splash and start DOSBox immediately.
+	static bool introdone = true;
 	if (!introdone) introdone = DrawIntro();
 }
 
