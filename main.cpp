@@ -74,6 +74,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
+static bool SofiVideoPanelOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
@@ -2385,8 +2386,97 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 			ImGui::PopStyleColor(4);
+			const bool videoSelected = SofiVideoPanelOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				videoSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				videoSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
+				SofiVideoPanelOpen = !SofiVideoPanelOpen;
+			ImGui::PopStyleColor(4);
 			ImGui::PopStyleVar(2);
 			ImGui::End();
+
+			// Visual-only VIDEO prototype. Selections remain local to this panel and
+			// are deliberately not forwarded to DOSBox Pure.
+			if (SofiVideoPanelOpen)
+			{
+				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				if (ImGui::Begin("SOFI VIDEO", &SofiVideoPanelOpen,
+					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+				{
+					ImGui::TextDisabled("PROTOTIPO VISUAL  //  SIN APLICAR CAMBIOS");
+					ImGui::Separator();
+					ImGui::BeginChild("##SofiVideoOptions", ImVec2(0.0f, 0.0f), false,
+						ImGuiWindowFlags_AlwaysVerticalScrollbar);
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ADAPTADORES DE VIDEO");
+					static const char* machineItems[] = { "SVGA (Super Video Graphics Array)", "VGA (Video Graphics Array)", "EGA (Enhanced Graphics Adapter)", "CGA (Color Graphics Adapter)", "Tandy (Tandy Graphics Adapter)", "Hercules (Hercules Graphics Card)", "PCjr" };
+					static int machineValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("Emulated Graphics Chip (restart required)", &machineValue, machineItems, IM_ARRAYSIZE(machineItems));
+					static const char* svgaItems[] = { "S3 Trio64", "S3 Trio64 no-line buffer hack", "S3 Trio64 VESA 1.3", "Tseng Labs ET3000", "Tseng Labs ET4000", "Paradise PVGA1A" };
+					static int svgaValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("SVGA Mode (restart required)", &svgaValue, svgaItems, IM_ARRAYSIZE(svgaItems));
+					static const char* svgaMemItems[] = { "512KB", "1MB", "2MB", "3MB", "4MB", "8MB" };
+					static int svgaMemValue = 2;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("SVGA Memory (restart required)", &svgaMemValue, svgaMemItems, IM_ARRAYSIZE(svgaMemItems));
+					static const char* cgaItems[] = { "Early model, composite mode auto", "Early model, composite mode on", "Early model, composite mode off", "Late model, composite mode auto", "Late model, composite mode on", "Late model, composite mode off" };
+					static int cgaValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CGA Mode", &cgaValue, cgaItems, IM_ARRAYSIZE(cgaItems));
+					static const char* herculesItems[] = { "Black & white", "Black & amber", "Black & green" };
+					static int herculesValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("Hercules Color Mode", &herculesValue, herculesItems, IM_ARRAYSIZE(herculesItems));
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "3DFX VOODOO");
+					static const char* voodooItems[] = { "Enabled - 8MB memory", "Enabled - 12MB memory, Dual Texture", "Enabled - 4MB memory, Low Resolution Only", "Disabled" };
+					static int voodooValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("3dfx Voodoo Emulation", &voodooValue, voodooItems, IM_ARRAYSIZE(voodooItems));
+					static const char* voodooPerfItems[] = { "Auto", "Hardware OpenGL", "Software Multi Threaded", "Software Multi Threaded, low quality", "Software Single Threaded, low quality", "Software Single Threaded" };
+					static int voodooPerfValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("3dfx Voodoo Performance", &voodooPerfValue, voodooPerfItems, IM_ARRAYSIZE(voodooPerfItems));
+					static const char* voodooScaleItems[] = { "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x" };
+					static int voodooScaleValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("3dfx Voodoo OpenGL Scaling", &voodooScaleValue, voodooScaleItems, IM_ARRAYSIZE(voodooScaleItems));
+					static const char* gammaItems[] = { "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "None", "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "Disable Gamma Correction" };
+					static int gammaValue = 8;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("3dfx Voodoo Gamma Correction", &gammaValue, gammaItems, IM_ARRAYSIZE(gammaItems));
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "PRESENTACIÓN DE IMAGEN");
+					static const char* scalingItems[] = { "Sharp Scaling (default)", "Simple Scaling (nearest neighbor)", "Bilinear Scaling", "Integer Scaling" };
+					static int scalingValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("Scaling", &scalingValue, scalingItems, IM_ARRAYSIZE(scalingItems));
+					static const char* crtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
+					static int crtValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CRT Filter", &crtValue, crtItems, IM_ARRAYSIZE(crtItems));
+					static const char* scanlineItems[] = { "No scanline gaps", "Weaker gaps", "Weak gaps", "Normal gaps", "Strong gaps", "Stronger gaps", "Strongest gaps" };
+					static int scanlineValue = 2;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CRT Filter Scanline Intensity", &scanlineValue, scanlineItems, IM_ARRAYSIZE(scanlineItems));
+					static const char* blurItems[] = { "Blurry", "Smooth", "Default", "Pixely", "Sharper", "Sharpest" };
+					static int blurValue = 2;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CRT Filter Blur/Sharpness", &blurValue, blurItems, IM_ARRAYSIZE(blurItems));
+					static const char* maskItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
+					static int maskValue = 2;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CRT Filter Phosphor Mask Strength", &maskValue, maskItems, IM_ARRAYSIZE(maskItems));
+					static const char* curveItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
+					static int curveValue = 2;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CRT Filter Curvature", &curveValue, curveItems, IM_ARRAYSIZE(curveItems));
+					static const char* cornerItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
+					static int cornerValue = 2;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("CRT Filter Rounded Corner", &cornerValue, cornerItems, IM_ARRAYSIZE(cornerItems));
+					static const char* aspectItems[] = { "Off", "On (single-scan)", "On (double-scan when applicable)", "Padded to 4:3 (single-scan)", "Padded to 4:3 (double-scan when applicable)", "Stretch the display to fill the window" };
+					static int aspectValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("Aspect Ratio Correction", &aspectValue, aspectItems, IM_ARRAYSIZE(aspectItems));
+					static const char* overscanItems[] = { "Off", "Small", "Medium", "Large" };
+					static int overscanValue = 0;
+					ImGui::SetNextItemWidth(260.0f); ImGui::Combo("Overscan Border Size", &overscanValue, overscanItems, IM_ARRAYSIZE(overscanItems));
+					ImGui::EndChild();
+				}
+				ImGui::End();
+			}
 
 			// Explorer opens Commander at its saved normal size, restores it when minimized,
 			// and minimizes it when already visible.
