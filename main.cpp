@@ -82,9 +82,11 @@ static void SofiMidiLog(const char* format, ...)
 static bool SofiIsMidiOption(const char* key) { return key && !strcmp(key, "dosbox_pure_midi"); }
 static const char* SofiMidiSettingSource(const char* key)
 {
-	if (ConfigCache.GetByKey(key)) return "ConfigCache";
+	// ConfigCache stores copies of both settings and overrides; inspect their
+	// underlying stores first so the log reports provenance, not merely caching.
 	if (ConfigOverrides.GetByKey(key)) return "ConfigOverrides";
 	if (ZL_Application::SettingsHas(key)) return "Settings";
+	if (ConfigCache.GetByKey(key)) return "ConfigCache (stale/origin unavailable)";
 	return "default/none";
 }
 enum { FAST_FPS_LIMIT = 200 };
@@ -652,6 +654,9 @@ std::string DBPS_GetConfigOverrideJSON()
 
 void DBPS_ToggleConfigOverride(const char* key, const char* defaultval)
 {
+	if (SofiIsMidiOption(key))
+		SofiMidiLog("CONFIG_OVERRIDE_TOGGLE begin active=%s effective=%s source=%s",
+			ConfigOverrides.HasKey(key) ? "true" : "false", GetSetting(key) ? GetSetting(key) : "<null>", SofiMidiSettingSource(key));
 	if (ConfigOverrides.HasKey(key))
 	{
 		mtxCoreOptions.Lock();
@@ -664,6 +669,7 @@ void DBPS_ToggleConfigOverride(const char* key, const char* defaultval)
 	}
 	else
 		ConfigOverrides[key].SetString(GetSetting(key, defaultval));
+	SofiMidiLogSetting("AFTER_CONFIG_OVERRIDE_TOGGLE", key);
 }
 
 bool DBPS_ApplyConfigOverrides(const std::string& json)
@@ -679,8 +685,8 @@ bool DBPS_ApplyConfigOverrides(const std::string& json)
 			affect_interface = (loop != 0 && (affect_interface || IsInterfaceConfigKey(key)));
 		}
 		if (loop == 0) { oldcrc = crc; ConfigOverrides = ZL_Json(json); }
-		else if (oldcrc == crc) return false;
-		else { ConfigCache.Clear(); DoApplyInterfaceOptions |= affect_interface; return true; }
+		else if (oldcrc == crc) { SofiMidiLogSetting("CONFIG_OVERRIDES_UNCHANGED", "dosbox_pure_midi"); return false; }
+		else { ConfigCache.Clear(); DoApplyInterfaceOptions |= affect_interface; SofiMidiLogSetting("AFTER_CONFIG_OVERRIDES_APPLY", "dosbox_pure_midi"); return true; }
 	}
 }
 
