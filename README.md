@@ -140,3 +140,10 @@ No se modifican los demás controles de AUDIO, VIDEO, EXPLORADOR, SOFI UI ni SOF
 La detección automática de archivos como `ROM1.BIN` o las ROM de MT-32 puede marcar `midiconfig` y `mpu401` como propiedades fijas dentro de DOSBox Pure. En ese estado, el core rechaza los cambios de MIDI solicitados por el frontend. Esta build aplica un parche acotado: permite que una selección manual de SOFI AUDIO reemplace esa fijación automática y reinicialice la salida MIDI.
 
 La selección manual de `dosbox_pure_midi` se guarda como preferencia global, fuera de `ConfigOverrides`, para que una configuración por juego antigua no vuelva a imponer Roland SC-55. La detección automática sigue siendo el punto de partida cuando no existe una preferencia manual. La prueba definitiva sigue siendo audible: seleccionar otra salida y comprobar que cambia realmente el sintetizador.
+
+
+## MIDI NEXT — atajo experimental
+
+La build experimental incorpora **Ctrl + Alt + M** para avanzar a la siguiente salida de la lista dinámica `dosbox_pure_midi` registrada por DOSBox Pure. Cada pulsación aplica el valor mediante la misma ruta de configuración utilizada por SOFI AUDIO, actualiza la preferencia global y muestra el nombre de la salida seleccionada. La combinación se consume en SOFIA-Pure y no se envía al teclado emulado. El atajo recorre la lista completa y vuelve al primer elemento al llegar al final.
+
+**Estado: experimental, pendiente de prueba funcional.** Debe verificarse que cada pulsación cambie realmente el sintetizador audible y que el selector MIDI de SOFI AUDIO refleje el mismo valor. Si la rotación funciona de forma fiable, el atajo podrá conservarse como función permanente.
