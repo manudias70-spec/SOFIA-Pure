@@ -101,7 +101,6 @@ El mono no resolvió el bug: encontró cómo reproducirlo. Su clic reveló el co
 
 La rama `experiment/video-panel-visual` incorpora un primer prototipo visual del panel **VIDEO** en SOFI Space. El botón VIDEO abre un panel hacia la derecha de la navegación, con listas desplegables que conservan visualmente el valor elegido. Incluye las opciones de video de la configuración de escritorio de DOSBox Pure: adaptadores y modos gráficos, memoria SVGA, emulación y rendimiento Voodoo, escalado, filtro CRT, corrección de aspecto y overscan.
 
-**Estado: exclusivamente visual.** Las selecciones se mantienen en variables locales de la interfaz y no se envían a DOSBox Pure, no modifican la configuración del emulador y no se guardan. Este prototipo sirve para evaluar la distribución y la presentación antes de conectar cada opción a su función real.
+**Estado: controles conectados a la configuración.** SOFI VIDEO lee los valores activos desde la configuración que utiliza DOSBox Pure y refleja la selección real al abrir el panel. Al cambiar una opción, escribe el valor correspondiente en la configuración del emulador y notifica la actualización mediante el mecanismo de variables de Libretro. Los ajustes propios de la interfaz (Scaling y filtros CRT) solicitan además la reaplicación de sus efectos; Aspect Ratio Correction actualiza la geometría de presentación.
 
-
-**Corrección del prototipo:** el selector Scaling incluye también la alternativa visual **xBRZ 4x**. Sigue siendo una selección de muestra, sin conexión funcional al shader ni a la configuración del emulador.
+El selector Scaling incluye **xBRZ 4x**, vinculado al valor `xbrz` incorporado en las opciones del core durante la compilación. Las opciones que DOSBox Pure identifica como «restart required» conservan esa limitación: el cambio queda guardado, pero requiere reiniciar el core para entrar en vigor.
