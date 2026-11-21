@@ -76,7 +76,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
-static bool SofiCommanderOpen = false, SofiCommanderFocused = false;
+static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
 static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
 static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
@@ -2367,6 +2367,7 @@ static struct sDOSBoxPure : public ZL_Application
 				if (!SofiCommanderOpen)
 				{
 					SofiCommanderOpen = true;
+					SofiCommanderFocusRequested = true;
 					SofiCommanderMinimized = false;
 					SofiCommanderApplyMinimized = true;
 					SofiCommanderApplyGeometry = (SofiCommanderMaximized || SofiCommanderRestoreSize.x > 0.0f);
@@ -2374,6 +2375,7 @@ static struct sDOSBoxPure : public ZL_Application
 				else if (SofiCommanderMinimized)
 				{
 					SofiCommanderMinimized = false;
+					SofiCommanderFocusRequested = true;
 					SofiCommanderApplyMinimized = true;
 				}
 				else
@@ -2423,8 +2425,11 @@ static struct sDOSBoxPure : public ZL_Application
 						}
 						SofiCommanderApplyGeometry = false;
 					}
-					if (!SofiCommanderFocused)
+					if (SofiCommanderFocusRequested)
+					{
 						ImGui::SetNextWindowFocus();
+						SofiCommanderFocusRequested = false;
+					}
 
 					const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
 					bool commanderMinimizeClicked = false;
@@ -2510,6 +2515,7 @@ static struct sDOSBoxPure : public ZL_Application
 					{
 						// Toggle between the exact saved normal geometry and a centered 735x980 window.
 						SofiCommanderMaximized = !SofiCommanderMaximized;
+						SofiCommanderFocusRequested = true;
 						SofiCommanderApplyGeometry = true;
 						SofiCommanderApplyMinimized = true;
 					}
@@ -2522,14 +2528,10 @@ static struct sDOSBoxPure : public ZL_Application
 						SofiCommanderFocused = false;
 						SofiCommanderMinimized = false;
 						SofiCommanderApplyMinimized = false;
+						SofiCommanderFocusRequested = false;
 					}
-					else if (commanderMinimizeClicked || commanderRestoreClicked)
+					else if (commanderMinimizeClicked)
 					{
-						SofiCommanderFocused = false;
-					}
-					else if (!commanderFocused && SofiCommanderFocused)
-					{
-						SofiCommanderOpen = false;
 						SofiCommanderFocused = false;
 					}
 					else SofiCommanderFocused = commanderFocused;
