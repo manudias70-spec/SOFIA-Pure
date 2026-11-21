@@ -588,6 +588,19 @@ static void SofiVideoSetSetting(const char* key, const char* value)
 	mtxCoreOptions.Unlock();
 }
 
+// MIDI selection must persist as a global preference even when a per-game override exists.
+static void SofiAudioSetMidiSetting(const char* key, const char* value)
+{
+	mtxCoreOptions.Lock();
+	ZL_Application::SettingsSet(key, value);
+	if (ConfigOverrides.HasKey(key))
+		ConfigOverrides[key].SetString(value);
+	ConfigCache.Erase(key);
+	DirtySettings();
+	VariablesUpdated = true;
+	mtxCoreOptions.Unlock();
+}
+
 static void SofiVideoCombo(const char* label, const char* key,
 	const char* const* items, const char* const* values, int count, const char* defaultValue)
 {
@@ -633,7 +646,7 @@ static void SofiAudioDynamicCombo(const char* label, const char* key, const char
 					const char* chosen = v->value;
 					ImGui::EndCombo();
 					mtxCoreOptions.Unlock();
-					SofiVideoSetSetting(key, chosen);
+					SofiAudioSetMidiSetting(key, chosen);
 					return;
 				}
 				if (selected) ImGui::SetItemDefaultFocus();
@@ -2043,6 +2056,7 @@ static bool DrawIntro()
 
 static void OnDraw()
 {
+	static bool sofiAudioPanelWasOpen = false;
 	SynchronizeSettings(false);
 
 	if (SofiSuppressMiddleMenu) SofiSuppressMiddleMenu = false;
@@ -2571,6 +2585,9 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				ImGui::End();
 			}
+			if (sofiAudioPanelWasOpen && !SofiAudioPanelOpen)
+				SynchronizeSettings(true);
+			sofiAudioPanelWasOpen = SofiAudioPanelOpen;
 
 			// VIDEO controls read the active DOSBox Pure settings and write changes back
 			// through the same settings path used by the Libretro environment callbacks.
