@@ -28,7 +28,6 @@
 #include <ZL_Network.h>
 
 #include <cfloat>
-#include <cstdarg>
 #include <vector>
 
 #include <libretro-common/include/libretro.h>
@@ -67,28 +66,8 @@ static float FastRate = 5.0f, SlowRate = 0.3f;
 static std::string PathSaves, PathSystem;
 static ZL_Vector PointerLockPos;
 static ZL_Json ConfigCache, ConfigOverrides;
+static const retro_core_option_v2_definition* SofiCoreOptionDefinitions = NULL;
 
-// Temporary MIDI diagnostics. File is placed beside DOSBoxPure.cfg.
-static FILE* SofiMidiLogFile = NULL;
-static unsigned long SofiMidiLogSequence = 0;
-static unsigned long SofiMidiUpdateFalseCount = 0;
-static void SofiMidiLog(const char* format, ...)
-{
-	if (!SofiMidiLogFile) return;
-	fprintf(SofiMidiLogFile, "[%06lu][%10u] ", ++SofiMidiLogSequence, (unsigned)ZLTICKS);
-	va_list args; va_start(args, format); vfprintf(SofiMidiLogFile, format, args); va_end(args);
-	fputc('\n', SofiMidiLogFile); fflush(SofiMidiLogFile);
-}
-static bool SofiIsMidiOption(const char* key) { return key && !strcmp(key, "dosbox_pure_midi"); }
-static const char* SofiMidiSettingSource(const char* key)
-{
-	// ConfigCache stores copies of both settings and overrides; inspect their
-	// underlying stores first so the log reports provenance, not merely caching.
-	if (ConfigOverrides.GetByKey(key)) return "ConfigOverrides";
-	if (ZL_Application::SettingsHas(key)) return "Settings";
-	if (ConfigCache.GetByKey(key)) return "ConfigCache (stale/origin unavailable)";
-	return "default/none";
-}
 enum { FAST_FPS_LIMIT = 200 };
 
 static ZL_Surface srfCore, srfOSD;
@@ -597,13 +576,6 @@ static const char* GetSetting(const char* key, const char* defaultval = NULL)
 	return defaultval;
 }
 
-static void SofiMidiLogSetting(const char* event, const char* key)
-{
-	if (!SofiIsMidiOption(key)) return;
-	const char* value = GetSetting(key);
-	SofiMidiLog("%s key=%s value=%s source=%s", event, key, value ? value : "<null>", SofiMidiSettingSource(key));
-}
-
 static void SofiVideoSetSetting(const char* key, const char* value)
 {
 	mtxCoreOptions.Lock();
@@ -636,10 +608,35 @@ static void SofiVideoCombo(const char* label, const char* key,
 }
 
 // AUDIO prototype controls are local-only; the SoundBlaster Type selector is connected to the core.
-static void SofiAudioCombo(const char* label, int* selected, const char* const* items, int count)
+static void SofiMidiCombo()
 {
+	const retro_core_option_v2_definition* option = NULL;
+	int selected = 0;
+	const char* preview = "MIDI options unavailable";
+	mtxCoreOptions.Lock();
+	for (const retro_core_option_v2_definition* it = SofiCoreOptionDefinitions; it && it->key; ++it)
+		if (!strcmp(it->key, "dosbox_pure_midi")) { option = it; break; }
+	if (option && option->values && option->values[0].value)
+	{
+		const char* active = GetSetting("dosbox_pure_midi", option->default_value);
+		for (int i = 0; option->values[i].value; ++i)
+			if (!strcmp(active ? active : option->default_value, option->values[i].value)) { selected = i; break; }
+		preview = option->values[selected].label ? option->values[selected].label : option->values[selected].value;
+	}
+	mtxCoreOptions.Unlock();
 	ImGui::SetNextItemWidth(300.0f);
-	ImGui::Combo(label, selected, items, count);
+	if (!option || !option->values || !option->values[0].value) { ImGui::TextDisabled("MIDI options unavailable."); return; }
+	if (ImGui::BeginCombo("MIDI Output", preview))
+	{
+		for (int i = 0; option->values[i].value; ++i)
+		{
+			const char* label = option->values[i].label ? option->values[i].label : option->values[i].value;
+			const bool isSelected = (i == selected);
+			if (ImGui::Selectable(label, isSelected)) SofiVideoSetSetting("dosbox_pure_midi", option->values[i].value);
+			if (isSelected) ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
 }
 
 bool DBPS_IsConfigOverride(const char* key)
@@ -654,9 +651,6 @@ std::string DBPS_GetConfigOverrideJSON()
 
 void DBPS_ToggleConfigOverride(const char* key, const char* defaultval)
 {
-	if (SofiIsMidiOption(key))
-		SofiMidiLog("CONFIG_OVERRIDE_TOGGLE begin active=%s effective=%s source=%s",
-			ConfigOverrides.HasKey(key) ? "true" : "false", GetSetting(key) ? GetSetting(key) : "<null>", SofiMidiSettingSource(key));
 	if (ConfigOverrides.HasKey(key))
 	{
 		mtxCoreOptions.Lock();
@@ -669,7 +663,6 @@ void DBPS_ToggleConfigOverride(const char* key, const char* defaultval)
 	}
 	else
 		ConfigOverrides[key].SetString(GetSetting(key, defaultval));
-	SofiMidiLogSetting("AFTER_CONFIG_OVERRIDE_TOGGLE", key);
 }
 
 bool DBPS_ApplyConfigOverrides(const std::string& json)
@@ -685,8 +678,8 @@ bool DBPS_ApplyConfigOverrides(const std::string& json)
 			affect_interface = (loop != 0 && (affect_interface || IsInterfaceConfigKey(key)));
 		}
 		if (loop == 0) { oldcrc = crc; ConfigOverrides = ZL_Json(json); }
-		else if (oldcrc == crc) { SofiMidiLogSetting("CONFIG_OVERRIDES_UNCHANGED", "dosbox_pure_midi"); return false; }
-		else { ConfigCache.Clear(); DoApplyInterfaceOptions |= affect_interface; SofiMidiLogSetting("AFTER_CONFIG_OVERRIDES_APPLY", "dosbox_pure_midi"); return true; }
+		else if (oldcrc == crc) return false;
+		else { ConfigCache.Clear(); DoApplyInterfaceOptions |= affect_interface; return true; }
 	}
 }
 
@@ -1125,16 +1118,9 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			return true;
 		case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2:
 			mtxCoreOptions.Lock();
-			for (const retro_core_option_v2_definition *it = ((retro_core_options_v2*)data)->definitions; it->key; it++)
+			SofiCoreOptionDefinitions = ((retro_core_options_v2*)data)->definitions;
+			for (const retro_core_option_v2_definition *it = SofiCoreOptionDefinitions; it->key; it++)
 			{
-				if (SofiIsMidiOption(it->key))
-				{
-					SofiMidiLog("SET_CORE_OPTIONS_V2 key=%s desc=%s default=%s current=%s source=%s",
-						it->key, it->desc ? it->desc : "<null>", it->default_value ? it->default_value : "<null>",
-						GetSetting(it->key) ? GetSetting(it->key) : "<null>", SofiMidiSettingSource(it->key));
-					for (const retro_core_option_value *v = it->values; v && v->value; ++v)
-						SofiMidiLog("MIDI_OPTION_VALUE key=%s value=%s label=%s", it->key, v->value, v->label ? v->label : "<null>");
-				}
 				const char* val = GetSetting(it->key);
 				if (!val) continue;
 				if (strcmp(val, it->default_value)) { for (const retro_core_option_value *v = it->values; v->value; v++) { if (!strcmp(val, v->value)) goto keyok; } }
@@ -1153,10 +1139,6 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			mtxCoreOptions.Lock();
 			const char* key = ((retro_variable*)data)->key;
 			bool res = ((((retro_variable*)data)->value = GetSetting(key)) != NULL);
-			if (SofiIsMidiOption(key))
-				SofiMidiLog("GET_VARIABLE key=%s returned=%s source=%s result=%s", key,
-					((retro_variable*)data)->value ? ((retro_variable*)data)->value : "<null>",
-					SofiMidiSettingSource(key), res ? "true" : "false");
 			mtxCoreOptions.Unlock();
 			return res;
 		}
@@ -1164,11 +1146,6 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 		{
 			mtxCoreOptions.Lock();
 			const char* key = ((retro_variable*)data)->key;
-			const char* requested = ((retro_variable*)data)->value;
-			if (SofiIsMidiOption(key))
-				SofiMidiLog("SET_VARIABLE key=%s requested=%s previous=%s source=%s override=%s", key,
-					requested ? requested : "<null>", GetSetting(key) ? GetSetting(key) : "<null>",
-					SofiMidiSettingSource(key), ConfigOverrides.HasKey(key) ? "true" : "false");
 			if (ConfigOverrides.HasKey(key))
 			{
 				ConfigOverrides[((retro_variable*)data)->key].SetString(((retro_variable*)data)->value);
@@ -1183,9 +1160,6 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			VariablesUpdated = true;
 			if (IsInterfaceConfigKey(key)) DoApplyInterfaceOptions = true;
 			if (!strcmp(key, "dosbox_pure_aspect_correction")) DoApplyGeometry = true;
-			if (SofiIsMidiOption(key))
-				SofiMidiLog("SET_VARIABLE_APPLIED key=%s effective=%s source=%s",
-					key, GetSetting(key) ? GetSetting(key) : "<null>", SofiMidiSettingSource(key));
 			mtxCoreOptions.Unlock();
 			return true;
 		}
@@ -1194,10 +1168,6 @@ static bool RETRO_CALLCONV retro_environment_cb(unsigned cmd, void *data)
 			const bool updated = VariablesUpdated;
 			*((bool*)data) = updated;
 			VariablesUpdated = false;
-			if (updated) {
-				SofiMidiLog("GET_VARIABLE_UPDATE updated=true false_polls_since_last=%lu", SofiMidiUpdateFalseCount);
-				SofiMidiUpdateFalseCount = 0;
-			} else ++SofiMidiUpdateFalseCount;
 			return true;
 		}
 		case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY:
@@ -2227,17 +2197,10 @@ static void OnDraw()
 
 static void OnLoad(int argc, char *argv[])
 {
-	SofiMidiLog("CORE_LIFECYCLE OnLoad begin");
 	retro_system_info sys;
 	retro_get_system_info(&sys); // #1
-	SofiMidiLog("CORE_LIFECYCLE system_info library=%s version=%s",
-		sys.library_name ? sys.library_name : "<null>", sys.library_version ? sys.library_version : "<null>");
 	retro_set_environment(retro_environment_cb); //#2
-	SofiMidiLog("CORE_LIFECYCLE retro_set_environment complete");
-	SofiMidiLogSetting("BEFORE_RETRO_INIT", "dosbox_pure_midi");
 	retro_init(); //#3
-	SofiMidiLog("CORE_LIFECYCLE retro_init complete");
-	SofiMidiLogSetting("AFTER_RETRO_INIT", "dosbox_pure_midi");
 
 	const int init_mod = SDL_GetLockModStates();
 	const uint16_t key_modifiers =
@@ -2250,11 +2213,7 @@ static void OnLoad(int argc, char *argv[])
 	int argi = 1;
 	for (; argi < argc; argi++) { if (argv[argi][0] != '-') { game.path = argv[argi++]; break; } }
 	if (!game.path && ZL_Application::SettingsHas("default_content")) game.path = GetSetting("default_content");
-	SofiMidiLogSetting("BEFORE_RETRO_LOAD_GAME", "dosbox_pure_midi");
-	SofiMidiLog("CORE_LIFECYCLE retro_load_game begin path=%s", game.path ? game.path : "<null>");
 	const bool gameLoaded = retro_load_game(&game); //#4
-	SofiMidiLog("CORE_LIFECYCLE retro_load_game result=%s", gameLoaded ? "true" : "false");
-	SofiMidiLogSetting("AFTER_RETRO_LOAD_GAME", "dosbox_pure_midi");
 	for (; argi < argc; argi++) { if (argv[argi][0] != '-') { DBPS_AddDisc(argv[argi]); } }
 
 	retro_set_input_poll(retro_input_poll_cb);
@@ -2337,12 +2296,6 @@ static struct sDOSBoxPure : public ZL_Application
 		}
 
 		ZL_Application::SettingsInit(basePath.c_str());
-		ZL_String midiLogPath(basePath);
-		midiLogPath.append(".sofi_midi.log");
-		SofiMidiLogFile = fopen_wrap(midiLogPath.c_str(), "wb");
-		SofiMidiLog("========== SOFIA-PURE MIDI DIAGNOSTIC START ==========");
-		SofiMidiLog("CONFIG basePath=%s configFile=%s.cfg", basePath.c_str(), basePath.c_str());
-		SofiMidiLogSetting("INITIAL_SETTING", "dosbox_pure_midi");
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
 		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
 		SofiCommanderGeometryPath.assign(SofiCommanderIniPath).append(".geometry");
@@ -2582,7 +2535,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 					ImGui::Spacing();
  					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MIDI OUTPUT");
-					ImGui::TextDisabled("MIDI selector temporarily disconnected for isolation testing.");
+					SofiMidiCombo();
 
 					static const char* volumeItems[] = { "5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%", "110%", "120%", "130%", "140%", "150%", "160%", "170%", "180%", "190%", "200%", "225%", "250%", "275%", "300%", "325%", "350%", "375%", "400%", "425%", "450%", "475%", "500%" };
 					static const char* volumeValues[] = { "0.05", "0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75", "4.0", "4.25", "4.5", "4.75", "5.0" };
@@ -2974,11 +2927,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGuiReady = false;
 		}
 		SynchronizeSettings(true);
-		SofiMidiLogSetting("BEFORE_RETRO_UNLOAD_GAME", "dosbox_pure_midi");
-		SofiMidiLog("CORE_LIFECYCLE retro_unload_game");
 		retro_unload_game();
-		SofiMidiLog("========== SOFIA-PURE MIDI DIAGNOSTIC END ==========");
-		if (SofiMidiLogFile) { fclose(SofiMidiLogFile); SofiMidiLogFile = NULL; }
 	}
 } DOSBoxPure;
 

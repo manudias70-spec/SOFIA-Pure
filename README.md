@@ -108,7 +108,7 @@ El selector Scaling incluye **xBRZ 4x**, vinculado al valor `xbrz` incorporado e
 
 ## Estado de SOFI AUDIO
 
-El panel **SOFI AUDIO** utiliza el mismo mecanismo de configuración que SOFI VIDEO: cada control conectado lee el valor activo del core y escribe los cambios mediante la ruta de configuración de DOSBox Pure. Incluye SoundBlaster Settings (puerto, IRQ y DMA), los seis controles de volumen, SoundBlaster Type (incluida AWE32 / EMU8000), modo FM/OPL, proveedor OPL, Gravis Ultrasound, Tandy y cambio de canales estéreo. **El selector MIDI está temporalmente desconectado** para una prueba de aislamiento: SOFI UI no consulta su lista dinámica, no lee su valor y no escribe ni actualiza `dosbox_pure_midi`. La configuración MIDI permanece bajo el control del core y de su interfaz original. Esta desconexión no modifica la detección de SoundFonts ni ROMs.
+El panel **SOFI AUDIO** utiliza el mismo mecanismo de configuración que SOFI VIDEO: cada control conectado lee el valor activo del core y escribe los cambios mediante la ruta de configuración de DOSBox Pure. Incluye SoundBlaster Settings (puerto, IRQ y DMA), los seis controles de volumen, SoundBlaster Type (incluida AWE32 / EMU8000), modo FM/OPL, proveedor OPL, Gravis Ultrasound, Tandy y cambio de canales estéreo. El selector **MIDI OUTPUT** vuelve a estar conectado y obtiene sus opciones y etiquetas directamente de la lista dinámica `dosbox_pure_midi` registrada por el core. Al elegir una salida, SOFI UI actualiza esa misma opción mediante la ruta de configuración compartida con el resto de AUDIO. La selección visible no sustituye la comprobación auditiva: el cambio real de módulo debe verificarse escuchando la salida.
 
 En la compilación **standalone** de SOFIA-Pure, DOSBox Pure no expone el selector Audio Sample Rate: la frecuencia de muestreo queda determinada por la compilación. Por eso el panel presenta **Audio Latency**, conectada a `interface_audiolatency`, que sí es configurable en esta versión. Los ajustes marcados como *restart required* necesitan reiniciar el core para entrar en vigor.
 
@@ -124,29 +124,12 @@ Temporary DOSBOX diagnostic mode: hiding SOFI UI also disables ImGui's software 
 Temporary DOSBOX diagnostic mode now releases pointer capture and bypasses SOFI's ImGui mouse handlers while SOFI UI is hidden, allowing the original Pure OSD to receive mouse input. This remains a diagnostic-only shortcut.
 
 
-## Prueba de aislamiento MIDI
+## Selector MIDI y arranque sin SOFI Splash
 
-La integración del selector MIDI de SOFI UI está temporalmente desconectada. El panel muestra un aviso en lugar de un control interactivo; no mantiene un puntero a las definiciones dinámicas del core ni lee o escribe `dosbox_pure_midi`. El resto de AUDIO permanece conectado y sin cambios. Esta versión sirve para comprobar si la selección MIDI vuelve a comportarse correctamente usando únicamente la configuración original de DOSBox Pure.
+Esta build conserva el arranque directo de la variante #422: la ejecución del Splash está desactivada y DOSBox inicia sin la presentación ni la espera de tecla. El código y el recurso gráfico del Splash se conservan; no se eliminan ni se rediseñan en este cambio.
 
+Se retira la instrumentación temporal de diagnóstico MIDI y deja de generarse el archivo `DOSBoxPure.sofi_midi.log`. El selector MIDI de SOFI AUDIO vuelve a utilizar las definiciones y etiquetas dinámicas proporcionadas por el core Libretro para `dosbox_pure_midi`. Al seleccionar una salida, el panel actualiza esa opción por la misma ruta de configuración que los demás controles de AUDIO.
 
-## Temporary MIDI diagnostic build
+El objetivo de esta build es comprobar de forma directa si, con el Splash desactivado, la selección MIDI de SOFI AUDIO produce un cambio audible entre las salidas disponibles. La compilación por sí sola no confirma el resultado: la prueba funcional definitiva es escuchar el módulo seleccionado.
 
-The diagnostic log is `DOSBoxPure.sofi_midi.log`, beside the active
-`DOSBoxPure.cfg`. It records the effective `dosbox_pure_midi` value and its
-source (cache, content override, persistent settings, or default), MIDI core
-option registration and available values, Libretro GET/SET variable calls,
-variable-update notifications, and core initialization/game-load/unload
-boundaries.
-
-Each record is flushed immediately. Repeated false `GET_VARIABLE_UPDATE`
-polls are counted and included with the next true update to avoid flooding.
-The logger does not change MIDI selections, overrides, or core behavior.
-Reproduce the problem once and send the complete log. This instrumentation is
-temporary and should be removed after diagnosis.
-
-
-## Build de diagnóstico MIDI sin SOFI Splash
-
-Esta variante de diagnóstico omite por completo la presentación SOFI Splash: DOSBox inicia directamente y no espera una tecla para continuar. La rutina de Splash y su recurso gráfico se conservan en el código; solo se desactiva su ejecución en esta build. El objetivo es aislar si la presentación o su espera intervienen indirectamente en la sincronización tardía de `ConfigOverrides` observada durante el diagnóstico MIDI.
-
-El resto de la interfaz y de las funciones del core permanece sin cambios. Esta modificación es temporal y específica de la rama `diagnostic/midi-no-splash`.
+No se modifican los demás controles de AUDIO, VIDEO, EXPLORADOR, SOFI UI ni SOFI Commander.
