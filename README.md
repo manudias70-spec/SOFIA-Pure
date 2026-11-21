@@ -108,7 +108,7 @@ El selector Scaling incluye **xBRZ 4x**, vinculado al valor `xbrz` incorporado e
 
 ## Estado de SOFI AUDIO
 
-El panel **SOFI AUDIO** utiliza el mismo mecanismo de configuración que SOFI VIDEO: cada control lee el valor activo del core y escribe los cambios mediante la ruta de configuración de DOSBox Pure. Incluye SoundBlaster Settings (puerto, IRQ y DMA), selección de MIDI, los seis controles de volumen, SoundBlaster Type (incluida AWE32 / EMU8000), modo FM/OPL, proveedor OPL, Gravis Ultrasound, Tandy y cambio de canales estéreo. La lista MIDI se obtiene de las opciones dinámicas que entrega el core, para mostrar los SoundFonts y ROMs detectados en el directorio de sistema. La selección MIDI se guarda también como preferencia persistente, incluso cuando existe una configuración específica del juego; al cerrar el panel AUDIO se fuerza la sincronización de los ajustes pendientes. La detección de Roland SC-55 / MT-32 y sus variantes sigue dependiendo de que las ROM correspondientes estén presentes.
+El panel **SOFI AUDIO** utiliza el mismo mecanismo de configuración que SOFI VIDEO: cada control conectado lee el valor activo del core y escribe los cambios mediante la ruta de configuración de DOSBox Pure. Incluye SoundBlaster Settings (puerto, IRQ y DMA), los seis controles de volumen, SoundBlaster Type (incluida AWE32 / EMU8000), modo FM/OPL, proveedor OPL, Gravis Ultrasound, Tandy y cambio de canales estéreo. **El selector MIDI está temporalmente desconectado** para una prueba de aislamiento: SOFI UI no consulta su lista dinámica, no lee su valor y no escribe ni actualiza `dosbox_pure_midi`. La configuración MIDI permanece bajo el control del core y de su interfaz original. Esta desconexión no modifica la detección de SoundFonts ni ROMs.
 
 En la compilación **standalone** de SOFIA-Pure, DOSBox Pure no expone el selector Audio Sample Rate: la frecuencia de muestreo queda determinada por la compilación. Por eso el panel presenta **Audio Latency**, conectada a `interface_audiolatency`, que sí es configurable en esta versión. Los ajustes marcados como *restart required* necesitan reiniciar el core para entrar en vigor.
 
@@ -122,3 +122,8 @@ El botón **DOSBOX** de la navegación oculta temporalmente la capa visual de SO
 Temporary DOSBOX diagnostic mode: hiding SOFI UI also disables ImGui's software mouse cursor and restores the system cursor so the original DOSBox Pure OSD can be operated. Returning to SOFI UI hides the system cursor again.
 
 Temporary DOSBOX diagnostic mode now releases pointer capture and bypasses SOFI's ImGui mouse handlers while SOFI UI is hidden, allowing the original Pure OSD to receive mouse input. This remains a diagnostic-only shortcut.
+
+
+## Prueba de aislamiento MIDI
+
+La integración del selector MIDI de SOFI UI está temporalmente desconectada. El panel muestra un aviso en lugar de un control interactivo; no mantiene un puntero a las definiciones dinámicas del core ni lee o escribe `dosbox_pure_midi`. El resto de AUDIO permanece conectado y sin cambios. Esta versión sirve para comprobar si la selección MIDI vuelve a comportarse correctamente usando únicamente la configuración original de DOSBox Pure.
