@@ -1611,13 +1611,13 @@ static void OnJoyDeviceChange(bool added, int which)
 // origin, while ImGui expects top-left screen coordinates.
 static void OnImGuiPointerMove(ZL_PointerMoveEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady || SofiCommanderCaptured) return;
+	if (e.which != 0 || !ImGuiReady || !SofiUIVisible || SofiCommanderCaptured) return;
 	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
 }
 
 static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	if (e.which != 0 || !ImGuiReady || !SofiUIVisible || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	ImGuiIO& io = ImGui::GetIO();
 
 	if (SofiCommanderCaptured)
@@ -1656,7 +1656,7 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 
 static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	if (e.which != 0 || !ImGuiReady || !SofiUIVisible || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	if (e.button == ZL_BUTTON_MIDDLE && SofiSuppressMiddleRelease)
 	{
 		SofiSuppressMiddleRelease = false;
@@ -1672,7 +1672,7 @@ static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 
 static void OnImGuiMouseWheel(ZL_MouseWheelEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady || SofiCommanderCaptured) return;
+	if (e.which != 0 || !ImGuiReady || !SofiUIVisible || SofiCommanderCaptured) return;
 	ImGui::GetIO().AddMouseWheelEvent((float)e.x, (float)e.y);
 }
 
@@ -2490,6 +2490,9 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("DOSBOX", ImVec2(88.0f, 44.0f)))
 			{
+				// Release any pointer lock before handing mouse input back to Pure's OSD.
+				SofiCommanderCaptured = false;
+				ZL_Display::SetPointerLock(false);
 				SofiUIVisible = false;
 				SofiAudioPanelOpen = false;
 				SofiVideoPanelOpen = false;
