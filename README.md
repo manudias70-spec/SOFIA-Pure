@@ -393,3 +393,14 @@ En **SOFI UI → INPUT**, las referencias se agrupan mediante viñetas principal
 Este cambio es exclusivamente visual: no altera la posición de la sección ATAJOS, el orden de las demás secciones, las funciones de los atajos ni el comportamiento del Mapper.
 
 **Estado: parche de presentación integrado en la rama experimental; pendiente de compilación Win32/Win64 y prueba visual/funcional de Manu.**
+
+
+## SOFI OSD e INPUT — orden de ATAJOS y texto informativo
+
+La sección **ATAJOS** se mueve al comienzo del contenido de **SOFI OSD**, antes de **HOTKEYS**. Conserva todos los accesos existentes y muestra también **Controller Mapper — Hotkey Modifier + F11**. Cada acceso queda en una línea independiente; la aclaración sobre F11 y F12 sin modificador permanece debajo de la lista.
+
+En **SOFI UI → INPUT**, las referencias informativas pasan a texto normal, sin viñetas ni signos tipográficos especiales: **JOYSTICK:**, **L3: Abrir Controller Mapper durante el juego.**, **TECLADO:** y **Hotkey Modifier + F11: Abrir Controller Mapper.** Los dos puntos se usan como separadores de texto.
+
+El cambio es exclusivamente de presentación. No modifica la lógica de los atajos, la entrada del joystick, las asignaciones ni el comportamiento del Controller Mapper.
+
+**Estado: parche y documentación integrados en la rama experimental; pendiente de compilación Win32/Win64 y prueba visual/funcional de Manu.**
