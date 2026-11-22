@@ -350,3 +350,12 @@ Se prepara una prueba aislada sobre la base funcional #445. L3 conserva la detec
 La solicitud abre el **Controller Mapper nativo** directamente en el hilo del emulador. Si el OSD ya está visible, cambia directamente al Mapper; si está cerrado, lo abre en ese modo. Se conserva el comportamiento de las demás opciones de OSD y se permite la apertura explícita del Mapper incluso cuando la preferencia de OSD está configurada en modo de teclado durante el juego. La acción diferida no sobrescribe otra operación pendiente.
 
 **Estado: cambio experimental pendiente de compilación y prueba de Manu.** El resultado esperado es que L3 muestre únicamente Controller Mapper y que, al cerrarlo, el juego continúe. No se considera validado hasta la prueba en el ejecutable.
+
+
+## OSD — bloqueo de navegación entre pestañas por teclado
+
+Se prepara una modificación aislada sobre la base funcional de la build **#453**. Esta etapa desactiva exclusivamente el mecanismo del OSD nativo que cambia de pestaña al recibir **Tab**, **Shift+Tab** o **Grave (`)**. La intervención se limita al controlador de navegación entre modos del OSD; no modifica el envío normal de teclas al emulador cuando el OSD está cerrado.
+
+Se conservan la navegación interna de cada pantalla, las acciones Atrás/Aceptar/Cancelar, el funcionamiento del Controller Mapper, el acceso directo mediante L3 y todos los controles por mouse y joystick. Estos últimos no forman parte de esta etapa.
+
+**Estado: parche integrado en una rama experimental; pendiente de compilación Win32/Win64 y prueba de Manu.** No se considera validado hasta completar ambas comprobaciones.
