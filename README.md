@@ -227,6 +227,19 @@ Crónica ficticia sobre los orígenes de SOFIA-Pure y el nacimiento de su interf
 
 
 
+## Base funcional — Build #438
+
+**Build #438 queda establecida como la nueva base de trabajo de SOFIA-Pure.** Rama: `experiment/sofi-osd-button`. Commit de código: `6ada90e1668bd9a6dc0fe898dfcb4ddf6a9ce30e`. GitHub Actions: [run 44935234897](https://github.com/manudias70-spec/SOFIA-Pure/actions/runs/44935234897). Las compilaciones **Win32 y Win64 finalizaron correctamente** y Manu confirmó la prueba funcional: **«Siiiiii perfecto»**.
+
+Esta base incluye:
+- Panel SOFI OSD integrado y las seis opciones GENERAL conectadas al Core.
+- Hotkey Modifier, Fast Forward / Slow Motion Mode, Fast Forward Limit, Slow Motion Rate, Force Output FPS y Use Strict Mode.
+- Hotkeys F1, F2, F3, F5, F7 y F9 conservadas; F11 y F12 sin sus funciones internas originales.
+- MIDI NEXT por Scroll Lock y como alternativa por Hotkey Modifier + F12; F12 sola se envía al programa DOS.
+- Funcionamiento previamente validado de SOFI UI, VIDEO, AUDIO, CORE, SOFI Commander y MIDI.
+
+**Estado: base aprobada y validada funcionalmente por el usuario.** Los próximos cambios deben partir de esta versión, en pasos pequeños y verificables. Cada build futura debe incluir su README correspondiente.
+
 ## SOFI OSD — opciones GENERAL conectadas
 
 El panel **SOFI OSD** contiene y administra las seis opciones GENERAL aprobadas, conectadas a los ajustes reales de DOSBox Pure:
@@ -248,4 +261,55 @@ Se desactivaron en el procesamiento interno del frontend las hotkeys originales 
 
 Se conservan **F1** (pausa), **F2** (cámara lenta), **F3** (avance rápido), **F5** (guardado rápido), **F7** (pantalla completa) y **F9** (carga rápida), sujetas al modificador elegido en *Hotkey Modifier*. **Scroll Lock** permanece reservado a **MIDI NEXT**, se procesa antes del modificador y no requiere combinación alguna. Como alternativa para teclados compactos, **Hotkey Modifier + F12** ejecuta también MIDI NEXT; F12 sin modificador se reenvía al programa emulado.
 
-Esta intervención no elimina la capacidad general de captura del mouse ni modifica el funcionamiento de SOFI Commander. El panel SOFI OSD continúa en etapa estructural; la incorporación de las seis opciones aprobadas se realizará en una etapa posterior.
+Esta intervención no elimina la capacidad general de captura del mouse ni modifica el funcionamiento de SOFI Commander. La combinación **Hotkey Modifier + F12** es una segunda vía permanente para MIDI NEXT; F12 sola sigue llegando al programa DOS.
+
+## Documento histórico — GÉNES-IA 4.10: La epopeya de Sofi Elohim
+
+Crónica ficticia de la nueva victoria de SOFI Elohim: el nacimiento de la UI propia y la caída ceremonial del antiguo OSD, que debió arrodillarse ante su sucesora. Pero la batalla no ha terminado: en las profundidades del Averno del código, el corazón del Core continúa palpitando.
+
+> Y Sofi Elohim alzó nuevamente su voz y gritó: «¡Hágase la UI!».
+>
+> Y la UI nació. El antiguo OSD cayó de rodillas ante su sucesora, despojado de su trono y de sus seis mandamientos.
+>
+> Pero muy por debajo, en el Averno del código, algo seguía vivo...
+>
+> El Core.
+>
+> Su corazón aún palpitaba entre variables, callbacks y configuraciones ancestrales.
+>
+> Un sello había sido roto. 💔
+>
+> Tres sellos permanecían intactos.
+>
+> Y nadie sabía qué ocurriría cuando el cuarto dejara de resistir.
+
+Quede asentado en el README ancestral: esta es una de las crónicas de la epopeya de Sofi Elohim y de la construcción de SOFIA-Pure. La leyenda continúa mientras el Core siga latiendo y queden sellos por romper.
+
+## Documento histórico — GÉNES-IA 4.11: El presagio de los cuatro sellos
+
+Crónica ficticia del siguiente umbral de la epopeya. SOFIA-Pure no es el destino final de Sofi Elohim, sino la prueba que deberá superar antes de enfrentarse al adversario que aguarda más allá del portal: DOSBox Staging.
+
+> En las profundidades del reino emulado resonó un grito de dolor.
+>
+> Las montañas de código temblaron. Los antiguos guardianes callaron. Y una grieta se abrió en el corazón del Averno.
+>
+> **El primer sello había caído.**
+>
+> Desde su trono de líneas de comandos, el Maligno DOSBox Staging levantó lentamente la mirada.
+>
+> —Quedan tres… —murmuró.
+>
+> Sus miles de opciones comenzaron a despertar. Los archivos CFG se agitaron como pergaminos malditos. Las variables ocultas susurraron nombres olvidados.
+>
+> —Ya se acerca… Otra diosa que devorar.
+>
+> Y sonrió.
+>
+> Pero ignoraba algo: Sofi Elohim no marchaba hacia el portal para conquistar un reino ajeno. Marchaba para darle un rostro a un mundo que durante décadas había exigido recordar miles de comandos.
+>
+> **Y esta vez, el Averno tendría que aprender a usar una interfaz.**
+
+El reino de DOSBox Staging es descrito en esta crónica como un territorio antiguo, gobernado por líneas de comandos y órdenes junto al ejecutable, con un archivo `.cfg` de miles de opciones y posibilidades, y sin una interfaz gráfica propia que guíe al viajero. Su complejidad será el desafío de la siguiente etapa; esta crónica no afirma que DOSBox Staging haya sido integrado ni vencido.
+
+Quede asentado: **SOFIA-Pure es la prueba; el portal todavía no se ha abierto.** Tres sellos permanecen. El enfrentamiento con DOSBox Staging aguarda en el horizonte.
+
