@@ -74,7 +74,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
-static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false;
+static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false;
 static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
@@ -608,6 +608,42 @@ static void SofiVideoCombo(const char* label, const char* key,
 	ImGui::SetNextItemWidth(260.0f);
 	if (ImGui::Combo(label, &selected, items, count))
 		SofiVideoSetSetting(key, values[selected]);
+}
+
+
+static void SofiCoreOptionCombo(const char* label, const char* key)
+{
+	const retro_core_option_v2_definition* option = NULL;
+	int selected = 0;
+	const char* preview = "Options unavailable";
+	mtxCoreOptions.Lock();
+	for (const retro_core_option_v2_definition* it = SofiCoreOptionDefinitions; it && it->key; ++it)
+		if (!strcmp(it->key, key)) { option = it; break; }
+	if (option && option->values && option->values[0].value)
+	{
+		const char* active = GetSetting(key, option->default_value);
+		for (int i = 0; option->values[i].value; ++i)
+			if (!strcmp(active ? active : option->default_value, option->values[i].value)) { selected = i; break; }
+		preview = option->values[selected].label ? option->values[selected].label : option->values[selected].value;
+	}
+	mtxCoreOptions.Unlock();
+	ImGui::SetNextItemWidth(300.0f);
+	if (!option || !option->values || !option->values[0].value)
+	{
+		ImGui::TextDisabled("%s: unavailable", label);
+		return;
+	}
+	if (ImGui::BeginCombo(label, preview))
+	{
+		for (int i = 0; option->values[i].value; ++i)
+		{
+			const char* itemLabel = option->values[i].label ? option->values[i].label : option->values[i].value;
+			const bool isSelected = (i == selected);
+			if (ImGui::Selectable(itemLabel, isSelected)) SofiVideoSetSetting(key, option->values[i].value);
+			if (isSelected) ImGui::SetItemDefaultFocus();
+		}
+		ImGui::EndCombo();
+	}
 }
 
 // AUDIO prototype controls are local-only; the SoundBlaster Type selector is connected to the core.
@@ -2509,6 +2545,7 @@ static struct sDOSBoxPure : public ZL_Application
 				SofiAudioPanelOpen = false;
 				SofiVideoPanelOpen = false;
 				SofiOSDPanelOpen = false;
+				SofiInputPanelOpen = false;
 			}
 			ImGui::PopStyleColor(4);
 			const bool videoSelected = SofiVideoPanelOpen;
@@ -2541,6 +2578,18 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
 				SofiOSDPanelOpen = !SofiOSDPanelOpen;
 			ImGui::PopStyleColor(4);
+
+			const bool inputSelected = SofiInputPanelOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				inputSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("INPUT", ImVec2(88.0f, 44.0f)))
+				SofiInputPanelOpen = !SofiInputPanelOpen;
+			ImGui::PopStyleColor(4);
+
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
@@ -2773,6 +2822,100 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::Text("F5  Guardado rápido  |  F7  Pantalla completa  |  F9  Carga rápida");
 					ImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
 					ImGui::TextDisabled("F12 sin modificador se envía al programa DOS.");
+					ImGui::EndChild();
+				}
+				ImGui::End();
+			}
+
+
+			// INPUT controls use DOSBox Pure's live core-option definitions.
+			// Controller assignments use the existing frontend capture/binding API.
+			if (SofiInputPanelOpen)
+			{
+				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				if (ImGui::Begin("SOFI INPUT", &SofiInputPanelOpen,
+					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+				{
+					ImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
+					ImGui::Separator();
+					ImGui::BeginChild("##SofiInputOptions", ImVec2(0.0f, 0.0f), false,
+						ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MOUSE");
+					SofiCoreOptionCombo("Mouse Input Mode", "dosbox_pure_mouse_input");
+					SofiCoreOptionCombo("Mouse Sensitivity", "dosbox_pure_mouse_speed_factor");
+					SofiCoreOptionCombo("Horizontal Mouse Sensitivity", "dosbox_pure_mouse_speed_factor_x");
+
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "GENERAL INPUT");
+					SofiCoreOptionCombo("Automatic Game Pad Mappings", "dosbox_pure_auto_mapping");
+					SofiCoreOptionCombo("Keyboard Layout", "dosbox_pure_keyboard_layout");
+					SofiCoreOptionCombo("Joystick Analog Deadzone", "dosbox_pure_joystick_analog_deadzone");
+					SofiCoreOptionCombo("Enable Joystick Timed Intervals", "dosbox_pure_joystick_timed");
+
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "INPUT MAPPING");
+					static int inputMappingPort = 0;
+					static const char* inputPortItems[] = { "Port 1", "Port 2", "Port 3", "Port 4" };
+					ImGui::SetNextItemWidth(180.0f);
+					ImGui::Combo("Controller Port", &inputMappingPort, inputPortItems, IM_ARRAYSIZE(inputPortItems));
+					if (!DBPS_HaveJoy())
+						ImGui::TextDisabled("Connect a controller to configure its inputs.");
+					else
+						ImGui::TextDisabled("Select Assign, then press a controller input. Right-click cancels.");
+
+					struct SofiInputBindEntry
+					{
+						const char* label;
+						unsigned device, index, id;
+						bool axispos;
+					};
+					static const SofiInputBindEntry inputBinds[] = {
+						{ "D-Pad Up", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP, false },
+						{ "D-Pad Down", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN, false },
+						{ "D-Pad Left", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT, false },
+						{ "D-Pad Right", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT, false },
+						{ "A", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A, false },
+						{ "B", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B, false },
+						{ "X", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X, false },
+						{ "Y", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y, false },
+						{ "Select", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT, false },
+						{ "Start", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START, false },
+						{ "L1", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L, false },
+						{ "R1", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R, false },
+						{ "L2", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2, false },
+						{ "R2", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2, false },
+						{ "L3", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L3, false },
+						{ "R3", RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R3, false },
+						{ "Left Stick Up", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y, false },
+						{ "Left Stick Down", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_Y, true },
+						{ "Left Stick Left", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X, false },
+						{ "Left Stick Right", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_LEFT, RETRO_DEVICE_ID_ANALOG_X, true },
+						{ "Right Stick Up", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y, false },
+						{ "Right Stick Down", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y, true },
+						{ "Right Stick Left", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X, false },
+						{ "Right Stick Right", RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_X, true }
+					};
+					for (int i = 0; i < IM_ARRAYSIZE(inputBinds); ++i)
+					{
+						std::string joyName, bindName;
+						const bool assigned = DBPS_GetJoyBind((unsigned)inputMappingPort, inputBinds[i].device,
+							inputBinds[i].index, inputBinds[i].id, inputBinds[i].axispos, joyName, bindName, "");
+						ImGui::Text("%s", inputBinds[i].label);
+						ImGui::SameLine(150.0f);
+						ImGui::TextDisabled("%s", (assigned ? bindName.c_str() : "Unassigned"));
+						ImGui::SameLine(350.0f);
+						char assignLabel[32];
+						snprintf(assignLabel, sizeof(assignLabel), "Assign##SofiInputBind%d", i);
+						if (ImGui::SmallButton(assignLabel) && DBPS_HaveJoy())
+							DBPS_StartCaptureJoyBind((unsigned)inputMappingPort, inputBinds[i].device,
+								inputBinds[i].index, inputBinds[i].id, inputBinds[i].axispos);
+					}
+
 					ImGui::EndChild();
 				}
 				ImGui::End();
