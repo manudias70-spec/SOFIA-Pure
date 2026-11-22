@@ -432,3 +432,15 @@ Se ajusta exclusivamente la presentación del teclado en pantalla nativo de DOSB
 No se modifican las asignaciones ni el comportamiento de **R3** (abrir teclado en pantalla) y **L3** (abrir Controller Mapper), ni la navegación, los paneles o el contenido del teclado.
 
 **Estado: parche visual integrado en la rama de trabajo; pendiente de compilación Win32/Win64 y prueba visual/funcional de Manu.**
+
+
+
+## SOFI INPUT — corrección del parche de escala del teclado OSD
+
+La prueba de Manu confirmó que el teclado seguía con su tamaño original. Al revisar los logs de la build anterior se encontró la causa: el parche buscaba un bloque exacto que ya había sido modificado por otro parche OSD. El script abortó con **“expected one exact anchor, found 0”**, pero el paso de PowerShell no detuvo la compilación; por eso se generó un ejecutable sin el ajuste visual.
+
+Se corrige el orden del workflow: el parche de tamaño se aplica inmediatamente después de obtener la versión fijada de DOSBox Pure, antes de los demás cambios OSD. Además, el workflow ahora detiene la build si ese parche falla y el script verifica que el cambio haya quedado escrito.
+
+El ajuste también escala el grosor de los trazos del teclado junto con las dimensiones y mantiene el cálculo de interacción en las mismas coordenadas físicas que el dibujo. Se conserva el objetivo: **50 % de escala y alineación a la derecha**, sin modificar R3 ni L3.
+
+**Estado: corrección del parche y verificación del workflow integradas; pendiente de compilación Win32/Win64 y nueva prueba de Manu.**
