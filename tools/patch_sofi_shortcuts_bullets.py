@@ -56,6 +56,7 @@ replace_once(
     """\t\t\t\t\tImGui::TextDisabled("Durante el juego: presiona L3 para abrir la configuración del control.");""",
     """\t\t\t\t\tImGui::Text("JOYSTICK:");
 \t\t\t\t\tImGui::Text("L3: Abrir Controller Mapper durante el juego.");
+\t\t\t\t\tImGui::Text("R3: Abrir teclado en pantalla durante el juego.");
 \t\t\t\t\tImGui::Text("TECLADO:");
 \t\t\t\t\tImGui::Text("Hotkey Modifier + F11: Abrir Controller Mapper.");"""
 )
