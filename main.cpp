@@ -516,6 +516,7 @@ enum { BIND_PORT0 = 0, _BIND_PORTS = 4 };
 enum EBindId { BIND_ID_UP, BIND_ID_DOWN, BIND_ID_LEFT, BIND_ID_RIGHT, BIND_ID_B, BIND_ID_A, BIND_ID_Y, BIND_ID_X, BIND_ID_SELECT, BIND_ID_START, BIND_ID_L, BIND_ID_R, BIND_ID_L2, BIND_ID_R2, BIND_ID_L3, BIND_ID_R3, BIND_ID_LSTICK_UP, BIND_ID_LSTICK_DOWN, BIND_ID_LSTICK_LEFT, BIND_ID_LSTICK_RIGHT, BIND_ID_RSTICK_UP, BIND_ID_RSTICK_DOWN, BIND_ID_RSTICK_LEFT, BIND_ID_RSTICK_RIGHT, _BIND_ID_COUNT, _BIND_ID_FIRST_AXIS = BIND_ID_LSTICK_UP };
 static const char* BindName[] = { "up", "down", "left", "right", "b", "a", "y", "x", "select", "start", "l", "r", "l2", "r2", "l3", "r3", "lstickup", "lstickdown", "lstickleft", "lstickright", "rstickup", "rstickdown", "rstickleft", "rstickright" };
 static SJoyBind JoyBinds[_BIND_PORTS][_BIND_ID_COUNT], *CaptureJoyBind;
+static bool SofiL3WasDown[_BIND_PORTS] = {};
 static std::vector<unsigned char> CaptureJoyState;
 static const char** JoyBindTemplateNames;
 
@@ -1450,6 +1451,17 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 	}
 
 	EBindId bid = GetBindIdFromRetro(device, index, id);
+	if (bid == BIND_ID_L3)
+	{
+		if (port >= _BIND_PORTS) return 0;
+		SJoyBind& l3 = JoyBinds[port][BIND_ID_L3];
+		const bool down = (l3.Joy && l3.GetVal(false));
+		const bool pressed = (down && !SofiL3WasDown[port]);
+		SofiL3WasDown[port] = down;
+		// L3 is reserved for the native Controller Mapper; never pass it to Pure's Start Menu binding.
+		if (pressed && !DBPS_IsShowingOSD()) DBPS_OpenControllerMapper();
+		return 0;
+	}
 	bool analog_button = false;
 	if (bid == _BIND_ID_COUNT)
 	{

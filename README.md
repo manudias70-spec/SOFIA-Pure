@@ -341,3 +341,12 @@ Se incorpora el botón **INPUT** a la navegación de SOFI Space y el panel **SOF
 Los siete selectores obtienen sus opciones directamente de las definiciones activas del core DOSBox Pure y guardan los cambios mediante la ruta de configuración ya utilizada por SOFI VIDEO y SOFI AUDIO. Input Mapping utiliza la captura y el almacenamiento de asignaciones existentes en el frontend, con selección de puerto 1 a 4, botones digitales y direcciones de ambos sticks analógicos.
 
 **Estado: integración de interfaz compilable pendiente de validación.** Manu revisará las opciones una por una en el programa y decidirá cuáles conservar, ajustar o retirar. La presencia de un control en el panel no equivale a una prueba funcional de cada ajuste. No se modifican EXPLORADOR, VIDEO, AUDIO ni SOFI OSD.
+
+
+## L3 — apertura directa del Controller Mapper
+
+Se prepara una prueba aislada sobre la base funcional #445. L3 conserva la detección y lectura del mando mediante las asignaciones nativas existentes del frontend; al detectar el flanco de pulsación, SOFIA intercepta esa entrada para que no llegue a la acción predeterminada de DOSBox Pure que abre Start Menu.
+
+La solicitud abre el **Controller Mapper nativo** directamente en el hilo del emulador. Si el OSD ya está visible, cambia directamente al Mapper; si está cerrado, lo abre en ese modo. Se conserva el comportamiento de las demás opciones de OSD y se permite la apertura explícita del Mapper incluso cuando la preferencia de OSD está configurada en modo de teclado durante el juego. La acción diferida no sobrescribe otra operación pendiente.
+
+**Estado: cambio experimental pendiente de compilación y prueba de Manu.** El resultado esperado es que L3 muestre únicamente Controller Mapper y que, al cerrarlo, el juego continúe. No se considera validado hasta la prueba en el ejecutable.
