@@ -452,3 +452,11 @@ Tras validar la build #481, se ajusta nuevamente la presentación del teclado OS
 El cálculo de escala sigue aplicándose a las dimensiones y al grosor de los trazos. No se modifican el contenido del teclado, las coordenadas de interacción, R3, L3, la navegación ni los demás paneles.
 
 **Estado: parche y crónica integrados; pendiente de compilación Win32/Win64 y validación visual/funcional de Manu.**
+
+## SOFI INPUT — desplazamiento horizontal de 5 cm
+
+Sobre la disposición validada al **60%**, se conserva el centrado vertical y se desplaza el teclado **5 cm hacia la derecha respecto del centro horizontal**. La conversión utiliza el ancho físico aproximado de 59,77 cm de un monitor 27 pulgadas 16:9 y la anchura efectiva del buffer OSD.
+
+No se modifica la escala, el contenido del teclado, las coordenadas de interacción, R3, L3 ni la navegación.
+
+**Estado: ajuste integrado; pendiente de compilación Win32/Win64 y validación visual de Manu.**
