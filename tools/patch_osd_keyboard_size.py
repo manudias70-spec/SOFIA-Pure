@@ -37,14 +37,14 @@ replacement = """\t\tint baseThickness = buf.GetThickness();
 \t\tint oskx = ((int)(buf.width / fx) - KWIDTH) / 2;
 \t\tint osky = ((int)(buf.height / fy) - 85) / 2;"""
 
-if "SOFIA: scale all native OSD keyboard geometry to half size." in source:
+if "SOFIA: increase native OSD keyboard geometry to 60% of original size." in source:
     raise SystemExit("OSK size patch already present; refusing to apply it twice")
 
 source, count = pattern.subn(lambda _: replacement, source, count=1)
 if count != 1:
     raise SystemExit(f"OSK size/position patch aborted: expected one GFX geometry block, found {count}")
 
-if "SOFIA: anchor the keyboard to the right edge with a small margin." not in source:
+if "SOFIA: center the keyboard horizontally and vertically in the OSD." not in source:
     raise SystemExit("OSK size patch verification failed: centering marker missing")
 
 target.write_text(source, encoding="utf-8", newline="\n")
