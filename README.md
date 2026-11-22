@@ -422,3 +422,13 @@ Se reserva **R3** del joystick como acceso directo al **teclado en pantalla** na
 En **SOFI UI → INPUT**, bajo **JOYSTICK**, se muestra la referencia de ambos accesos: **L3: Abrir Controller Mapper durante el juego** y **R3: Abrir teclado en pantalla durante el juego**. No se modifican otras asignaciones ni paneles.
 
 **Estado: implementación y referencia de INPUT integradas; pendiente de compilación Win32/Win64 y prueba funcional de Manu.**
+
+
+
+## SOFI INPUT — teclado en pantalla al 50% y alineado a la derecha
+
+Se ajusta exclusivamente la presentación del teclado en pantalla nativo de DOSBox Pure: escala horizontal y vertical al **50%**, conservando la proporción, y alineación contra el borde derecho del área OSD con un pequeño margen. La posición vertical mantiene el anclaje inferior que ya utilizaba el teclado.
+
+No se modifican las asignaciones ni el comportamiento de **R3** (abrir teclado en pantalla) y **L3** (abrir Controller Mapper), ni la navegación, los paneles o el contenido del teclado.
+
+**Estado: parche visual integrado en la rama de trabajo; pendiente de compilación Win32/Win64 y prueba visual/funcional de Manu.**
