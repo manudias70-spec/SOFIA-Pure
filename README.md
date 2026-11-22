@@ -341,3 +341,9 @@ Se incorpora el botón **INPUT** a la navegación de SOFI Space y el panel **SOF
 Los siete selectores obtienen sus opciones directamente de las definiciones activas del core DOSBox Pure y guardan los cambios mediante la ruta de configuración ya utilizada por SOFI VIDEO y SOFI AUDIO. Input Mapping utiliza la captura y el almacenamiento de asignaciones existentes en el frontend, con selección de puerto 1 a 4, botones digitales y direcciones de ambos sticks analógicos.
 
 **Estado: integración de interfaz compilable pendiente de validación.** Manu revisará las opciones una por una en el programa y decidirá cuáles conservar, ajustar o retirar. La presencia de un control en el panel no equivale a una prueba funcional de cada ajuste. No se modifican EXPLORADOR, VIDEO, AUDIO ni SOFI OSD.
+
+## SOFI INPUT — retorno a SOFI UI mediante L3
+
+Se reincorpora **Use L3 Button to Show Menu** al panel SOFI INPUT, utilizando la opción nativa `dosbox_pure_l3_menu` como activador configurable. Cuando está habilitada, SOFIA-Pure intercepta la pulsación de L3, muestra SOFI UI si estaba oculta y evita que esa pulsación llegue al Core para abrir el menú original de DOSBox Pure. La acción se procesa al presionar el botón, no mientras permanece sostenido; se conserva el estado de liberación para permitir una nueva pulsación.
+
+La implementación está integrada en el código, pero queda **pendiente de compilación y prueba funcional**. La validación deberá confirmar que L3 devuelve a SOFI UI desde el modo DOSBOX, que no aparece el menú original de Pure y que, con la opción desactivada, L3 conserva el comportamiento normal del juego.
