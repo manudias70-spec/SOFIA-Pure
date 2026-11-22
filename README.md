@@ -411,3 +411,14 @@ El cambio es exclusivamente de presentación. No modifica la lógica de los ataj
 Se conserva íntegramente la presentación jerárquica y el orden de la sección **ATAJOS** incorporados en la base #473. El único ajuste es tipográfico: se reemplazan los separadores entre cada atajo y su descripción por dos puntos. En la línea de **MIDI NEXT**, también se reemplaza la barra vertical entre los dos métodos de activación por dos puntos. No se modifican INPUT, las funciones de los atajos, Controller Mapper ni ningún otro comportamiento.
 
 **Estado: cambio de texto integrado; pendiente de compilación Win32/Win64 y validación visual de Manu.**
+
+
+## SOFI INPUT — teclado en pantalla mediante R3
+
+Se reserva **R3** del joystick como acceso directo al **teclado en pantalla** nativo de DOSBox Pure. Durante el juego, una pulsación de R3 solicita la apertura del OSD directamente en el modo de teclado en pantalla, sin depender de la navegación entre pestañas. La acción se ejecuta en el hilo del emulador y no reemplaza otra operación diferida que ya esté pendiente.
+
+**L3 conserva sin cambios su función existente:** abrir directamente el Controller Mapper. R3 queda reservado para el teclado en pantalla y no se reenvía como entrada al programa DOS.
+
+En **SOFI UI → INPUT**, bajo **JOYSTICK**, se muestra la referencia de ambos accesos: **L3: Abrir Controller Mapper durante el juego** y **R3: Abrir teclado en pantalla durante el juego**. No se modifican otras asignaciones ni paneles.
+
+**Estado: implementación y referencia de INPUT integradas; pendiente de compilación Win32/Win64 y prueba funcional de Manu.**
