@@ -1556,7 +1556,7 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 {
 	//static const char* zlknames[] = { "UNKNOWN", NULL, NULL, NULL, "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "RETURN", "ESCAPE", "BACKSPACE", "TAB", "SPACE", "MINUS", "EQUALS", "LEFTBRACKET", "RIGHTBRACKET", "BACKSLASH", "SHARP", "SEMICOLON", "APOSTROPHE", "GRAVE", "COMMA", "PERIOD", "SLASH", "CAPSLOCK", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "PRINTSCREEN", "SCROLLLOCK", "PAUSE", "INSERT", "HOME", "PAGEUP", "DELETE", "END", "PAGEDOWN", "RIGHT", "LEFT", "DOWN", "UP", "NUMLOCKCLEAR", "KP_DIVIDE", "KP_MULTIPLY", "KP_MINUS", "KP_PLUS", "KP_ENTER", "KP_1", "KP_2", "KP_3", "KP_4", "KP_5", "KP_6", "KP_7", "KP_8", "KP_9", "KP_0", "KP_PERIOD", "NONUSBACKSLASH", "APPLICATION", "POWER", "KP_EQUALS", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", "EXECUTE", "HELP", "MENU", "SELECT", "STOP", "AGAIN", "UNDO", "CUT", "COPY", "PASTE", "FIND", "MUTE", "VOLUMEUP", "VOLUMEDOWN", NULL, NULL, NULL, "KP_COMMA", "KP_EQUALSAS400", "INTERNATIONAL1", "INTERNATIONAL2", "INTERNATIONAL3", "INTERNATIONAL4", "INTERNATIONAL5", "INTERNATIONAL6", "INTERNATIONAL7", "INTERNATIONAL8", "INTERNATIONAL9", "LANG1", "LANG2", "LANG3", "LANG4", "LANG5", "LANG6", "LANG7", "LANG8", "LANG9", "ALTERASE", "SYSREQ", "CANCEL", "CLEAR", "PRIOR", "RETURN2", "SEPARATOR", "OUT", "OPER", "CLEARAGAIN", "CRSEL", "EXSEL", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "KP_00", "KP_000", "THOUSANDSSEPARATOR", "DECIMALSEPARATOR", "CURRENCYUNIT", "CURRENCYSUBUNIT", "KP_LEFTPAREN", "KP_RIGHTPAREN", "KP_LEFTBRACE", "KP_RIGHTBRACE", "KP_TAB", "KP_BACKSPACE", "KP_A", "KP_B", "KP_C", "KP_D", "KP_E", "KP_F", "KP_XOR", "KP_POWER", "KP_PERCENT", "KP_LESS", "KP_GREATER", "KP_AMPERSAND", "KP_DBLAMPERSAND", "KP_VERTICALBAR", "KP_DBLVERTICALBAR", "KP_COLON", "KP_HASH", "KP_SPACE", "KP_AT", "KP_EXCLAM", "KP_MEMSTORE", "KP_MEMRECALL", "KP_MEMCLEAR", "KP_MEMADD", "KP_MEMSUBTRACT", "KP_MEMMULTIPLY", "KP_MEMDIVIDE", "KP_PLUSMINUS", "KP_CLEAR", "KP_CLEARENTRY", "KP_BINARY", "KP_OCTAL", "KP_DECIMAL", "KP_HEXADECIMAL", NULL, NULL, "LCTRL", "LSHIFT", "LALT", "LGUI", "RCTRL", "RSHIFT", "RALT", "RGUI",  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "MODE", "AUDIONEXT", "AUDIOPREV", "AUDIOSTOP", "AUDIOPLAY", "AUDIOMUTE", "MEDIASELECT", "WWW", "MAIL", "CALCULATOR", "COMPUTER", "AC_SEARCH", "AC_HOME", "AC_BACK", "AC_FORWARD", "AC_STOP", "AC_REFRESH", "AC_BOOKMARKS", "BRIGHTNESSDOWN", "BRIGHTNESSUP", "DISPLAYSWITCH", "KBDILLUMTOGGLE", "KBDILLUMDOWN", "KBDILLUMUP", "EJECT", "SLEEP",  }; 
 	//ZL_LOG("KEY", "DOWN: %d - %s", (int)e.is_down, zlknames[(int)e.key]);
-	static bool pressedFs[12], pressedAltReturn, pressedApplication;
+	static bool pressedFs[12], pressedAltReturn, pressedApplication, pressedMapperF11;
 	static bool pressedMidiNext, pressedMidiNextF12;
 	const bool midiNextKey = (e.key == ZLK_SCROLLLOCK);
 	if (midiNextKey || pressedMidiNext)
@@ -1587,6 +1587,17 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 	if (f < 0 || f > 11) return false;
 	unsigned short mod = ((e.mod & ZLKMOD_CTRL) ? ZLKMOD_CTRL : 0) | ((e.mod & ZLKMOD_SHIFT) ? ZLKMOD_SHIFT : 0) | ((e.mod & ZLKMOD_ALT) ? ZLKMOD_ALT : 0) | ((e.mod & ZLKMOD_META) ? ZLKMOD_META : 0) | (pressedApplication ? ZLKMOD_MODE : 0);
 	const bool midiNextF12 = (e.key == ZLK_F12 && HotkeyMod != 0 && (mod & HotkeyMod) == HotkeyMod && !(mod & ((ZLKMOD_CTRL|ZLKMOD_SHIFT|ZLKMOD_ALT|ZLKMOD_META|ZLKMOD_MODE)&~HotkeyMod)));
+	const bool mapperF11 = (e.key == ZLK_F11 && HotkeyMod != 0 && (mod & HotkeyMod) == HotkeyMod && !(mod & ((ZLKMOD_CTRL|ZLKMOD_SHIFT|ZLKMOD_ALT|ZLKMOD_META|ZLKMOD_MODE)&~HotkeyMod)));
+	if (mapperF11 || pressedMapperF11)
+	{
+		if (e.is_down && !pressedMapperF11)
+		{
+			pressedMapperF11 = true;
+			if (DBPS_IsGameRunning()) DBPS_OpenControllerMapper();
+		}
+		else if (!e.is_down) pressedMapperF11 = false;
+		return true;
+	}
 	if (midiNextF12 || pressedMidiNextF12)
 	{
 		if (e.is_down && !pressedMidiNextF12)
@@ -2870,6 +2881,12 @@ static struct sDOSBoxPure : public ZL_Application
 
 					ImGui::Spacing();
 					ImGui::Separator();
+					ImGui::Spacing();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ACCESO AL CONFIGURADOR");
+					ImGui::Text("L3  Abrir configuración del control durante el juego");
+					ImGui::Text("Hotkey Modifier + F11  Abrir configuración del control");
+					ImGui::TextDisabled("Ambos accesos abren directamente Controller Mapper.");
+
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "INPUT MAPPING");
 					static int inputMappingPort = 0;
 					static const char* inputPortItems[] = { "Port 1", "Port 2", "Port 3", "Port 4" };
