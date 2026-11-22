@@ -36,7 +36,7 @@ replace_once(
 \t\tconst bool pressed = (down && !SofiL3WasDown[port]);
 \t\tSofiL3WasDown[port] = down;
 \t\t// L3 is reserved for the native Controller Mapper; never pass it to Pure's Start Menu binding.
-\t\tif (pressed && !DBPS_IsShowingOSD()) DBPS_OpenControllerMapper();
+\t\tif (pressed) DBPS_ToggleControllerMapper();
 \t\treturn 0;
 \t}
 \tif (bid == BIND_ID_R3)
@@ -47,7 +47,7 @@ replace_once(
 \t\tconst bool pressed = (down && !SofiR3WasDown[port]);
 \t\tSofiR3WasDown[port] = down;
 \t\t// R3 is reserved for the native on-screen keyboard; never pass it to the emulated program.
-\t\tif (pressed && !DBPS_IsShowingOSD()) DBPS_OpenOnScreenKeyboard();
+\t\tif (pressed) DBPS_ToggleOnScreenKeyboard();
 \t\treturn 0;
 \t}"""
 )
