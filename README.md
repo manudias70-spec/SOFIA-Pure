@@ -485,3 +485,12 @@ Se agrega una lectura específica de R3 en la rama de entrada del OSD activo. El
 La prueba funcional mostró que R3 no ejecutaba ninguna acción dentro del teclado OSD, mientras que L3 sí podía abrir y cerrar el Controller Mapper. Se ajusta únicamente el manejador de R3 dentro del flujo de entrada del OSD para que invoque **la misma acción nativa de L3** (`DBPS_ToggleControllerMapper`). Así, desde el teclado, R3 cambia al Controller Mapper; una segunda pulsación de R3 dentro del Mapper lo cierra. L3 conserva su comportamiento y R3 fuera del OSD no se modifica.
 
 **Estado: cambio integrado en el script de parche y documentado; pendiente de compilación Win32/Win64 y validación funcional de Manu.**
+
+
+## SOFI INPUT — R3 replica el evento nativo de L3 dentro del OSD
+
+Corrección sobre la base de la build #494: el OSD nativo ya asigna L3 al evento `DBPET_TOGGLEOSD` dentro de `DBP_MenuInterceptor::input()`. En vez de ejecutar un toggle paralelo o encolar una acción distinta, R3 se agrega a esa misma tabla con **el mismo evento exacto**. Así, dentro del OSD, R3 y L3 siguen el mismo recorrido nativo; no se modifica el comportamiento de R3 fuera del OSD ni la navegación.
+
+Se elimina el detector R3 adicional que se había insertado en el interceptor de entrada. El cambio queda limitado al mapeo nativo de entrada del OSD.
+
+**Estado: parche integrado; pendiente de compilación Win32/Win64 y prueba funcional de Manu.**
