@@ -26,6 +26,8 @@ jobs:
       run: |
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
+        python main/tools/patch_osd_keyboard_size.py
+        if ($LASTEXITCODE -ne 0) { throw "Failed to patch native DOSBox Pure OSD keyboard size/position" }
         perl -0pi -e 's/DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480/DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540/' dosbox-pure/dosbox_pure_sta.h
         if (-not (Select-String -Path dosbox-pure/dosbox_pure_sta.h -Pattern 'DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540' -Quiet)) { throw "16:9 OSD canvas was not configured" }
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
@@ -48,7 +50,6 @@ jobs:
         python main/tools/patch_dosbox_pure_controller_mapper.py
         python main/tools/patch_osd_disable_keyboard_tab_navigation.py
         python main/tools/patch_osd_disable_mouse_joy_tab_navigation.py
-        python main/tools/patch_osd_keyboard_size.py
         python main/tools/patch_sofi_controller_mapper_hotkey.py
         python main/tools/patch_sofi_shortcuts_bullets.py
     - if: ${{ github.event.inputs.versionstring == '' }}
@@ -79,6 +80,8 @@ jobs:
       run: |
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
+        python main/tools/patch_osd_keyboard_size.py
+        if ($LASTEXITCODE -ne 0) { throw "Failed to patch native DOSBox Pure OSD keyboard size/position" }
         perl -0pi -e 's/DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480/DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540/' dosbox-pure/dosbox_pure_sta.h
         if (-not (Select-String -Path dosbox-pure/dosbox_pure_sta.h -Pattern 'DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540' -Quiet)) { throw "16:9 OSD canvas was not configured" }
         perl -0pi -e 's/\{ "integer", "Integer Scaling" \},/\{ "integer", "Integer Scaling" \},\n\t\t\t\{ "xbrz", "xBRZ 4x" \},/' dosbox-pure/core_options.h
@@ -99,7 +102,6 @@ jobs:
         python main/tools/patch_dosbox_pure_controller_mapper.py
         python main/tools/patch_osd_disable_keyboard_tab_navigation.py
         python main/tools/patch_osd_disable_mouse_joy_tab_navigation.py
-        python main/tools/patch_osd_keyboard_size.py
         python main/tools/patch_sofi_controller_mapper_hotkey.py
         python main/tools/patch_sofi_shortcuts_bullets.py
     - if: ${{ github.event.inputs.versionstring == '' }}
