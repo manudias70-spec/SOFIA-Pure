@@ -411,6 +411,10 @@ static ticks_t txtOSDTick, dirtySettingsTick;
 struct SNotify { ZL_TextBuffer txt; unsigned duration; retro_log_level level; ticks_t ticks; float y; };
 static std::vector<SNotify> vecNotify;
 static std::vector<ZL_JoystickData*> vecJoys;
+// SOFI owns L3 independently of the libretro/Core joy binding table.
+static ZL_JoystickData* SofiL3Joy = NULL;
+static unsigned char SofiL3Button = 0;
+static bool SofiL3WasDown = false;
 
 // Network
 static ZL_Server server;
@@ -824,6 +828,11 @@ static void RefreshJoysticks()
 			joyPS4 = joy;
 	}
 
+	// Select SOFI's physical L3 source directly from the controller, not JoyBinds.
+	SofiL3Joy = (joyXInput ? joyXInput : joyPS4);
+	SofiL3Button = (joyXInput ? 6 : (joyPS4 ? 10 : 0)); // XInput: 6, DualShock: 10
+	SofiL3WasDown = false;
+
 	SJoyBind* bindtemplate = NULL;
 	if      (joyXInput) { for (SJoyBind& it : JoyBindTemplateXInput) { it.Joy = joyXInput; } bindtemplate = JoyBindTemplateXInput; JoyBindTemplateNames = JoyBindTemplateXInputNames; }
 	else if (joyPS4)    { for (SJoyBind& it : JoyBindTemplatePS4)    { it.Joy = joyPS4;    } bindtemplate = JoyBindTemplatePS4;    JoyBindTemplateNames = JoyBindTemplatePS4Names;    }
@@ -836,6 +845,13 @@ static void RefreshJoysticks()
 		{
 			int bindPort = (idx / _BIND_ID_COUNT), bindId = (idx % _BIND_ID_COUNT);
 			sprintf(key, "bind_port_%d_%s", (bindPort + 1), BindName[bindId]);
+			if (bindId == BIND_ID_L3)
+			{
+				// Remove any legacy Core-side L3 assignment; SOFI reserves this control.
+				if (ZL_Application::SettingsHas(key)) { ZL_Application::SettingsDel(key); DirtySettings(); }
+				JoyBinds[bindPort][BIND_ID_L3] = { NULL };
+				continue;
+			}
 			if (!ZL_Application::SettingsHas(key)) continue;
 			(bindPort ? have_secondary : have_primary) = 1;
 			JoyBinds[bindPort][bindId] = SJoyBind::FromConfig(ZL_Application::SettingsGet(key));
@@ -856,6 +872,37 @@ static void RefreshJoysticks()
 		memcpy(JoyBinds[0], bindtemplate, sizeof(JoyBinds[0]));
 	else
 		JoyBindTemplateNames = NULL;
+
+	// L3 is never represented in the Core's binding table, including templates.
+	for (int bindPort = 0; bindPort != _BIND_PORTS; bindPort++)
+		JoyBinds[bindPort][BIND_ID_L3] = { NULL };
+}
+
+static void SofiPollL3()
+{
+	const bool down = (SofiL3Joy && SofiL3Button < SofiL3Joy->nbuttons && SofiL3Joy->buttons[SofiL3Button]);
+	if (!down) { SofiL3WasDown = false; return; }
+	if (SofiL3WasDown) return;
+	SofiL3WasDown = true;
+
+	bool useL3Menu = true;
+	mtxCoreOptions.Lock();
+	useL3Menu = !strcmp(GetSetting("sofi_l3_menu", "true"), "true");
+	mtxCoreOptions.Unlock();
+	if (!useL3Menu || SofiUIVisible) return;
+
+	// SOFI handles the physical press at application-frame level; the Core never sees it.
+	SofiCommanderCaptured = false;
+	ZL_Display::SetPointerLock(false);
+	if (SofiCommanderOpen) SofiCommanderMinimized = true;
+	SofiCommanderFocused = false;
+	SofiCommanderFocusRequested = false;
+	SofiCommanderApplyMinimized = false;
+	SofiVideoPanelOpen = false;
+	SofiAudioPanelOpen = false;
+	SofiOSDPanelOpen = false;
+	SofiInputPanelOpen = false;
+	SofiUIVisible = true;
 }
 
 static void SetCaptureJoyBind(const SJoyBind& setbind)
@@ -1422,6 +1469,10 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 	if (device == RETRO_DEVICE_LIGHTGUN || device == (RETRO_DEVICE_MOUSE | 0x10000) || device == (RETRO_DEVICE_POINTER | 0x10000)) return 0;
 	#endif
 
+	// L3 is reserved for SOFI. Never expose it to the Core, including analog-button queries.
+	if ((device == RETRO_DEVICE_JOYPAD && id == RETRO_DEVICE_ID_JOYPAD_L3) ||
+		(device == RETRO_DEVICE_ANALOG && index == RETRO_DEVICE_INDEX_ANALOG_BUTTON && id == RETRO_DEVICE_ID_JOYPAD_L3)) return 0;
+
 	if (id == RETRO_DEVICE_ID_JOYPAD_MASK && device == RETRO_DEVICE_JOYPAD) return 0; // only used to detect game focus in other frontends
 
 	if (CaptureJoyBind)
@@ -1463,35 +1514,6 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 	{
 		SJoyBind& bnd = JoyBinds[port][bid];
 		const int value = (bnd.Joy ? (int)bnd.GetVal(analog_button) : 0);
-		if (device == RETRO_DEVICE_JOYPAD && id == RETRO_DEVICE_ID_JOYPAD_L3 && port < _BIND_PORTS)
-		{
-			bool useL3Menu = true;
-			mtxCoreOptions.Lock();
-			useL3Menu = !strcmp(GetSetting("sofi_l3_menu", "true"), "true");
-			mtxCoreOptions.Unlock();
-			if (useL3Menu)
-			{
-				// L3 belongs to SOFI UI, not to DOSBox Pure. Keep the game running
-				// behind the SOFI layer while hiding Commander and all open panels.
-				static bool l3WasDown[_BIND_PORTS] = {};
-				if (value && !l3WasDown[port] && !SofiUIVisible)
-				{
-					SofiCommanderCaptured = false;
-					ZL_Display::SetPointerLock(false);
-					if (SofiCommanderOpen) SofiCommanderMinimized = true;
-					SofiCommanderFocused = false;
-					SofiCommanderFocusRequested = false;
-					SofiCommanderApplyMinimized = false;
-					SofiVideoPanelOpen = false;
-					SofiAudioPanelOpen = false;
-					SofiOSDPanelOpen = false;
-					SofiInputPanelOpen = false;
-					SofiUIVisible = true;
-				}
-				l3WasDown[port] = (value != 0);
-				return 0;
-			}
-		}
 		return value;
 	}
 	else
@@ -1505,7 +1527,7 @@ void DBPS_StartCaptureJoyBind(unsigned port, unsigned device, unsigned index, un
 {
 	ZL_ASSERT(port < _BIND_PORTS);
 	EBindId bid = GetBindIdFromRetro(device, index, id, axispos);
-	if (bid == _BIND_ID_COUNT) return;
+	if (bid == _BIND_ID_COUNT || bid == BIND_ID_L3) return;
 	CaptureJoyState.clear();
 	CaptureJoyBind = &JoyBinds[port][bid];
 }
@@ -1516,7 +1538,7 @@ bool DBPS_GetJoyBind(unsigned port, unsigned device, unsigned index, unsigned id
 {
 	ZL_ASSERT(port < _BIND_PORTS);
 	EBindId bid = GetBindIdFromRetro(device, index, id, axispos);
-	if (bid == _BIND_ID_COUNT) return false;
+	if (bid == _BIND_ID_COUNT || bid == BIND_ID_L3) return false;
 	SJoyBind& bnd = JoyBinds[port][bid];
 	if (!bnd.From) return false;
 	bnd.Describe(outJoyName, outBind, prefix, (JoyBindTemplateNames ? JoyBindTemplateNames[bid] : NULL));
@@ -2474,6 +2496,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 	virtual void AfterFrame()
 	{
+		SofiPollL3();
 		OnDraw();
 		if (ImGuiReady && srfOSD.GetGLTexture() && DBPS_IsShowingOSD())
 		{

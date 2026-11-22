@@ -365,3 +365,19 @@ Cuando L3 está habilitado y SOFI UI se encuentra oculta, la pulsación:
 La ventana principal de la aplicación no se minimiza a nivel del sistema operativo: SOFI UI y la salida del emulador comparten esa ventana. El emulador queda oculto visualmente detrás de SOFI UI, sin detener ni cerrar la sesión.
 
 **Estado: cambio integrado en código; pendiente de compilación y prueba funcional de Manu.** La compilación no se considerará validación hasta comprobar L3 con Commander abierto, con Commander cerrado y con la opción desactivada.
+
+
+## SOFI INPUT — L3 reservado exclusivamente a SOFI UI
+
+Se separa la captura física de L3 del recorrido de entrada de DOSBox Pure. SOFI consulta directamente el estado del botón del joystick durante cada ciclo de la aplicación, sin esperar a que el Core solicite una lectura mediante `retro_input_state_cb` y sin utilizar `JoyBinds` para detectar la pulsación. La detección independiente utiliza los perfiles físicos ya reconocidos por el frontend: XInput (botón 6) y DualShock / Wireless Controller (botón 10).
+
+L3 queda reservado de forma permanente:
+- El Core recibe siempre **0** para L3, tanto en consultas JOYPAD como en consultas de botón analógico.
+- Las asignaciones L3 antiguas guardadas en los puertos del Core se eliminan al refrescar los joysticks.
+- Las plantillas y la tabla de bindings del Core mantienen L3 vacío.
+- La captura y consulta de asignaciones del Core rechazan L3; no se puede mostrar ni reasignar desde INPUT MAPPING.
+- La opción **Use L3 Button to Show Menu** solo activa o desactiva la acción propia de SOFI. Desactivarla no devuelve L3 al Core.
+
+Al detectar el flanco de pulsación, SOFI libera el pointer lock, minimiza Commander si corresponde, cierra paneles secundarios y muestra SOFI UI. El Core continúa ejecutándose detrás, pero nunca recibe ni puede apropiarse de L3.
+
+**Estado: cambio integrado en código; pendiente de compilación Win32/Win64 y prueba funcional de Manu.** La detección independiente se ha implementado para los perfiles XInput y DualShock reconocidos actualmente por el frontend; otros modelos deberán incorporarse mediante su perfil físico propio si no son presentados por SDL como uno de esos tipos.
