@@ -1380,7 +1380,7 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 		return (id < RETROK_LAST ? (int16_t)RETROKDown[id] : 0);
 	}
 
-	if (ImGuiReady && (device == RETRO_DEVICE_MOUSE || device == RETRO_DEVICE_POINTER))
+	if (ImGuiReady && !CaptureJoyBind && (device == RETRO_DEVICE_MOUSE || device == RETRO_DEVICE_POINTER))
 	{
 		// Pure receives mouse input only while Commander explicitly owns the pointer.
 		if (!SofiCommanderCaptured) return 0;
