@@ -48,6 +48,27 @@ replace_once(
     "OSD footer tab navigation",
 )
 
+# Keep only the fullscreen background fill from the former footer-navigation block.
+replace_once(
+    osd,
+    """\t\t\tint btny = h - 13 - lh, btnmrgn = (w >= 296 ? 34 : 8), ydist = (isOSK ? (int)(127 - (btny - mouse.y) / (h*0.001f)) : 0xFF);
+\t\t\tBit32u btnblend = (DBP_FullscreenOSD ? 0xFF000000 : ((ydist > dbp_alphablend_base ? dbp_alphablend_base : (ydist < 30 ? 30 : ydist)) << 24));
+\t\t\tBit32u txtblend = (DBP_FullscreenOSD ? 0xFF000000 : ((ydist*2 > 0xFF ? 0xFF : (ydist < 30 ? 30 : ydist*2)) << 24));
+\t\t\tBit8u orgrealmouse = mouse.realmouse;
+\t\t\tmouse.realmouse |= isOSK; // allow button presses with joystick in OSK
+\t\t\tif (DBP_FullscreenOSD) buf.FillRect(0, 0, w, h, buf.BGCOL_STARTMENU);
+""",
+    """\t\t\tif (DBP_FullscreenOSD) buf.FillRect(0, 0, w, h, buf.BGCOL_STARTMENU);
+""",
+    "unused OSD footer-navigation state",
+)
+replace_once(
+    osd,
+    "\t\t\tmouse.realmouse = orgrealmouse;\n",
+    "",
+    "OSD footer-navigation mouse restoration",
+)
+
 # Remove the global Tab / Shift+Tab / Grave handler, leaving the current menu's
 # own Input() processing untouched (Mapper confirm, cancel, back and directions).
 replace_once(
