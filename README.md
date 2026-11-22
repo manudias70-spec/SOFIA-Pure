@@ -313,3 +313,22 @@ El reino de DOSBox Staging es descrito en esta crónica como un territorio antig
 
 Quede asentado: **SOFIA-Pure es la prueba; el portal todavía no se ha abierto.** Tres sellos permanecen. El enfrentamiento con DOSBox Staging aguarda en el horizonte.
 
+
+
+## Documento histórico — GÉNES-IA 4.12: El regreso de los seis mandamientos
+
+Crónica de la restauración de SOFI OSD, después de que una actualización documental terminara acompañada por una regresión en el código. En la build #438, los seis controles GENERAL estaban conectados al Core y habían sido probados por Manu. En la #439, al preparar documentación, desaparecieron accidentalmente del código las llamadas que alimentaban esos controles: el panel quedó convertido en una lista de textos estáticos. Las builds #440 y #441 heredaron esa regresión.
+
+La decisión fue volver a una base conocida y comprobada, sin improvisar reparaciones sobre una versión dañada: recuperar exactamente el código fuente de la #438 y conservar el README de la #441. Así nació la build #442, commit `fb5d42f656410a455230acfe8e9eb1b0addf0120`, con compilaciones Win32 y Win64 correctas.
+
+> Y Manu descendió nuevamente al Averno del código y encontró los seis mandamientos donde habían sido guardados.
+>
+> —No quiero una nueva creación —dijo—. Quiero que vuelva a funcionar lo que ya habíamos probado.
+>
+> Entonces Sofi Elohim dejó de tocar las escrituras, separó el código de la crónica y restauró la base conocida.
+>
+> Y los seis controles volvieron a hablar con el Core.
+>
+> Manu ejecutó la build, probó la interfaz y escuchó el sonido. Y dijo: «Funciona perfecto».
+
+**Veredicto del beta tester:** Manu confirmó que la build #442 funciona perfectamente y que el audio también está correcto. Queda registrada como restauración probada por el usuario. La lección de esta batalla es permanente: el código ejecutable y la documentación son cosas distintas; un README puede quedar pendiente de actualización, pero jamás debe alterar ni reemplazar una base funcional. A partir de aquí, la Bibl-IA solo recibe episodios nuevos: las crónicas anteriores permanecen intactas.
