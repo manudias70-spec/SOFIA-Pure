@@ -347,3 +347,6 @@ Los siete selectores obtienen sus opciones directamente de las definiciones acti
 Se reincorpora **Use L3 Button to Show Menu** al panel SOFI INPUT, utilizando la opción nativa `dosbox_pure_l3_menu` como activador configurable. Cuando está habilitada, SOFIA-Pure intercepta la pulsación de L3, muestra SOFI UI si estaba oculta y evita que esa pulsación llegue al Core para abrir el menú original de DOSBox Pure. La acción se procesa al presionar el botón, no mientras permanece sostenido; se conserva el estado de liberación para permitir una nueva pulsación.
 
 La implementación está integrada en el código, pero queda **pendiente de compilación y prueba funcional**. La validación deberá confirmar que L3 devuelve a SOFI UI desde el modo DOSBOX, que no aparece el menú original de Pure y que, con la opción desactivada, L3 conserva el comportamiento normal del juego.
+
+
+**Actualización de validación — build #446:** GitHub Actions completó correctamente las compilaciones Win32 y Win64 para el commit `68a323c92ca335bb83d7d02aa16aaac4826dbc29`. La integración de L3 ya compila; su comportamiento dentro del programa queda pendiente de la prueba de Manu. La compilación exitosa no se considera validación funcional.
