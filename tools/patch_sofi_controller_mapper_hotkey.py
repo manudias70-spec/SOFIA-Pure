@@ -7,7 +7,7 @@ def replace_once(path, old, new):
         raise SystemExit(f"{path}: expected exactly one patch anchor, found {count}")
     path.write_text(text.replace(old, new, 1), encoding="utf-8", newline="")
 
-main = Path("main.cpp")
+main = Path("main/main.cpp")
 
 replace_once(
     main,
