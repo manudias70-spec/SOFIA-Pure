@@ -470,3 +470,11 @@ Si el OSD está abierto en el modo contrario, el botón solicitado cambia direct
 No se modifica la escala ni la posición del teclado, la navegación interna del Mapper/teclado, los atajos de teclado ni otros paneles.
 
 **Estado: cambio integrado en los scripts de parche y documentado; pendiente de compilación Win32/Win64 y prueba funcional de Manu.**
+
+## SOFI INPUT — R3 también operativo con el OSD abierto
+
+La prueba de Manu confirmó que R3 abría el teclado en pantalla, pero la segunda pulsación no lo cerraba. El diagnóstico encontró que, mientras DOSBox Pure mantiene un interceptor OSD activo, deja de recorrer las asignaciones normales del joystick; por eso el atajo R3 de `main.cpp` no recibía nuevas pulsaciones dentro del teclado.
+
+Se agrega una lectura específica de R3 en la rama de entrada del OSD activo. El detector identifica el flanco de pulsación y solicita el mismo toggle nativo ya utilizado por el acceso directo normal: si el teclado está abierto, lo cierra; si está abierto otro modo OSD, cambia al teclado. La lectura se limita al modo standalone y no altera los eventos del teclado, la navegación, L3 ni los controles DOS.
+
+**Estado: corrección del recorrido de entrada integrada en el script de parche; pendiente de compilación Win32/Win64 y prueba funcional de Manu.**
