@@ -371,3 +371,16 @@ Se conserva la navegación propia de SOFIA mediante la barra lateral, además de
 
 
 **Nota de diagnóstico:** la primera ejecución detectó que el bloque de pestañas heredadas tenía una estructura distinta tras aplicar la barra lateral SOFIA. El parche se ajustó para retirar cada control antiguo mediante coincidencias independientes y verificadas, sin alterar la rama de navegación SOFIA.
+
+
+## Controller Mapper — acceso directo por teclado
+
+Se agrega **Hotkey Modifier + F11** como acceso directo para abrir directamente el Controller Mapper nativo durante el juego. La combinación utiliza el modificador configurado en SOFI UI y requiere que el juego esté activo. F11 sin modificador conserva su comportamiento normal y se envía al programa DOS.
+
+En **SOFI UI → INPUT** se documentan ambos accesos al configurador:
+- **L3:** abre Controller Mapper durante el juego.
+- **Hotkey Modifier + F11:** abre Controller Mapper durante el juego.
+
+Ambos son accesos informativos; no agregan controles duplicados ni modifican el mapeo del mando. Se conserva MIDI NEXT en Hotkey Modifier + F12.
+
+**Estado: cambio integrado en rama experimental; pendiente de compilación Win32/Win64 y prueba de Manu.**
