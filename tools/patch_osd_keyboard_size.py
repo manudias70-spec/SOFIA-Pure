@@ -33,8 +33,9 @@ replacement = """\t\tint baseThickness = buf.GetThickness();
 \t\tint thickness = (int)(fx + .95f);
 \t\tint thicknessy = (int)(fy + .95f);
 
-\t\t// SOFIA: center the keyboard horizontally and vertically in the OSD.
-\t\tint oskx = ((int)(buf.width / fx) - KWIDTH) / 2;
+\t\t// SOFIA: center the keyboard vertically and offset it 5 cm right of horizontal center.
+\t\t// 27-inch 16:9 display: 59.77 cm physical width; shift 5 cm right from center.
+		int oskx = ((int)(buf.width / fx) - KWIDTH) / 2 + (int)((buf.width / fx) * (5.0f / 59.77f));
 \t\tint osky = ((int)(buf.height / fy) - 85) / 2;"""
 
 if "SOFIA: increase native OSD keyboard geometry to 60% of original size." in source:
