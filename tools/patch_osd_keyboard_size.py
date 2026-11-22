@@ -45,8 +45,8 @@ source, count = pattern.subn(lambda _: replacement, source, count=1)
 if count != 1:
     raise SystemExit(f"OSK size/position patch aborted: expected one GFX geometry block, found {count}")
 
-if "SOFIA: center the keyboard horizontally and vertically in the OSD." not in source:
-    raise SystemExit("OSK size patch verification failed: centering marker missing")
+if "SOFIA: center the keyboard vertically and offset it 5 cm right of horizontal center." not in source:
+    raise SystemExit("OSK size patch verification failed: 5 cm right-offset marker missing")
 
 target.write_text(source, encoding="utf-8", newline="\n")
-print("Verified: native DOSBox Pure OSD keyboard scaled to 60% and centered")
+print("Verified: native DOSBox Pure OSD keyboard scaled to 60%, vertically centered, and offset 5 cm right")
