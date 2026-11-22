@@ -368,3 +368,6 @@ Segunda etapa sobre la build **#461**, cuya navegación por teclado fue probada 
 Se conserva la navegación propia de SOFIA mediante la barra lateral, además de L2/R2, L3 para abrir directamente Controller Mapper, cruceta, sticks, botones de acción y todas las operaciones internas del Mapper (navegar, Atrás, Aceptar y Cancelar). No se modifican los atajos del teclado ya validados ni los controles normales del emulador.
 
 **Estado: parche integrado en una rama experimental; pendiente de compilación Win32/Win64 y prueba de Manu.**
+
+
+**Nota de diagnóstico:** la primera ejecución detectó que el bloque de pestañas heredadas tenía una estructura distinta tras aplicar la barra lateral SOFIA. El parche se ajustó para retirar cada control antiguo mediante coincidencias independientes y verificadas, sin alterar la rama de navegación SOFIA.
