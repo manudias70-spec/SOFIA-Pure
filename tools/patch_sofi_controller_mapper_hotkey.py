@@ -11,6 +11,49 @@ main = Path("main/main.cpp")
 
 replace_once(
     main,
+    "static bool SofiL3WasDown[_BIND_PORTS] = {};",
+    "static bool SofiL3WasDown[_BIND_PORTS] = {}, SofiR3WasDown[_BIND_PORTS] = {};"
+)
+
+replace_once(
+    main,
+    """\tif (bid == BIND_ID_L3)
+\t{
+\t\tif (port >= _BIND_PORTS) return 0;
+\t\tSJoyBind& l3 = JoyBinds[port][BIND_ID_L3];
+\t\tconst bool down = (l3.Joy && l3.GetVal(false));
+\t\tconst bool pressed = (down && !SofiL3WasDown[port]);
+\t\tSofiL3WasDown[port] = down;
+\t\t// L3 is reserved for the native Controller Mapper; never pass it to Pure's Start Menu binding.
+\t\tif (pressed && !DBPS_IsShowingOSD()) DBPS_OpenControllerMapper();
+\t\treturn 0;
+\t}""",
+    """\tif (bid == BIND_ID_L3)
+\t{
+\t\tif (port >= _BIND_PORTS) return 0;
+\t\tSJoyBind& l3 = JoyBinds[port][BIND_ID_L3];
+\t\tconst bool down = (l3.Joy && l3.GetVal(false));
+\t\tconst bool pressed = (down && !SofiL3WasDown[port]);
+\t\tSofiL3WasDown[port] = down;
+\t\t// L3 is reserved for the native Controller Mapper; never pass it to Pure's Start Menu binding.
+\t\tif (pressed && !DBPS_IsShowingOSD()) DBPS_OpenControllerMapper();
+\t\treturn 0;
+\t}
+\tif (bid == BIND_ID_R3)
+\t{
+\t\tif (port >= _BIND_PORTS) return 0;
+\t\tSJoyBind& r3 = JoyBinds[port][BIND_ID_R3];
+\t\tconst bool down = (r3.Joy && r3.GetVal(false));
+\t\tconst bool pressed = (down && !SofiR3WasDown[port]);
+\t\tSofiR3WasDown[port] = down;
+\t\t// R3 is reserved for the native on-screen keyboard; never pass it to the emulated program.
+\t\tif (pressed && !DBPS_IsShowingOSD()) DBPS_OpenOnScreenKeyboard();
+\t\treturn 0;
+\t}"""
+)
+
+replace_once(
+    main,
     "static bool pressedMidiNext, pressedMidiNextF12;",
     "static bool pressedMidiNext, pressedMidiNextF12, pressedControllerMapperF11;"
 )
