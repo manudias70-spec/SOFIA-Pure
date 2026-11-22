@@ -332,3 +332,12 @@ La decisión fue volver a una base conocida y comprobada, sin improvisar reparac
 > Manu ejecutó la build, probó la interfaz y escuchó el sonido. Y dijo: «Funciona perfecto».
 
 **Veredicto del beta tester:** Manu confirmó que la build #442 funciona perfectamente y que el audio también está correcto. Queda registrada como restauración probada por el usuario. La lección de esta batalla es permanente: el código ejecutable y la documentación son cosas distintas; un README puede quedar pendiente de actualización, pero jamás debe alterar ni reemplazar una base funcional. A partir de aquí, la Bibl-IA solo recibe episodios nuevos: las crónicas anteriores permanecen intactas.
+
+
+## SOFI INPUT — primera integración estructural
+
+Se incorpora el botón **INPUT** a la navegación de SOFI Space y el panel **SOFI INPUT**. El panel reúne las siete opciones de entrada acordadas —Mouse Input Mode, Mouse Sensitivity, Horizontal Mouse Sensitivity, Automatic Game Pad Mappings, Keyboard Layout, Joystick Analog Deadzone y Enable Joystick Timed Intervals— y la sección **Input Mapping**.
+
+Los siete selectores obtienen sus opciones directamente de las definiciones activas del core DOSBox Pure y guardan los cambios mediante la ruta de configuración ya utilizada por SOFI VIDEO y SOFI AUDIO. Input Mapping utiliza la captura y el almacenamiento de asignaciones existentes en el frontend, con selección de puerto 1 a 4, botones digitales y direcciones de ambos sticks analógicos.
+
+**Estado: integración de interfaz compilable pendiente de validación.** Manu revisará las opciones una por una en el programa y decidirá cuáles conservar, ajustar o retirar. La presencia de un control en el panel no equivale a una prueba funcional de cada ajuste. No se modifican EXPLORADOR, VIDEO, AUDIO ni SOFI OSD.
