@@ -1462,7 +1462,28 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 	if (bid < _BIND_ID_FIRST_AXIS)
 	{
 		SJoyBind& bnd = JoyBinds[port][bid];
-		return (bnd.Joy ? (int)bnd.GetVal(analog_button) : 0);
+		const int value = (bnd.Joy ? (int)bnd.GetVal(analog_button) : 0);
+		if (device == RETRO_DEVICE_JOYPAD && id == RETRO_DEVICE_ID_JOYPAD_L3 && port < _BIND_PORTS)
+		{
+			bool useL3Menu = false;
+			mtxCoreOptions.Lock();
+			useL3Menu = !strcmp(GetSetting("dosbox_pure_l3_menu", "false"), "true");
+			mtxCoreOptions.Unlock();
+			if (useL3Menu)
+			{
+				// Redirect Pure's L3 menu shortcut to SOFI UI and never pass it to the core.
+				static bool l3WasDown[_BIND_PORTS] = {};
+				if (value && !l3WasDown[port] && !SofiUIVisible)
+				{
+					SofiCommanderCaptured = false;
+					ZL_Display::SetPointerLock(false);
+					SofiUIVisible = true;
+				}
+				l3WasDown[port] = (value != 0);
+				return 0;
+			}
+		}
+		return value;
 	}
 	else
 	{
@@ -2855,6 +2876,7 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiCoreOptionCombo("Keyboard Layout", "dosbox_pure_keyboard_layout");
 					SofiCoreOptionCombo("Joystick Analog Deadzone", "dosbox_pure_joystick_analog_deadzone");
 					SofiCoreOptionCombo("Enable Joystick Timed Intervals", "dosbox_pure_joystick_timed");
+					SofiCoreOptionCombo("Use L3 Button to Show Menu", "dosbox_pure_l3_menu");
 
 					ImGui::Spacing();
 					ImGui::Separator();
