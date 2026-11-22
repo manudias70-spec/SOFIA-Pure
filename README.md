@@ -359,3 +359,12 @@ Se prepara una modificación aislada sobre la base funcional de la build **#453*
 Se conservan la navegación interna de cada pantalla, las acciones Atrás/Aceptar/Cancelar, el funcionamiento del Controller Mapper, el acceso directo mediante L3 y todos los controles por mouse y joystick. Estos últimos no forman parte de esta etapa.
 
 **Estado: parche integrado en una rama experimental; pendiente de compilación Win32/Win64 y prueba de Manu.** No se considera validado hasta completar ambas comprobaciones.
+
+
+## OSD — bloqueo de navegación entre pestañas por mouse y joystick
+
+Segunda etapa sobre la build **#461**, cuya navegación por teclado fue probada y confirmada por Manu. Se retiran exclusivamente los accesos heredados del OSD nativo: clics en las pestañas superiores, botones laterales L/R, rueda del mouse y asignaciones de L1/R1 que enviaban Grave/Tab.
+
+Se conserva la navegación propia de SOFIA mediante la barra lateral, además de L2/R2, L3 para abrir directamente Controller Mapper, cruceta, sticks, botones de acción y todas las operaciones internas del Mapper (navegar, Atrás, Aceptar y Cancelar). No se modifican los atajos del teclado ya validados ni los controles normales del emulador.
+
+**Estado: parche integrado en una rama experimental; pendiente de compilación Win32/Win64 y prueba de Manu.**
