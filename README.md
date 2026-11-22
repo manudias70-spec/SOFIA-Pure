@@ -460,3 +460,13 @@ Sobre la disposición validada al **60%**, se conserva el centrado vertical y se
 No se modifica la escala, el contenido del teclado, las coordenadas de interacción, R3, L3 ni la navegación.
 
 **Estado: ajuste integrado; pendiente de compilación Win32/Win64 y validación visual de Manu.**
+
+## SOFI INPUT — cierre del OSD mediante segunda pulsación
+
+L3 y R3 pasan a funcionar como interruptores independientes del OSD nativo. La primera pulsación de **L3** abre el **Controller Mapper** y una segunda pulsación de L3, mientras ese mismo modo está abierto, lo cierra. De igual manera, **R3** abre el teclado en pantalla y una segunda pulsación de R3, mientras el teclado está abierto, lo cierra.
+
+Si el OSD está abierto en el modo contrario, el botón solicitado cambia directamente al modo que le corresponde, en lugar de cerrar una pantalla ajena. Las pulsaciones se procesan en el hilo del emulador y ambos botones siguen consumiéndose para que no lleguen a las acciones predeterminadas del programa DOS.
+
+No se modifica la escala ni la posición del teclado, la navegación interna del Mapper/teclado, los atajos de teclado ni otros paneles.
+
+**Estado: cambio integrado en los scripts de parche y documentado; pendiente de compilación Win32/Win64 y prueba funcional de Manu.**
