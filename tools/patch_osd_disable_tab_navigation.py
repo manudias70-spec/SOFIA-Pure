@@ -73,18 +73,12 @@ replace_once(
     "legacy standalone OSD tabs",
 )
 
-# Remove state used exclusively to make the old footer buttons clickable.
+# Remove the obsolete spacing variable used only by the legacy tab strip.
 replace_once(
     osd,
-    "\t\t\tBit8u orgrealmouse = mouse.realmouse;\n\t\t\tmouse.realmouse |= isOSK; // allow button presses with joystick in OSK\n",
-    "",
-    "legacy footer mouse activation",
-)
-replace_once(
-    osd,
-    "\t\t\tmouse.realmouse = orgrealmouse;\n",
-    "",
-    "legacy footer mouse restoration",
+    "\\t\\t\\tint btny = h - 13 - lh, btnmrgn = (w >= 296 ? 34 : 8), ydist = (isOSK ? (int)(127 - (btny - mouse.y) / (h*0.001f)) : 0xFF);\\n",
+    "\\t\\t\\tint btny = h - 13 - lh, ydist = (isOSK ? (int)(127 - (btny - mouse.y) / (h*0.001f)) : 0xFF);\\n",
+    "legacy tab-strip spacing",
 )
 
 # Remove the global Tab / Shift+Tab / Grave handler, leaving each menu's own
