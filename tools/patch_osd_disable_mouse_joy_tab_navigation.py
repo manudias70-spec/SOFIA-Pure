@@ -23,18 +23,18 @@ replace_once(
     "L1/R1 OSD bindings",
 )
 
-# Remove the legacy header-tab controls from the standalone OSD's non-SOFIA branch.
-# The SOFIA sideNav branch and its own controls are intentionally left untouched.
+# The sidebar patch translates the legacy tab labels before this script runs.
+# Remove only those old header-tab draw/click calls; SOFIA sideNav remains untouched.
 for old, label in [
     ("\t\t\t\tint osk = 3*(int)(first_shell && !DBP_FullscreenOSD), mpr = 3*(int)!!first_shell, n = 4+osk+mpr;\n", "legacy tab layout declaration"),
-    ('\t\t\t\tif (       buf.DrawButton(btnblend, btny, lh,   0,   2, n, btnmrgn, mode == DBPOSD_MAIN,     mouse, "START MENU",                              txtblend) && mouse.click) SetMode(DBPOSD_MAIN);\n', "legacy Start tab"),
-    ('\t\t\t\tif (osk && buf.DrawButton(btnblend, btny, lh,   2,   5, n, btnmrgn, mode == DBPOSD_OSK,      mouse, "ON-SCREEN KEYBOARD",                      txtblend) && mouse.click) SetMode(DBPOSD_OSK);\n', "legacy OSK tab"),
-    ('\t\t\t\tif (mpr && buf.DrawButton(btnblend, btny, lh, n-5, n-2, n, btnmrgn, mode == DBPOSD_MAPPER,   mouse, "CONTROLLER MAPPER",                       txtblend) && mouse.click) SetMode(DBPOSD_MAPPER);\n', "legacy Mapper tab"),
-    ('\t\t\t\tif (       buf.DrawButton(btnblend, btny, lh, n-2, n  , n, btnmrgn, mode == DBPOSD_SETTINGS, mouse, "SETTINGS",                                txtblend) && mouse.click) SetMode(DBPOSD_SETTINGS);\n', "legacy Settings tab"),
+    ('\t\t\t\tif (       buf.DrawButton(btnblend, btny, lh,   0,   2, n, btnmrgn, mode == DBPOSD_MAIN,     mouse, "MENÚ INICIAL",                              txtblend) && mouse.click) SetMode(DBPOSD_MAIN);\n', "legacy Start tab"),
+    ('\t\t\t\tif (osk && buf.DrawButton(btnblend, btny, lh,   2,   5, n, btnmrgn, mode == DBPOSD_OSK,      mouse, "TECLADO EN PANTALLA",                      txtblend) && mouse.click) SetMode(DBPOSD_OSK);\n', "legacy OSK tab"),
+    ('\t\t\t\tif (mpr && buf.DrawButton(btnblend, btny, lh, n-5, n-2, n, btnmrgn, mode == DBPOSD_MAPPER,   mouse, "ASIGNADOR DE CONTROLES",                       txtblend) && mouse.click) SetMode(DBPOSD_MAPPER);\n', "legacy Mapper tab"),
+    ('\t\t\t\tif (       buf.DrawButton(btnblend, btny, lh, n-2, n  , n, btnmrgn, mode == DBPOSD_SETTINGS, mouse, "OPCIONES",                                txtblend) && mouse.click) SetMode(DBPOSD_SETTINGS);\n', "legacy Settings tab"),
 ]:
     replace_once(old, "", label)
 
-# Remove the L/R arrow shortcuts and mouse-wheel event injection.
+# Remove the legacy L/R arrow shortcuts and mouse-wheel event injection.
 replace_once(
     '\t\t\tif (!sideNav && w >= 296 && buf.DrawButtonAt(btnblend, btny, lh, 4, 4, 8, 30, false,                 mouse, "L",                                           txtblend) && mouse.click) evnt(DBPET_KEYUP, KBD_grave, 0);\n',
     "",
@@ -52,10 +52,12 @@ replace_once(
 )
 
 # Also remove direct tab-click routes from the alternate non-standalone build path.
+# Its labels are translated by the preceding SOFIA sidebar patch as well.
 for old, label in [
-    ('\t\t\tif (       buf.DrawButton(btnblend, btny, lh,   0, 1, n, btnmrgn, mode == DBPOSD_MAIN,   mouse, (w < 500 ? "START"    : "START MENU"),         txtblend) && mouse.click) SetMode(DBPOSD_MAIN);\n', "alternate Start tab"),
-    ('\t\t\tif (osk && buf.DrawButton(btnblend, btny, lh,   1, 2, n, btnmrgn, mode == DBPOSD_OSK,    mouse, (w < 500 ? "KEYBOARD" : "ON-SCREEN KEYBOARD"), txtblend) && mouse.click) SetMode(DBPOSD_OSK);\n', "alternate OSK tab"),
-    ('\t\t\tif (mpr && buf.DrawButton(btnblend, btny, lh, n-1, n, n, btnmrgn, mode == DBPOSD_MAPPER, mouse, (w < 500 ? "CONTROLS" : "CONTROLLER MAPPER"),  txtblend) && mouse.click) SetMode(DBPOSD_MAPPER);\n', "alternate Mapper tab"),
+    ("\t\t\tint osk = (int)(first_shell && !DBP_FullscreenOSD), mpr = (int)!!first_shell, n = 1+osk+mpr;\n", "alternate tab layout declaration"),
+    ('\t\t\tif (       buf.DrawButton(btnblend, btny, lh,   0, 1, n, btnmrgn, mode == DBPOSD_MAIN,   mouse, (w < 500 ? "START"    : "MENÚ INICIAL"),         txtblend) && mouse.click) SetMode(DBPOSD_MAIN);\n', "alternate Start tab"),
+    ('\t\t\tif (osk && buf.DrawButton(btnblend, btny, lh,   1, 2, n, btnmrgn, mode == DBPOSD_OSK,    mouse, (w < 500 ? "TECLADO" : "TECLADO EN PANTALLA"), txtblend) && mouse.click) SetMode(DBPOSD_OSK);\n', "alternate OSK tab"),
+    ('\t\t\tif (mpr && buf.DrawButton(btnblend, btny, lh, n-1, n, n, btnmrgn, mode == DBPOSD_MAPPER, mouse, (w < 500 ? "CONTROLES" : "ASIGNADOR DE CONTROLES"),  txtblend) && mouse.click) SetMode(DBPOSD_MAPPER);\n', "alternate Mapper tab"),
 ]:
     replace_once(old, "", label)
 
