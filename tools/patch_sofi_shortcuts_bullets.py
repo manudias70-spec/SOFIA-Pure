@@ -17,28 +17,28 @@ replace_once(
 \t\t\t\t\tImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
 \t\t\t\t\tImGui::Text("Controller Mapper: Hotkey Modifier + F11");
 \t\t\t\t\tImGui::TextDisabled("F12 y F11 sin modificador se envían al programa DOS.");""",
-    """\t\t\t\t\tImGui::BulletText("F1 — Pausa");
-\t\t\t\t\tImGui::BulletText("F2 — Cámara lenta");
-\t\t\t\t\tImGui::BulletText("F3 — Avance rápido");
-\t\t\t\t\tImGui::BulletText("F5 — Guardado rápido");
-\t\t\t\t\tImGui::BulletText("F7 — Pantalla completa");
-\t\t\t\t\tImGui::BulletText("F9 — Carga rápida");
-\t\t\t\t\tImGui::BulletText("MIDI NEXT — Scroll Lock | Hotkey Modifier + F12");
-\t\t\t\t\tImGui::BulletText("Controller Mapper — Hotkey Modifier + F11");
+    """\t\t\t\t\tImGui::BulletText("F1: Pausa");
+\t\t\t\t\tImGui::BulletText("F2: Cámara lenta");
+\t\t\t\t\tImGui::BulletText("F3: Avance rápido");
+\t\t\t\t\tImGui::BulletText("F5: Guardado rápido");
+\t\t\t\t\tImGui::BulletText("F7: Pantalla completa");
+\t\t\t\t\tImGui::BulletText("F9: Carga rápida");
+\t\t\t\t\tImGui::BulletText("MIDI NEXT: Scroll Lock : Hotkey Modifier + F12");
+\t\t\t\t\tImGui::BulletText("Controller Mapper: Hotkey Modifier + F11");
 \t\t\t\t\tImGui::TextDisabled("F11 y F12 sin modificador se envían al programa DOS.");"""
 )
 
 # Move the complete ATAJOS section to the very beginning of SOFI OSD.
 shortcut_section = """\t\t\t\t\tImGui::Separator();
 \t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ATAJOS");
-\t\t\t\t\tImGui::BulletText("F1 — Pausa");
-\t\t\t\t\tImGui::BulletText("F2 — Cámara lenta");
-\t\t\t\t\tImGui::BulletText("F3 — Avance rápido");
-\t\t\t\t\tImGui::BulletText("F5 — Guardado rápido");
-\t\t\t\t\tImGui::BulletText("F7 — Pantalla completa");
-\t\t\t\t\tImGui::BulletText("F9 — Carga rápida");
-\t\t\t\t\tImGui::BulletText("MIDI NEXT — Scroll Lock | Hotkey Modifier + F12");
-\t\t\t\t\tImGui::BulletText("Controller Mapper — Hotkey Modifier + F11");
+\t\t\t\t\tImGui::BulletText("F1: Pausa");
+\t\t\t\t\tImGui::BulletText("F2: Cámara lenta");
+\t\t\t\t\tImGui::BulletText("F3: Avance rápido");
+\t\t\t\t\tImGui::BulletText("F5: Guardado rápido");
+\t\t\t\t\tImGui::BulletText("F7: Pantalla completa");
+\t\t\t\t\tImGui::BulletText("F9: Carga rápida");
+\t\t\t\t\tImGui::BulletText("MIDI NEXT: Scroll Lock : Hotkey Modifier + F12");
+\t\t\t\t\tImGui::BulletText("Controller Mapper: Hotkey Modifier + F11");
 \t\t\t\t\tImGui::TextDisabled("F11 y F12 sin modificador se envían al programa DOS.");"""
 
 replace_once(main, shortcut_section, "")
