@@ -350,3 +350,14 @@ Se prepara una prueba aislada sobre la base funcional #445. L3 conserva la detec
 La solicitud abre el **Controller Mapper nativo** directamente en el hilo del emulador. Si el OSD ya está visible, cambia directamente al Mapper; si está cerrado, lo abre en ese modo. Se conserva el comportamiento de las demás opciones de OSD y se permite la apertura explícita del Mapper incluso cuando la preferencia de OSD está configurada en modo de teclado durante el juego. La acción diferida no sobrescribe otra operación pendiente.
 
 **Estado: cambio experimental pendiente de compilación y prueba de Manu.** El resultado esperado es que L3 muestre únicamente Controller Mapper y que, al cerrarlo, el juego continúe. No se considera validado hasta la prueba en el ejecutable.
+
+
+## Navegación entre pestañas del OSD nativo
+
+Se prepara un cambio aislado sobre la base de la build **#453**, cuya apertura directa del Controller Mapper mediante L3 fue probada y confirmada por Manu.
+
+El cambio elimina exclusivamente las vías de navegación entre pestañas del OSD de DOSBox Pure: **Tab, Shift+Tab, Grave, L1/R1, rueda del mouse en la franja inferior, botones laterales L/R y selección directa de pestañas**. Se conserva la apertura directa del Mapper mediante L3.
+
+No se modifica la navegación interna de los menús: flechas, direcciones del mando, Aceptar, Atrás, Cancelar y las acciones propias del Controller Mapper permanecen intactas. La tecla Grave y Tab fuera del OSD no se modifican. Tampoco se altera el comportamiento de la rueda dentro de las listas.
+
+**Estado: cambio preparado para compilación y prueba.** La build deberá verificar que no se puede cambiar de pestaña por ninguna de las vías retiradas y que el Mapper sigue siendo plenamente utilizable.
