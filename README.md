@@ -371,3 +371,13 @@ Se conserva la navegación propia de SOFIA mediante la barra lateral, además de
 
 
 **Nota de diagnóstico:** la primera ejecución detectó que el bloque de pestañas heredadas tenía una estructura distinta tras aplicar la barra lateral SOFIA. El parche se ajustó para retirar cada control antiguo mediante coincidencias independientes y verificadas, sin alterar la rama de navegación SOFIA.
+
+
+
+## SOFI OSD — acceso directo al Controller Mapper por teclado
+
+Se incorpora **Hotkey Modifier + F11** como acceso directo al **Controller Mapper nativo**. La combinación utiliza el modificador configurado en SOFI OSD y, durante una partida con el OSD cerrado, abre directamente el Mapper, sin pasar por Start Menu. La pulsación se consume en SOFIA-Pure; **F11 sin modificador continúa enviándose al programa DOS**. El atajo se documenta en la sección ATAJOS de SOFI OSD.
+
+En **SOFI UI → INPUT** se muestra la referencia del acceso por joystick: **L3 — durante el juego, abrir la configuración del control**. Es una indicación informativa, no una asignación adicional ni un control reasignable. El acceso por teclado queda documentado en SOFI OSD y no se duplica en INPUT.
+
+**Estado: parche y documentación integrados en una rama experimental; pendiente de compilación Win32/Win64 y prueba funcional de Manu.** No se considera validado hasta completar ambas comprobaciones.
