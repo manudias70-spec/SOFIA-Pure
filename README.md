@@ -350,3 +350,18 @@ La implementación está integrada en el código, pero queda **pendiente de comp
 
 
 **Actualización de validación — build #446:** GitHub Actions completó correctamente las compilaciones Win32 y Win64 para el commit `68a323c92ca335bb83d7d02aa16aaac4826dbc29`. La integración de L3 ya compila; su comportamiento dentro del programa queda pendiente de la prueba de Manu. La compilación exitosa no se considera validación funcional.
+
+## SOFI INPUT — L3 propio de SOFI UI y retorno limpio
+
+Se corrige la integración inicial de L3: **Use L3 Button to Show Menu** deja de depender de la opción nativa de DOSBox Pure y pasa a ser un ajuste local de SOFI UI (`sofi_l3_menu`), guardado en la configuración de la aplicación. El valor inicial es **ON**; al desactivarlo, L3 vuelve a entregarse al Core.
+
+Cuando L3 está habilitado y SOFI UI se encuentra oculta, la pulsación:
+- Libera la captura del mouse y el pointer lock.
+- Minimiza visualmente SOFI Commander si estaba abierto, conservando su estado para poder restaurarlo desde EXPLORADOR.
+- Cierra los paneles secundarios que pudieran haber quedado abiertos.
+- Muestra SOFI UI por encima de la imagen del emulador, que continúa ejecutándose detrás de la interfaz.
+- Consume la pulsación para impedir que DOSBox Pure abra su menú original.
+
+La ventana principal de la aplicación no se minimiza a nivel del sistema operativo: SOFI UI y la salida del emulador comparten esa ventana. El emulador queda oculto visualmente detrás de SOFI UI, sin detener ni cerrar la sesión.
+
+**Estado: cambio integrado en código; pendiente de compilación y prueba funcional de Manu.** La compilación no se considerará validación hasta comprobar L3 con Commander abierto, con Commander cerrado y con la opción desactivada.
