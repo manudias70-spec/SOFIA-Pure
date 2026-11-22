@@ -444,3 +444,11 @@ Se corrige el orden del workflow: el parche de tamaño se aplica inmediatamente 
 El ajuste también escala el grosor de los trazos del teclado junto con las dimensiones y mantiene el cálculo de interacción en las mismas coordenadas físicas que el dibujo. Se conserva el objetivo: **50 % de escala y alineación a la derecha**, sin modificar R3 ni L3.
 
 **Estado: corrección del parche y verificación del workflow integradas; pendiente de compilación Win32/Win64 y nueva prueba de Manu.**
+
+## SOFI INPUT — teclado en pantalla al 60% y centrado
+
+Tras validar la build #481, se ajusta nuevamente la presentación del teclado OSD nativo: el tamaño pasa del 50% al **60% de la escala original** (un aumento relativo del 20% respecto del tamaño anterior). El teclado queda centrado horizontal y verticalmente en el área OSD.
+
+El cálculo de escala sigue aplicándose a las dimensiones y al grosor de los trazos. No se modifican el contenido del teclado, las coordenadas de interacción, R3, L3, la navegación ni los demás paneles.
+
+**Estado: parche y crónica integrados; pendiente de compilación Win32/Win64 y validación visual/funcional de Manu.**
