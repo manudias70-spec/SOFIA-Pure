@@ -381,3 +381,15 @@ Se incorpora **Hotkey Modifier + F11** como acceso directo al **Controller Mappe
 En **SOFI UI → INPUT** se muestra la referencia del acceso por joystick: **L3 — durante el juego, abrir la configuración del control**. Es una indicación informativa, no una asignación adicional ni un control reasignable. El acceso por teclado queda documentado en SOFI OSD y no se duplica en INPUT.
 
 **Estado: parche y documentación integrados en una rama experimental; pendiente de compilación Win32/Win64 y prueba funcional de Manu.** No se considera validado hasta completar ambas comprobaciones.
+
+
+
+## SOFI OSD e INPUT — presentación jerárquica de atajos
+
+Se conserva la sección **ATAJOS** en su posición actual, arriba del todo del SOFI OSD. Sus accesos se presentan ahora como una lista de viñetas, con cada atajo en una línea independiente: F1, F2, F3, F5, F7, F9, MIDI NEXT y Controller Mapper. La aclaración sobre F11/F12 sin modificador permanece debajo de la lista.
+
+En **SOFI UI → INPUT**, las referencias se agrupan mediante viñetas principales por dispositivo y subviñetas indentadas: **JOYSTICK → L3** para abrir Controller Mapper y **TECLADO → Hotkey Modifier + F11** para la misma función. Son referencias informativas; no crean asignaciones nuevas ni modifican la lógica de entrada.
+
+Este cambio es exclusivamente visual: no altera la posición de la sección ATAJOS, el orden de las demás secciones, las funciones de los atajos ni el comportamiento del Mapper.
+
+**Estado: parche de presentación integrado en la rama experimental; pendiente de compilación Win32/Win64 y prueba visual/funcional de Manu.**
