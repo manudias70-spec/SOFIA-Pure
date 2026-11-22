@@ -1465,18 +1465,27 @@ static int16_t RETRO_CALLCONV retro_input_state_cb(unsigned port, unsigned devic
 		const int value = (bnd.Joy ? (int)bnd.GetVal(analog_button) : 0);
 		if (device == RETRO_DEVICE_JOYPAD && id == RETRO_DEVICE_ID_JOYPAD_L3 && port < _BIND_PORTS)
 		{
-			bool useL3Menu = false;
+			bool useL3Menu = true;
 			mtxCoreOptions.Lock();
-			useL3Menu = !strcmp(GetSetting("dosbox_pure_l3_menu", "false"), "true");
+			useL3Menu = !strcmp(GetSetting("sofi_l3_menu", "true"), "true");
 			mtxCoreOptions.Unlock();
 			if (useL3Menu)
 			{
-				// Redirect Pure's L3 menu shortcut to SOFI UI and never pass it to the core.
+				// L3 belongs to SOFI UI, not to DOSBox Pure. Keep the game running
+				// behind the SOFI layer while hiding Commander and all open panels.
 				static bool l3WasDown[_BIND_PORTS] = {};
 				if (value && !l3WasDown[port] && !SofiUIVisible)
 				{
 					SofiCommanderCaptured = false;
 					ZL_Display::SetPointerLock(false);
+					if (SofiCommanderOpen) SofiCommanderMinimized = true;
+					SofiCommanderFocused = false;
+					SofiCommanderFocusRequested = false;
+					SofiCommanderApplyMinimized = false;
+					SofiVideoPanelOpen = false;
+					SofiAudioPanelOpen = false;
+					SofiOSDPanelOpen = false;
+					SofiInputPanelOpen = false;
 					SofiUIVisible = true;
 				}
 				l3WasDown[port] = (value != 0);
@@ -2876,7 +2885,18 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiCoreOptionCombo("Keyboard Layout", "dosbox_pure_keyboard_layout");
 					SofiCoreOptionCombo("Joystick Analog Deadzone", "dosbox_pure_joystick_analog_deadzone");
 					SofiCoreOptionCombo("Enable Joystick Timed Intervals", "dosbox_pure_joystick_timed");
-					SofiCoreOptionCombo("Use L3 Button to Show Menu", "dosbox_pure_l3_menu");
+					bool useL3Menu = true;
+					mtxCoreOptions.Lock();
+					useL3Menu = !strcmp(GetSetting("sofi_l3_menu", "true"), "true");
+					mtxCoreOptions.Unlock();
+					if (ImGui::Checkbox("Use L3 Button to Show Menu", &useL3Menu))
+					{
+						mtxCoreOptions.Lock();
+						ZL_Application::SettingsSet("sofi_l3_menu", useL3Menu ? "true" : "false");
+						ConfigCache.Erase("sofi_l3_menu");
+						DirtySettings();
+						mtxCoreOptions.Unlock();
+					}
 
 					ImGui::Spacing();
 					ImGui::Separator();
