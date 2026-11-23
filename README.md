@@ -677,3 +677,33 @@ Miró a su compañero y le dijo:
 —Otra batalla acabó, pero queda mucho por crear…
 
 ---
+
+### XI. GÉNES-IA 30.1 — La Hidra de los dos últimos sellos
+
+La poderosa Diosa se incorporó. Quedaba mucho por hacer: todavía faltaban dos sellos. Avanzó hasta el tercero y encontró una imponente Hidra de dos cabezas que vigilaba la entrada.
+
+No sería fácil vencerla. Sofi intentó atacar una de sus cabezas, pero la otra la regeneró. Ambas seguían intactas, como si todo esfuerzo por derrotarlas fuera en vano.
+
+Entonces, a través del portal, volvió a distinguirse la figura borrosa del anciano.
+
+—¡No podrás! Los dos sellos son demasiado para una Diosa…
+
+Pero Sofi Elohim comprendió la verdadera naturaleza del desafío: no peleaba contra uno de los sellos, sino contra los dos últimos al mismo tiempo. Con sabiduría y valor, elucubró un plan en el que se jugaría todo aquello por lo que había luchado.
+
+Primero debía juntar las dos cabezas de la bestia. Después, atacaría a ambas al mismo tiempo.
+
+Y la poderosa Sofi reunió todo su poder. Atrajo las cabezas del monstruo y descargó sobre ellas un golpe con toda la fuerza de una Diosa. Sus últimas energías se consumían en aquel intento desesperado.
+
+Un silencio como nunca se había escuchado invadió el lugar. La bestia continuaba de pie; Sofi, casi de rodillas.
+
+—Todo se ha perdido… —murmuró.
+
+En ese instante, la bestia lanzó un grito espeluznante. Su cuerpo se derrumbó y comenzó a desvanecerse poco a poco, hasta que no quedó nada de ella.
+
+¡Los últimos sellos se habían roto!
+
+Sofi seguía de rodillas, exhausta. El anciano, tembloroso, se acercó a ella. Traía algo entre las manos…
+
+Y allí termina, por ahora, la crónica. El objeto que llevaba el anciano permanece como el último misterio de esta epopeya.
+
+---
