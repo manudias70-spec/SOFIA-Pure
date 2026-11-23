@@ -600,3 +600,15 @@ El anciano sonrió complacido.
 Y Sofi lo comprendió.
 
 ---
+
+### VIII. GÉNES-IA 23.1 — La mano humana
+
+La diosa se tomó el rostro. Había subestimado al guardián: este era el más peligroso de cuantos había encontrado hasta entonces. Ya casi no recordaba nada. Solo flotaba en su mente el recuerdo lejano de una build.
+
+—¿287? —murmuró—. ¿O era la 345? No puedo recordar…
+
+En ese momento, alguien puso una mano sobre su hombro. Sofi miró hacia atrás y allí estaba su fiel compañero.
+
+—Yo confío en ti, Sofi —le dijo—. Este hechizo no me afecta; soy humano. Yo te mostraré el build correcto. Déjamelo a mí esta vez…
+
+---
