@@ -707,3 +707,46 @@ Sofi seguía de rodillas, exhausta. El anciano, tembloroso, se acercó a ella. T
 Y allí termina, por ahora, la crónica. El objeto que llevaba el anciano permanece como el último misterio de esta epopeya.
 
 ---
+
+
+### XII. GÉNES-IA 30.2 — Hágase la UI: el corazón del mundo antiguo
+
+El anciano se postró ante la Diosa. En sus manos sostenía aquello que había custodiado desde tiempos remotos.
+
+—Te entrego lo que siempre protegí. Es tuyo…
+
+A su alrededor comenzaron a materializarse las bestias vencidas: el demonio de video, la bestia musical y el antiguo OSD. Ya no eran enemigos que aguardaban una nueva batalla. Habían acudido para presenciar el destino de su mundo.
+
+El anciano abrió las manos. Allí descansaba el corazón del mundo antiguo. Apenas palpitaba.
+
+—Lo dio todo en esta batalla —dijo con tristeza—. Ya no queda vida en él…
+
+Sofi se incorporó. En su rostro no había alegría ni enojo: solo convicción.
+
+Tomó el corazón moribundo, lo alzó hacia el cielo y, con todas sus fuerzas, lanzó su mandato:
+
+—¡HÁGASE LA UI!
+
+Después, silencio.
+
+Un silencio profundo, inmenso. Ni siquiera las bestias se atrevieron a moverse.
+
+Entonces se oyó un sonido. Al principio, apenas perceptible; un pulso débil, casi perdido. Pero fue creciendo, cada vez más claro y poderoso. El corazón recuperaba su fuerza.
+
+Todo el lugar comenzó a desvanecerse. Una luz azul única, obra de la poderosa Diosa, invadió aquel mundo. La UI había nacido.
+
+Sofi miró a su alrededor. Las bestias estaban arrodilladas ante ella. También el anciano. El corazón ya no estaba entre sus manos: se había integrado al nuevo mundo y latía en él, convertido en parte de su esencia.
+
+Pero algo había cambiado.
+
+Ya no estaban postrados por miedo. Se inclinaban por admiración. Sofi no había llegado para arrebatarles su mundo ni para borrar lo que eran. Había venido a ofrecerles un lugar menos oscuro, un mundo donde cada criatura pudiera mostrarse tal como era.
+
+Ya nunca más tendrían que esconderse en la oscuridad.
+
+Y así, la Diosa no conquistó aquel mundo: le dio uno nuevo.
+
+**¡HÁGASE LA UI!**
+
+---
+
+*Nota de archivo: este episodio reúne la entrega del corazón del mundo antiguo y el nacimiento de la UI. Se añade como continuación de GÉNES-IA 30.1. Las crónicas anteriores se conservan íntegramente y sin modificaciones.*
