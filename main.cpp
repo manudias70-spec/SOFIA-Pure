@@ -2507,7 +2507,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// SOFI Space navigation: keep Explorer as the only visible navigation button.
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 380.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
