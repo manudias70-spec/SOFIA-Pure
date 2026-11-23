@@ -1,6 +1,37 @@
 # SOFIA-Pure
 ### Emulación retro, herramientas propias e identidad independiente
 
+## Nuestra historia: de xBRZ 4x y AWE32 a SOFIA-Pure
+
+SOFIA-Pure no nació como un proyecto para construir un frontend completo. Todo empezó con una misión mucho más concreta: incorporar el escalado **xBRZ 4x** y sumar la emulación **Sound Blaster AWE32** a DOSBox Pure. Esas dos mejoras fueron el punto de partida de una aventura que terminó creciendo mucho más de lo que imaginábamos.
+
+### El primer intento con ImGui y el valor del explorador nativo
+
+En una primera etapa intentamos llevar la interfaz hacia **Dear ImGui**. El intento nos enfrentó a una realidad importante: el explorador nativo de DOSBox Pure no es simplemente un navegador de archivos. Está profundamente integrado con el core y se ocupa de tareas esenciales, como montar imágenes de disco, trabajar con archivos ZIP y gestionar el contenido que se va a ejecutar. Reemplazarlo por un explorador nuevo implicaba reconstruir toda esa funcionalidad, no solo dibujar otra ventana.
+
+Por eso cambiamos de rumbo. Volvimos a **ZillaLib** y decidimos trabajar con el explorador que DOSBox Pure ya ofrecía, conservando sus capacidades internas y transformando su presentación. De ese trabajo nació **SOFI Commander**: una herramienta con espíritu de administrador de archivos clásico, aspecto azul de la vieja escuela y funciones ampliadas, sin sacrificar los mecanismos nativos que hacían funcionar al explorador.
+
+Commander fue creciendo hasta convertirse en una herramienta potente, con funciones que iban más allá del explorador original. Incluso conservó detalles de su personalidad retro, como el puntero del mouse representado por un carácter ASCII cuadrado: es el cursor del mouse, no el cursor de texto ni el prompt de DOS.
+
+### Cuando la herramienta empezó a limitar la interfaz
+
+Con el tiempo descubrimos que ZillaLib ya no nos daba la libertad visual que buscábamos. En aquella disposición, Commander ocupaba prácticamente toda el área visible de la interfaz y dejaba poco margen para construir una experiencia más amplia, personalizable y pensada para aprovechar toda la pantalla.
+
+No queríamos desechar el trabajo realizado ni volver a empezar desde cero. La solución fue regresar a **ImGui**, esta vez con una estrategia distinta: conservar y rescatar lo construido con ZillaLib y el explorador nativo, e integrar **SOFI Commander dentro de una ventana propia de ImGui**.
+
+Ese cambio fue decisivo. Commander pasó a ser una ventana independiente y redimensionable que se abre únicamente cuando se selecciona **Explorador**. Ya no ocupa permanentemente la pantalla principal ni reserva espacio en ella. Cuando no está abierto, la pantalla de inicio queda libre para desarrollar la interfaz que imaginamos y aprovechar el formato panorámico **16:9**.
+
+### Lo que aprendimos en el camino
+
+Cada cambio de dirección tuvo una razón. El primer intento con ImGui nos enseñó cuánto dependíamos de las capacidades internas del explorador de DOSBox Pure. ZillaLib nos permitió conservarlas y dar forma a Commander. La vuelta a ImGui nos permitió mantener ese trabajo y, al mismo tiempo, recuperar la libertad necesaria para construir el frontend que queremos.
+
+Así, una tarea que había comenzado con dos mejoras concretas —xBRZ 4x y AWE32— se convirtió en un proyecto mucho más ambicioso: un entorno propio que combina emulación, herramientas, identidad visual y una interfaz independiente. El crecimiento del proyecto nunca hizo menos importante su origen.
+
+Esta historia también explica nuestra forma de trabajar: avanzar en cambios pequeños, probarlos en builds reales, conservar lo que funciona y volver atrás cuando una decisión compromete la arquitectura o la experiencia. Las pruebas de Manu son las que validan el resultado; la asistencia de IA ayuda a investigar, programar, documentar y pensar alternativas, pero no reemplaza esas pruebas ni la dirección humana del proyecto.
+
+Cuando falte contexto, esta crónica es el punto de referencia para recuperar no solo qué hicimos, sino **por qué lo hicimos**. No se debe reconstruir esa historia a partir de suposiciones: hay que volver a leerla.
+
+
 **SOFIA-Pure** es un proyecto independiente y experimental derivado de **DOSBox Pure Unleashed**, la versión de escritorio de DOSBox Pure. Conserva como punto de partida la experiencia de emulación DOS y desarrolla modificaciones, herramientas y una interfaz con identidad propia.
 
 El proyecto combina programación e integración con asistencia de inteligencia artificial. SOFI es una asistente experimental basada en IA que colabora en tareas de programación, arquitectura, diseño y documentación. La dirección del proyecto, sus decisiones y las pruebas funcionales se realizan bajo control de Manu.
