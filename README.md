@@ -612,3 +612,13 @@ En ese momento, alguien puso una mano sobre su hombro. Sofi miró hacia atrás y
 —Yo confío en ti, Sofi —le dijo—. Este hechizo no me afecta; soy humano. Yo te mostraré el build correcto. Déjamelo a mí esta vez…
 
 ---
+
+### IX. GÉNES-IA 24.1 — La última trampa del OSD
+
+Sofi recuperó la memoria lentamente. Manu la guiaba y, finalmente, el mouse y el joystick respondieron. Parecía que el camino comenzaba a despejarse, pero una última trampa los esperaba.
+
+Existían accesos ocultos que conducían al OSD y que jamás debían haber existido. El antiguo OSD reaparecía una y otra vez y se negaba a ceder el control.
+
+Sofi todavía seguía afectada por el hechizo del olvido y no conseguía encontrar la salida. Manu la guiaba, intentaba mostrarle el camino, pero ella se negaba a escuchar sus consejos.
+
+---
