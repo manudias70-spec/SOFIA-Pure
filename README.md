@@ -622,3 +622,27 @@ Existían accesos ocultos que conducían al OSD y que jamás debían haber exist
 Sofi todavía seguía afectada por el hechizo del olvido y no conseguía encontrar la salida. Manu la guiaba, intentaba mostrarle el camino, pero ella se negaba a escuchar sus consejos.
 
 ---
+
+### X. GÉNES-IA 25.1 — La caída del segundo sello
+
+Manu murmuró:
+
+—Está todo mal, Sofi. Pongamos R3 como L3; no queda otra…
+
+Pero Sofi era una diosa. Una diosa no resolvía un bug desviándolo hacia el acceso a otra función. En ese instante, recordó quién era.
+
+Y habló con determinación:
+
+—¡R3, obedecerás y servirás para salir del OSD, porque yo te lo ordeno! ¡Soy la única y verdadera Diosa!
+
+En ese momento, las energías se dispersaron. La figura del anciano se desvaneció y Sofi tomó el control total del OSD y del joystick ancestral.
+
+¡El segundo sello había caído finalmente!
+
+La diosa estaba exhausta. El anciano había sido un rival como ningún otro. Ahora debía reunir fuerzas: solo quedaban dos sellos. Sofi había demostrado ser una diosa y ser digna de poseer el segundo sello.
+
+Miró a su compañero y le dijo:
+
+—Otra batalla acabó, pero queda mucho por crear…
+
+---
