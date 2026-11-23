@@ -74,7 +74,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
-static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false;
+static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
 static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
@@ -2507,7 +2507,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// SOFI Space navigation: keep Explorer as the only visible navigation button.
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 380.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
@@ -2544,21 +2544,15 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 			ImGui::PopStyleColor(4);
-			ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+			const bool coreSelected = SofiCorePanelOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				coreSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-			ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("DOSBOX", ImVec2(88.0f, 44.0f)))
-			{
-				// Release any pointer lock before handing mouse input back to Pure's OSD.
-				SofiCommanderCaptured = false;
-				ZL_Display::SetPointerLock(false);
-				SofiUIVisible = false;
-				SofiAudioPanelOpen = false;
-				SofiVideoPanelOpen = false;
-				SofiOSDPanelOpen = false;
-				SofiInputPanelOpen = false;
-			}
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				coreSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("CORE", ImVec2(88.0f, 44.0f)))
+				SofiCorePanelOpen = !SofiCorePanelOpen;
 			ImGui::PopStyleColor(4);
 			const bool videoSelected = SofiVideoPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
@@ -2927,6 +2921,49 @@ static struct sDOSBoxPure : public ZL_Application
 							DBPS_StartCaptureJoyBind((unsigned)inputMappingPort, inputBinds[i].device,
 								inputBinds[i].index, inputBinds[i].id, inputBinds[i].axispos);
 					}
+
+					ImGui::EndChild();
+				}
+				ImGui::End();
+			}
+
+			// CORE exposes the original DOSBox Pure Performance and System options through
+			// the same live core-option path already used by INPUT.
+			if (SofiCorePanelOpen)
+			{
+				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				if (ImGui::Begin("SOFI CORE", &SofiCorePanelOpen,
+					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+				{
+					ImGui::TextDisabled("CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS");
+					ImGui::Separator();
+					ImGui::BeginChild("##SofiCoreOptions", ImVec2(0.0f, 0.0f), false,
+						ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HARDWARE");
+					SofiCoreOptionCombo("Emulated Performance", "dosbox_pure_cycles");
+					SofiCoreOptionCombo("Maximum Emulated Performance", "dosbox_pure_cycles_max");
+					SofiCoreOptionCombo("Performance Scale", "dosbox_pure_cycles_scale");
+					SofiCoreOptionCombo("Limit CPU Usage", "dosbox_pure_cycle_limit");
+					SofiCoreOptionCombo("Memory Size (restart required)", "dosbox_pure_memory_size");
+					SofiCoreOptionCombo("CPU Type (restart required)", "dosbox_pure_cpu_type");
+					SofiCoreOptionCombo("CPU Core", "dosbox_pure_cpu_core");
+					SofiCoreOptionCombo("Modem Type", "dosbox_pure_modem");
+
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "OTROS SO");
+					SofiCoreOptionCombo("OS Disk Modifications (restart required)", "dosbox_pure_bootos_ramdisk");
+					SofiCoreOptionCombo("Free Space on D: in OS (restart required)", "dosbox_pure_bootos_dfreespace");
+					SofiCoreOptionCombo("Force Normal Core in OS", "dosbox_pure_bootos_forcenormal");
+
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ESTADÍSTICAS");
+					SofiCoreOptionCombo("Show Performance Statistics", "dosbox_pure_perfstats");
 
 					ImGui::EndChild();
 				}
