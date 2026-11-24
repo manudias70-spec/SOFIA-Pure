@@ -89,7 +89,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
-static bool SofiLauncherCardPressed = false;
+static bool SofiLauncherCardSelected = false;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath, SofiLauncherSetupPath;
 static bool SofiLauncherProfileFilterActive = false;
@@ -3418,14 +3418,19 @@ static struct sDOSBoxPure : public ZL_Application
 						const ImVec2 menuMax(imageMax.x - 6.0f, imageMin.y + 34.0f);
 						const bool menuHovered = ImGui::IsMouseHoveringRect(menuMin, menuMax, true);
 						const bool imageHovered = ImGui::IsMouseHoveringRect(imageMin, imageMax, true) && !menuHovered;
-						if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-							SofiLauncherCardPressed = imageHovered;
-						const bool launchReleased = SofiLauncherCardPressed && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && imageHovered;
-						if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-							SofiLauncherCardPressed = false;
+						const bool leftClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+						const bool launchDoubleClicked = imageHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+						if (leftClicked)
+						{
+							if (imageHovered) SofiLauncherCardSelected = true;
+						else if (!menuHovered && ImGui::IsWindowHovered()) SofiLauncherCardSelected = false;
+						}
 						ImDrawList* cardDraw = ImGui::GetWindowDrawList();
-						if (SofiLauncherCardPressed)
-							cardDraw->AddRectFilled(imageMin, imageMax, IM_COL32(255, 255, 255, 85));
+						if (SofiLauncherCardSelected)
+						{
+							cardDraw->AddRectFilled(imageMin, imageMax, IM_COL32(255, 255, 255, 48));
+						cardDraw->AddRect(imageMin, imageMax, IM_COL32(180, 205, 255, 230), 0.0f, 0, 2.0f);
+						}
 						cardDraw->AddRectFilled(menuMin, menuMax, IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 6.0f);
 						const float dotX = (menuMin.x + menuMax.x) * 0.5f;
 						const float dotY = (menuMin.y + menuMax.y) * 0.5f;
@@ -3444,7 +3449,7 @@ static struct sDOSBoxPure : public ZL_Application
 							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty())) SofiLauncherRunSetup();
 							ImGui::EndPopup();
 						}
-						if (launchReleased && !menuClicked && !SofiLauncherExePath.empty())
+						if (launchDoubleClicked && !menuClicked && !SofiLauncherExePath.empty())
 						{
 							SofiLauncherGameProfile launchProfile;
 							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
