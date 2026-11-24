@@ -89,6 +89,7 @@ static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
+static bool SofiLauncherCardPressed = false;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath, SofiLauncherSetupPath;
 static bool SofiLauncherProfileFilterActive = false;
@@ -3411,13 +3412,20 @@ static struct sDOSBoxPure : public ZL_Application
 					if (SofiLauncherImageTexture)
 					{
 						ImGui::Image((ImTextureID)SofiLauncherImageTexture, cardSize);
-						const bool launchClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 						const ImVec2 imageMin = ImGui::GetItemRectMin();
 						const ImVec2 imageMax = ImGui::GetItemRectMax();
 						const ImVec2 menuMin(imageMax.x - 34.0f, imageMin.y + 6.0f);
 						const ImVec2 menuMax(imageMax.x - 6.0f, imageMin.y + 34.0f);
 						const bool menuHovered = ImGui::IsMouseHoveringRect(menuMin, menuMax, true);
+						const bool imageHovered = ImGui::IsMouseHoveringRect(imageMin, imageMax, true) && !menuHovered;
+						if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+							SofiLauncherCardPressed = imageHovered;
+						const bool launchReleased = SofiLauncherCardPressed && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && imageHovered;
+						if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+							SofiLauncherCardPressed = false;
 						ImDrawList* cardDraw = ImGui::GetWindowDrawList();
+						if (SofiLauncherCardPressed)
+							cardDraw->AddRectFilled(imageMin, imageMax, IM_COL32(255, 255, 255, 85));
 						cardDraw->AddRectFilled(menuMin, menuMax, IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 6.0f);
 						const float dotX = (menuMin.x + menuMax.x) * 0.5f;
 						const float dotY = (menuMin.y + menuMax.y) * 0.5f;
@@ -3436,7 +3444,7 @@ static struct sDOSBoxPure : public ZL_Application
 							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty())) SofiLauncherRunSetup();
 							ImGui::EndPopup();
 						}
-						if (launchClicked && !menuClicked && !SofiLauncherExePath.empty())
+						if (launchReleased && !menuClicked && !SofiLauncherExePath.empty())
 						{
 							SofiLauncherGameProfile launchProfile;
 							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
