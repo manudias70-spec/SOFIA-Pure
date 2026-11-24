@@ -2202,10 +2202,14 @@ static bool SofiLauncherSelectImage()
 {
 	SofiLauncherImageStatus.clear();
 	wchar_t selected[32768]={};static const wchar_t filter[]=L"Imágenes (*.png;*.jpg;*.jpeg)\0*.png;*.jpg;*.jpeg\0Todos los archivos (*.*)\0*.*\0\0";
-	OPENFILENAMEW d={};d.lStructSize=sizeof(d);d.hwndOwner=GetActiveWindow();if(!d.hwndOwner)d.hwndOwner=GetForegroundWindow();d.lpstrFilter=filter;d.lpstrFile=selected;d.nMaxFile=32768;d.lpstrTitle=L"Seleccionar imagen para la tarjeta";
+	HWND owner=GetActiveWindow();if(!owner)owner=GetForegroundWindow();
+	OPENFILENAMEW d={};d.lStructSize=sizeof(d);d.hwndOwner=owner;d.lpstrFilter=filter;d.lpstrFile=selected;d.nMaxFile=32768;d.lpstrTitle=L"Seleccionar imagen para la tarjeta";
 	d.Flags=OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;
 	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib){SofiLauncherImageStatus="No se pudo abrir el selector de archivos de Windows.";return false;}
-	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);DWORD dialogError=accepted?0:CommDlgExtendedError();FreeLibrary(lib);if(!accepted){if(dialogError)SofiLauncherImageStatus="El selector de Windows informó un error ("+std::to_string(dialogError)+").";else SofiLauncherImageStatus="No se seleccionó ningún archivo.";return false;}
+	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);DWORD dialogError=accepted?0:CommDlgExtendedError();FreeLibrary(lib);
+	// The common dialog can leave the SDL host window minimized or behind other windows.
+	if(owner){ShowWindow(owner,SW_RESTORE);BringWindowToTop(owner);SetForegroundWindow(owner);}
+	if(!accepted){if(dialogError)SofiLauncherImageStatus="El selector de Windows informó un error ("+std::to_string(dialogError)+").";else SofiLauncherImageStatus="No se seleccionó ningún archivo.";return false;}
 	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder)){SofiLauncherImageStatus="No se pudo convertir la carpeta de datos del programa.";return false;}
 	// SettingsInit may use a data directory that does not exist yet (for example beside the EXE).
 	if(!CreateDirectoryW(folder.c_str(),NULL)){DWORD e=GetLastError();if(e!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta de datos DOSBoxPure (error "+std::to_string(e)+").";return false;}}
