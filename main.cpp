@@ -2131,7 +2131,7 @@ static bool SofiLauncherSelectExe()
 
 
 // Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
-static std::string SofiLauncherDataPath, SofiLauncherImagePath;
+static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImageStatus;
 static unsigned int SofiLauncherImageTexture = 0;
 static bool SofiLauncherTextureAttempted = false;
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
@@ -2157,9 +2157,9 @@ static void SofiJpegWrite(void* ctx,void* data,int size)
 }
 static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wstring& output)
 {
-	std::vector<unsigned char> fileBytes; if(!SofiReadImageBytes(input,fileBytes)) return false;
+	std::vector<unsigned char> fileBytes; if(!SofiReadImageBytes(input,fileBytes)){SofiLauncherImageStatus="No se pudo leer el archivo seleccionado.";return false;}
 	int sw=0,sh=0,ch=0; unsigned char* src=stbi_load_from_memory(fileBytes.data(),(int)fileBytes.size(),&sw,&sh,&ch,3);
-	if(!src||sw<=0||sh<=0){if(src)stbi_image_free(src);return false;}
+	if(!src||sw<=0||sh<=0){if(src)stbi_image_free(src);SofiLauncherImageStatus="El archivo no es una imagen válida o no se pudo decodificar.";return false;}
 	const double ar=16.0/9.0; double cw=sw,hh=sh;
 	if(cw/hh>ar) cw=hh*ar; else hh=cw/ar;
 	double ox=(sw-cw)*0.5,oy=(sh-hh)*0.5;
@@ -2178,40 +2178,41 @@ static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wst
 	stbi_image_free(src);
 	std::vector<unsigned char> jpg; bool ok=false;
 	for(int q=90;q>=35;q-=5){jpg.clear();if(!stbi_write_jpg_to_func(SofiJpegWrite,&jpg,320,180,3,pixels.data(),q))return false;if(jpg.size()<=300*1024){ok=true;break;}}
-	if(!ok)return false;
+	if(!ok){SofiLauncherImageStatus="No se pudo optimizar la imagen por debajo de 300 KB.";return false;}
 	HANDLE f=CreateFileW(output.c_str(),GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
-	if(f==INVALID_HANDLE_VALUE)return false; DWORD put=0; bool saved=WriteFile(f,jpg.data(),(DWORD)jpg.size(),&put,NULL)&&put==jpg.size(); CloseHandle(f); return saved;
+	if(f==INVALID_HANDLE_VALUE){SofiLauncherImageStatus="No se pudo crear el archivo de imagen en GLImage (error "+std::to_string(GetLastError())+").";return false;} DWORD put=0; bool saved=WriteFile(f,jpg.data(),(DWORD)jpg.size(),&put,NULL)&&put==jpg.size(); DWORD writeError=saved?0:GetLastError(); CloseHandle(f); if(!saved){SofiLauncherImageStatus="No se pudo escribir la imagen optimizada (error "+std::to_string(writeError)+").";return false;} return true;
 }
 static void SofiLauncherLoadImageTexture()
 {
-	if(SofiLauncherImagePath.empty())return; std::wstring path; if(!SofiUtf8ToWide(SofiLauncherImagePath,path))return;
-	std::vector<unsigned char> bytes;if(!SofiReadImageBytes(path,bytes))return;
-	int w=0,h=0,c=0;unsigned char* px=stbi_load_from_memory(bytes.data(),(int)bytes.size(),&w,&h,&c,3);if(!px)return;
+	if(SofiLauncherImagePath.empty())return; std::wstring path; if(!SofiUtf8ToWide(SofiLauncherImagePath,path)){SofiLauncherImageStatus="No se pudo convertir la ruta de la imagen.";return;}
+	std::vector<unsigned char> bytes;if(!SofiReadImageBytes(path,bytes)){SofiLauncherImageStatus="No se pudo abrir la copia guardada de la imagen.";return;}
+	int w=0,h=0,c=0;unsigned char* px=stbi_load_from_memory(bytes.data(),(int)bytes.size(),&w,&h,&c,3);if(!px){SofiLauncherImageStatus="No se pudo decodificar la copia optimizada.";return;}
 	typedef void (APIENTRY *GenFn)(int,unsigned int*); typedef void (APIENTRY *BindFn)(unsigned int,unsigned int);
 	typedef void (APIENTRY *ParamFn)(unsigned int,unsigned int,int); typedef void (APIENTRY *ImageFn)(unsigned int,int,int,int,int,int,unsigned int,unsigned int,const void*);
 	typedef void (APIENTRY *DeleteFn)(int,const unsigned int*);
 	GenFn gen=(GenFn)SDL_GL_GetProcAddress("glGenTextures");BindFn bind=(BindFn)SDL_GL_GetProcAddress("glBindTexture");
 	ParamFn param=(ParamFn)SDL_GL_GetProcAddress("glTexParameteri");ImageFn image=(ImageFn)SDL_GL_GetProcAddress("glTexImage2D");
 	DeleteFn del=(DeleteFn)SDL_GL_GetProcAddress("glDeleteTextures");
-	if(!gen||!bind||!param||!image||!del){stbi_image_free(px);return;}
+	if(!gen||!bind||!param||!image||!del){stbi_image_free(px);SofiLauncherImageStatus="No se pudieron inicializar las funciones gráficas para mostrar la imagen.";return;}
 	if(SofiLauncherImageTexture)del(1,&SofiLauncherImageTexture);gen(1,&SofiLauncherImageTexture);bind(0x0DE1,SofiLauncherImageTexture);
 	param(0x0DE1,0x2801,0x2601);param(0x0DE1,0x2800,0x2601);param(0x0DE1,0x2802,0x812F);param(0x0DE1,0x2803,0x812F);
-	image(0x0DE1,0,0x1907,w,h,0,0x1907,0x1401,px);bind(0x0DE1,0);stbi_image_free(px);SofiLauncherTextureAttempted=true;
+	image(0x0DE1,0,0x1907,w,h,0,0x1907,0x1401,px);bind(0x0DE1,0);stbi_image_free(px);SofiLauncherTextureAttempted=true;SofiLauncherImageStatus="Imagen cargada correctamente.";
 }
 static bool SofiLauncherSelectImage()
 {
+	SofiLauncherImageStatus.clear();
 	wchar_t selected[32768]={};static const wchar_t filter[]=L"Imágenes (*.png;*.jpg;*.jpeg)\0*.png;*.jpg;*.jpeg\0Todos los archivos (*.*)\0*.*\0\0";
-	OPENFILENAMEW d={};d.lStructSize=sizeof(d);d.lpstrFilter=filter;d.lpstrFile=selected;d.nMaxFile=32768;d.lpstrTitle=L"Seleccionar imagen para la tarjeta";
+	OPENFILENAMEW d={};d.lStructSize=sizeof(d);d.hwndOwner=GetActiveWindow();if(!d.hwndOwner)d.hwndOwner=GetForegroundWindow();d.lpstrFilter=filter;d.lpstrFile=selected;d.nMaxFile=32768;d.lpstrTitle=L"Seleccionar imagen para la tarjeta";
 	d.Flags=OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;
-	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib)return false;
-	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);FreeLibrary(lib);if(!accepted)return false;
-	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder))return false;folder.append(L"\\GLImage");
-	if(!CreateDirectoryW(folder.c_str(),NULL)&&GetLastError()!=ERROR_ALREADY_EXISTS)return false;
+	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib){SofiLauncherImageStatus="No se pudo abrir el selector de archivos de Windows.";return false;}
+	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);DWORD dialogError=accepted?0:CommDlgExtendedError();FreeLibrary(lib);if(!accepted){if(dialogError)SofiLauncherImageStatus="El selector de Windows informó un error ("+std::to_string(dialogError)+").";else SofiLauncherImageStatus="No se seleccionó ningún archivo.";return false;}
+	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder)){SofiLauncherImageStatus="No se pudo convertir la carpeta de datos del programa.";return false;}folder.append(L"\\GLImage");
+	if(!CreateDirectoryW(folder.c_str(),NULL)&&GetLastError()!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta GLImage (error "+std::to_string(GetLastError())+").";return false;}
 	std::wstring dest=folder+L"\\game_01.jpg";if(!SofiLauncherCreateCardImage(selected,dest))return false;
 	int n=WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,NULL,0,NULL,NULL);if(n<=1)return false;
 	std::vector<char> utf8((size_t)n);if(!WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,utf8.data(),n,NULL,NULL))return false;
 	SofiLauncherImagePath.assign(utf8.data());ZL_Application::SettingsSet("interface_launcher_image",SofiLauncherImagePath.c_str());DirtySettings();
-	SofiLauncherTextureAttempted=false;SofiLauncherLoadImageTexture();return true;
+	SofiLauncherTextureAttempted=false;SofiLauncherLoadImageTexture();if(!SofiLauncherImageTexture&&SofiLauncherImageStatus=="Imagen cargada correctamente.")SofiLauncherImageStatus="La copia se guardó, pero no se pudo crear la textura para mostrarla.";return SofiLauncherImageTexture!=0;
 }
 #else
 static bool SofiLauncherSelectImage(){return false;}
@@ -3279,6 +3280,7 @@ static struct sDOSBoxPure : public ZL_Application
 								ImGui::TextDisabled("Copia optimizada guardada en GLImage. El original no se modifica.");
 							}
 							else ImGui::TextDisabled("Todavía no hay una imagen seleccionada.");
+							if(!SofiLauncherImageStatus.empty())ImGui::TextWrapped("%s",SofiLauncherImageStatus.c_str());
 							ImGui::EndTabItem();
 						}
 						if (ImGui::BeginTabItem("CONFIG"))
