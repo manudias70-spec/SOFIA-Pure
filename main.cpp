@@ -623,6 +623,15 @@ static const char* SofiTranslate(const char* text)
 	struct SofiTranslation { const char* spanish; const char* english; };
 	static const SofiTranslation translations[] = {
 		{"CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR", "ACTIVE CONFIGURATION  //  CHANGES IN THE EMULATOR"},
+		{"HOTKEYS", "CONFIGURACIÓN DE ATAJOS"}, {"INPUT MAPPING", "ASIGNACIÓN DE CONTROLES"},
+		{"unavailable", "no disponible"}, {"MIDI options unavailable.", "Opciones MIDI no disponibles."},
+		{"Controller Port", "Puerto del control"},
+		{"AUDIO", "AUDIO"}, {"VIDEO", "VIDEO"}, {"INPUT", "ENTRADA"}, {"CORE", "NÚCLEO"},
+		{"Standalone build: sample rate is fixed by the build; latency is configurable.", "Versión independiente: la frecuencia de muestreo queda fijada por la compilación; la latencia se puede configurar."},
+		{"Requires awe32.raw beside DOSBoxPure.exe.", "Requiere awe32.raw junto a DOSBoxPure.exe."},
+		{"Connect a controller to configure its inputs.", "Conectá un control para configurar sus entradas."},
+		{"Select Assign, then press a controller input. Right-click cancels.", "Seleccioná Asignar y luego presioná una entrada del control. El clic derecho cancela."},
+		
 		{"CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR", "ACTIVE CONFIGURATION  //  CHANGES APPLIED TO THE EMULATOR"},
 		{"ADAPTADORES DE VIDEO", "VIDEO ADAPTERS"}, {"PRESENTACIÓN DE IMAGEN", "IMAGE PRESENTATION"},
 		{"AVANZADO", "ADVANCED"}, {"VOLUMEN", "VOLUME"}, {"ATAJOS", "SHORTCUTS"},
@@ -2750,7 +2759,7 @@ static struct sDOSBoxPure : public ZL_Application
 					static const char* latencyItems[] = { "10 ms", "15 ms", "20 ms", "25 ms", "30 ms", "35 ms", "40 ms", "45 ms", "50 ms", "55 ms", "60 ms", "65 ms", "70 ms", "75 ms", "80 ms", "85 ms", "90 ms", "95 ms", "100 ms" };
 					static const char* latencyValues[] = { "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100" };
 					SofiVideoCombo("Audio Latency", "interface_audiolatency", latencyItems, latencyValues, IM_ARRAYSIZE(latencyItems), "25");
-					ImGui::TextDisabled("Standalone build: sample rate is fixed by the build; latency is configurable.");
+					ImGui::TextDisabled(SofiText("Versión independiente: la frecuencia de muestreo queda fijada por la compilación; la latencia se puede configurar.", "Standalone build: sample rate is fixed by the build; latency is configurable."));
 
 					ImGui::Spacing();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("SOUNDBLASTER"));
@@ -2800,7 +2809,7 @@ static struct sDOSBoxPure : public ZL_Application
 						const char* activeType = GetSetting("dosbox_pure_sblaster_type", "sb16");
 						const bool awe32Active = activeType && !strcmp(activeType, "awe32");
 						mtxCoreOptions.Unlock();
-						if (awe32Active) ImGui::TextDisabled("Requires awe32.raw beside DOSBoxPure.exe.");
+						if (awe32Active) ImGui::TextDisabled(SofiText("Requiere awe32.raw junto a DOSBoxPure.exe.", "Requires awe32.raw beside DOSBoxPure.exe."));
 					}
 					SofiVideoCombo("SoundBlaster Adlib/FM Mode", "dosbox_pure_sblaster_adlib_mode", fmModeItems, fmModeValues, IM_ARRAYSIZE(fmModeItems), "auto");
 					SofiVideoCombo("SoundBlaster Adlib Provider", "dosbox_pure_sblaster_adlib_emu", adlibProviderItems, adlibProviderValues, IM_ARRAYSIZE(adlibProviderItems), "default");
@@ -2931,7 +2940,7 @@ static struct sDOSBoxPure : public ZL_Application
 						languageItems, languageValues, IM_ARRAYSIZE(languageItems), "es");
 
 					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("HOTKEYS"));
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");
 					static const char* hotkeyItems[] = { "CTRL", "ALT", "SHIFT", "CTRL+ALT", "CTRL+SHIFT", "ALT+SHIFT", "CTRL+ALT+SHIFT", "WIN", "MENU", "None" };
 					static const char* hotkeyValues[] = { "1", "2", "4", "3", "5", "6", "7", "8", "16", "0" };
 					SofiVideoCombo(SofiText("Modificador de atajo", "Hotkey Modifier"), "interface_hotkeymod", hotkeyItems, hotkeyValues, IM_ARRAYSIZE(hotkeyItems), "1");
@@ -2977,7 +2986,7 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Begin("SOFI INPUT", &SofiInputPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
-					ImGui::TextDisabled(SofiTranslate("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES"));
+					ImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiInputOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
@@ -3004,11 +3013,11 @@ static struct sDOSBoxPure : public ZL_Application
 					static int inputMappingPort = 0;
 					static const char* inputPortItems[] = { "Port 1", "Port 2", "Port 3", "Port 4" };
 					ImGui::SetNextItemWidth(180.0f);
-					ImGui::Combo("Controller Port", &inputMappingPort, inputPortItems, IM_ARRAYSIZE(inputPortItems));
+					ImGui::Combo(SofiTranslate("Controller Port"), &inputMappingPort, inputPortItems, IM_ARRAYSIZE(inputPortItems));
 					if (!DBPS_HaveJoy())
-						ImGui::TextDisabled("Connect a controller to configure its inputs.");
+						ImGui::TextDisabled(SofiTranslate("Connect a controller to configure its inputs."));
 					else
-						ImGui::TextDisabled("Select Assign, then press a controller input. Right-click cancels.");
+						ImGui::TextDisabled(SofiTranslate("Select Assign, then press a controller input. Right-click cancels."));
 
 					struct SofiInputBindEntry
 					{
