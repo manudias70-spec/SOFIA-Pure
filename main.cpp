@@ -2206,8 +2206,11 @@ static bool SofiLauncherSelectImage()
 	d.Flags=OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;
 	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib){SofiLauncherImageStatus="No se pudo abrir el selector de archivos de Windows.";return false;}
 	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);DWORD dialogError=accepted?0:CommDlgExtendedError();FreeLibrary(lib);if(!accepted){if(dialogError)SofiLauncherImageStatus="El selector de Windows informó un error ("+std::to_string(dialogError)+").";else SofiLauncherImageStatus="No se seleccionó ningún archivo.";return false;}
-	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder)){SofiLauncherImageStatus="No se pudo convertir la carpeta de datos del programa.";return false;}folder.append(L"\\GLImage");
-	if(!CreateDirectoryW(folder.c_str(),NULL)&&GetLastError()!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta GLImage (error "+std::to_string(GetLastError())+").";return false;}
+	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder)){SofiLauncherImageStatus="No se pudo convertir la carpeta de datos del programa.";return false;}
+	// SettingsInit may use a data directory that does not exist yet (for example beside the EXE).
+	if(!CreateDirectoryW(folder.c_str(),NULL)){DWORD e=GetLastError();if(e!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta de datos DOSBoxPure (error "+std::to_string(e)+").";return false;}}
+	folder.append(L"\\GLImage");
+	if(!CreateDirectoryW(folder.c_str(),NULL)){DWORD e=GetLastError();if(e!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta GLImage (error "+std::to_string(e)+").";return false;}}
 	std::wstring dest=folder+L"\\game_01.jpg";if(!SofiLauncherCreateCardImage(selected,dest))return false;
 	int n=WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,NULL,0,NULL,NULL);if(n<=1)return false;
 	std::vector<char> utf8((size_t)n);if(!WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,utf8.data(),n,NULL,NULL))return false;
