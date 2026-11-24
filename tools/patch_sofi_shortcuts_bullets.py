@@ -48,10 +48,10 @@ translated_shortcut_section = shortcut_section.replace(
 replace_once(main, shortcut_section, "")
 replace_once(
     main,
-    """\t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiText("CONFIGURACIÓN DE ATAJOS", "HOTKEY SETTINGS"));""",
+    """\t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");""",
     translated_shortcut_section + """
 \t\t\t\t\tImGui::Separator();
-\t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");"""
+\t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiText("CONFIGURACIÓN DE ATAJOS", "HOTKEY SETTINGS"));"""
 )
 
 # SOFI UI > INPUT: ordinary informative text with plain colon punctuation.
