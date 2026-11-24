@@ -53,7 +53,7 @@ replace_once(
 # SOFI UI > INPUT: ordinary informative text with plain colon punctuation.
 replace_once(
     main,
-    """\t\t\t\t\tImGui::TextDisabled("Durante el juego: presiona L3 para abrir la configuración del control.");""",
+    """\t\t\t\t\tImGui::TextDisabled(SofiText("Durante el juego: presioná L3 para abrir la configuración del control.", "In-game: press L3 to open controller configuration."));""",
     """\t\t\t\t\tImGui::Text(SofiText("JOYSTICK:", "JOYSTICK:"));
 \t\t\t\t\tImGui::Text(SofiText("L3: Abrir Controller Mapper durante el juego.", "L3: Open Controller Mapper while in-game."));
 \t\t\t\t\tImGui::Text(SofiText("R3: Abrir teclado en pantalla durante el juego.", "R3: Open the on-screen keyboard while in-game."));
