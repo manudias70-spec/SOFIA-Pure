@@ -42,6 +42,8 @@
 #include "sofia_splash.h"
 #include "imgui.h"
 #include "backends/imgui_impl_opengl3.h"
+#include <algorithm>
+#include <string>
 #include <cmath>
 #define STBI_NO_STDIO
 #define STB_IMAGE_IMPLEMENTATION
