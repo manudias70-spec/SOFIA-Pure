@@ -80,6 +80,7 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiLauncherOpen = false;
+static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
 
@@ -2636,6 +2637,21 @@ static void OnDraw()
 				retro_run();
 	}
 
+	// Restore SOFI Space only after the launched DOS program has actually run and then exited.
+	if (SofiLauncherWaitingForGameExit)
+	{
+		const bool gameRunning = DBPS_IsGameRunning();
+		const bool osdShowing = DBPS_IsShowingOSD();
+		if (gameRunning && !osdShowing)
+			SofiLauncherGameWasRunning = true;
+		else if (SofiLauncherGameWasRunning && !gameRunning && osdShowing)
+		{
+			SofiLauncherWaitingForGameExit = false;
+			SofiLauncherGameWasRunning = false;
+			SofiUIVisible = true;
+		}
+	}
+
 	if (DoSave) RunSave();
 	if (DoLoad) RunLoad();
 	if (DoApplyInterfaceOptions) ApplyInterfaceOptions();
@@ -3094,6 +3110,8 @@ static struct sDOSBoxPure : public ZL_Application
 
 					if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
 					{
+						SofiLauncherWaitingForGameExit = true;
+						SofiLauncherGameWasRunning = false;
 						SofiUIVisible = false;
 						DBPS_OpenContent(SofiLauncherExePath.c_str());
 					}
