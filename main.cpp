@@ -2168,11 +2168,14 @@ static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const c
 static bool SofiLauncherIsValidCyclesMax(const char* value)
 {
 	if (!value || !*value) return false;
+	mtxCoreOptions.Lock();
 	const retro_core_option_v2_definition* option = SofiLauncherFindCoreOption("dosbox_pure_cycles_max");
-	if (!option || !option->values) return false;
-	for (int i = 0; option->values[i].value; ++i)
-		if (!strcmp(value, option->values[i].value)) return true;
-	return false;
+	bool valid = false;
+	if (option && option->values)
+		for (int i = 0; option->values[i].value; ++i)
+			if (!strcmp(value, option->values[i].value)) { valid = true; break; }
+	mtxCoreOptions.Unlock();
+	return valid;
 }
 
 static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncherGameProfile& profile)
@@ -3395,12 +3398,12 @@ static struct sDOSBoxPure : public ZL_Application
 					else if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
 					{
 						SofiLauncherGameProfile launchProfile;
-							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
-							SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
-							SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
-							SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
-							SofiLauncherRestoreProfileCyclesMax();
-							if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
+						SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
+						SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
+						SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
+						SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
+						SofiLauncherRestoreProfileCyclesMax();
+						if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 						DoApplyInterfaceOptions = true;
 						SofiLauncherWaitingForGameExit = true;
 						SofiLauncherGameWasRunning = false;
@@ -3443,7 +3446,7 @@ static struct sDOSBoxPure : public ZL_Application
 						}
 						if (ImGui::BeginTabItem("CONFIG"))
 						{
-							// // Both options belong to this game's profile; global settings remain untouched.
+							// Both options belong to this game's profile; global settings remain untouched.
 							SofiLauncherGameProfile currentProfile;
 							const bool hasProfile = SofiLauncherLoadGameProfile(SofiLauncherExePath, currentProfile);
 							static const char* gameCrtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
