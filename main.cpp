@@ -93,6 +93,11 @@ static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning =
 static std::string SofiLauncherExePath;
 static bool SofiLauncherProfileFilterActive = false;
 static int SofiLauncherProfileFilter = 0;
+static bool SofiLauncherProfileCyclesMaxActive = false;
+static std::string SofiLauncherProfileCyclesMax;
+static bool SofiLauncherCyclesMaxPreviousOverrideCaptured = false;
+static bool SofiLauncherCyclesMaxHadPreviousOverride = false;
+static std::string SofiLauncherCyclesMaxPreviousOverride;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
 
 // Main SOFI settings panels are mutually exclusive. Explorer is intentionally independent.
@@ -2151,7 +2156,26 @@ static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 }
 
 // Each profile belongs to the full executable path. Store the path too, so a hash collision cannot apply another game's settings.
-static bool SofiLauncherLoadGameProfileFilter(const std::string& exePath, int& filter)
+struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; };
+
+static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const char* key)
+{
+	for (const retro_core_option_v2_definition* it = SofiCoreOptionDefinitions; it && it->key; ++it)
+		if (!strcmp(it->key, key)) return it;
+	return NULL;
+}
+
+static bool SofiLauncherIsValidCyclesMax(const char* value)
+{
+	if (!value || !*value) return false;
+	const retro_core_option_v2_definition* option = SofiLauncherFindCoreOption("dosbox_pure_cycles_max");
+	if (!option || !option->values) return false;
+	for (int i = 0; option->values[i].value; ++i)
+		if (!strcmp(value, option->values[i].value)) return true;
+	return false;
+}
+
+static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncherGameProfile& profile)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
 	if (path.empty()) return false;
@@ -2166,30 +2190,81 @@ static bool SofiLauncherLoadGameProfileFilter(const std::string& exePath, int& f
 	if (read != (size_t)size) return false;
 	const std::string contents(data.data(), read);
 	const size_t first = contents.find('\n');
-	if (first == std::string::npos || contents.substr(0, first) != "SOFIA_GAME_PROFILE_V1") return false;
+	if (first == std::string::npos) return false;
+	const std::string header = contents.substr(0, first);
+	if (header != "SOFIA_GAME_PROFILE_V1" && header != "SOFIA_GAME_PROFILE_V2") return false;
 	const size_t second = contents.find('\n', first + 1);
 	if (second == std::string::npos || contents.substr(first + 1, second - first - 1) != exePath) return false;
-	char* end = NULL;
-	const long value = strtol(contents.c_str() + second + 1, &end, 10);
-	if (end == contents.c_str() + second + 1 || value < 0 || value > 5) return false;
-	filter = (int)value;
+	const size_t third = contents.find('\n', second + 1);
+	const std::string filterText = contents.substr(second + 1, third == std::string::npos ? std::string::npos : third - second - 1);
+	char* parseEnd = NULL;
+	const long filter = strtol(filterText.c_str(), &parseEnd, 10);
+	if (parseEnd == filterText.c_str() || *parseEnd || filter < 0 || filter > 5) return false;
+	profile.filter = (int)filter;
+	profile.hasCyclesMax = false;
+	profile.cyclesMax.clear();
+	if (header == "SOFIA_GAME_PROFILE_V2" && third != std::string::npos)
+	{
+		const size_t fourth = contents.find('\n', third + 1);
+		const std::string value = contents.substr(third + 1, fourth == std::string::npos ? std::string::npos : fourth - third - 1);
+		if (SofiLauncherIsValidCyclesMax(value.c_str())) { profile.cyclesMax = value; profile.hasCyclesMax = true; }
+	}
 	return true;
 }
 
-static bool SofiLauncherSaveGameProfileFilter(const std::string& exePath, int filter)
+static std::string SofiLauncherGlobalCyclesMax()
+{
+	mtxCoreOptions.Lock();
+	const retro_core_option_v2_definition* option = SofiLauncherFindCoreOption("dosbox_pure_cycles_max");
+	const char* value = option ? GetSetting("dosbox_pure_cycles_max", option->default_value) : NULL;
+	std::string result = value ? value : "";
+	mtxCoreOptions.Unlock();
+	return result;
+}
+
+static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
-	if (path.empty() || filter < 0 || filter > 5) return false;
+	if (path.empty() || filter < 0 || filter > 5 || !SofiLauncherIsValidCyclesMax(cyclesMax.c_str())) return false;
 	std::string folder = SofiLauncherDataPath;
 	folder.append(1, CROSS_FILESPLIT);
 	folder += "GLProfiles";
 	if (retro_vfs_mkdir_impl(folder.c_str()) == -1) return false;
 	FILE* f = fopen_wrap(path.c_str(), "wb");
 	if (!f) return false;
-	bool ok = fprintf(f, "SOFIA_GAME_PROFILE_V1\n%s\n%d\n", exePath.c_str(), filter) > 0 && !ferror(f);
+	bool ok = fprintf(f, "SOFIA_GAME_PROFILE_V2\n%s\n%d\n%s\n", exePath.c_str(), filter, cyclesMax.c_str()) > 0 && !ferror(f);
 	if (fclose(f) != 0) ok = false;
 	return ok;
 }
+
+static void SofiLauncherApplyProfileCyclesMax(const std::string& value)
+{
+	if (value.empty()) return;
+	mtxCoreOptions.Lock();
+	ZL_Json previous = ConfigOverrides.GetByKey("dosbox_pure_cycles_max");
+	SofiLauncherCyclesMaxHadPreviousOverride = ConfigOverrides.HasKey("dosbox_pure_cycles_max");
+	SofiLauncherCyclesMaxPreviousOverride = (SofiLauncherCyclesMaxHadPreviousOverride && previous.GetType() == ZL_Json::TYPE_STRING) ? previous.GetString() : "";
+	SofiLauncherCyclesMaxPreviousOverrideCaptured = true;
+	ConfigOverrides["dosbox_pure_cycles_max"].SetString(value.c_str());
+	ConfigCache.Erase("dosbox_pure_cycles_max");
+	VariablesUpdated = true;
+	mtxCoreOptions.Unlock();
+}
+
+static void SofiLauncherRestoreProfileCyclesMax()
+{
+	if (!SofiLauncherCyclesMaxPreviousOverrideCaptured) return;
+	mtxCoreOptions.Lock();
+	if (SofiLauncherCyclesMaxHadPreviousOverride) ConfigOverrides["dosbox_pure_cycles_max"].SetString(SofiLauncherCyclesMaxPreviousOverride.c_str());
+	else ConfigOverrides.Erase("dosbox_pure_cycles_max");
+	ConfigCache.Erase("dosbox_pure_cycles_max");
+	VariablesUpdated = true;
+	mtxCoreOptions.Unlock();
+	SofiLauncherCyclesMaxPreviousOverrideCaptured = false;
+	SofiLauncherCyclesMaxHadPreviousOverride = false;
+	SofiLauncherCyclesMaxPreviousOverride.clear();
+}
+
 static unsigned int SofiLauncherImageTexture = 0;
 static bool SofiLauncherTextureAttempted = false;
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
@@ -2823,6 +2898,9 @@ static void OnDraw()
 			SofiLauncherWaitingForGameExit = false;
 			SofiLauncherGameWasRunning = false;
 			SofiLauncherProfileFilterActive = false;
+			SofiLauncherProfileCyclesMaxActive = false;
+			SofiLauncherProfileCyclesMax.clear();
+			SofiLauncherRestoreProfileCyclesMax();
 			DoApplyInterfaceOptions = true;
 			SofiUIVisible = true;
 		}
@@ -3300,7 +3378,13 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::TextWrapped("%s", exeName);
 						if (ImGui::Button("PULSAR PARA INICIAR", ImVec2(340.0f, 42.0f)) && !SofiLauncherExePath.empty())
 						{
-							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfileFilter(SofiLauncherExePath, SofiLauncherProfileFilter);
+							SofiLauncherGameProfile launchProfile;
+							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
+							SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
+							SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
+							SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
+							SofiLauncherRestoreProfileCyclesMax();
+							if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 							DoApplyInterfaceOptions = true;
 							SofiLauncherWaitingForGameExit = true;
 							SofiLauncherGameWasRunning = false;
@@ -3310,7 +3394,13 @@ static struct sDOSBoxPure : public ZL_Application
 					}
 					else if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
 					{
-						SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfileFilter(SofiLauncherExePath, SofiLauncherProfileFilter);
+						SofiLauncherGameProfile launchProfile;
+							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
+							SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
+							SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
+							SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
+							SofiLauncherRestoreProfileCyclesMax();
+							if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 						DoApplyInterfaceOptions = true;
 						SofiLauncherWaitingForGameExit = true;
 						SofiLauncherGameWasRunning = false;
@@ -3353,10 +3443,12 @@ static struct sDOSBoxPure : public ZL_Application
 						}
 						if (ImGui::BeginTabItem("CONFIG"))
 						{
-							// The template stores this option in its own per-game profile, never in global settings.
+							// // Both options belong to this game's profile; global settings remain untouched.
+							SofiLauncherGameProfile currentProfile;
+							const bool hasProfile = SofiLauncherLoadGameProfile(SofiLauncherExePath, currentProfile);
 							static const char* gameCrtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
-							int selectedFilter = 0;
-							if (!SofiLauncherLoadGameProfileFilter(SofiLauncherExePath, selectedFilter))
+							int selectedFilter = hasProfile ? currentProfile.filter : 0;
+							if (!hasProfile)
 							{
 								mtxCoreOptions.Lock();
 								const char* globalFilter = GetSetting("interface_crtfilter", "false");
@@ -3366,18 +3458,50 @@ static struct sDOSBoxPure : public ZL_Application
 							selectedFilter = ZL_Math::Clamp(selectedFilter, 0, IM_ARRAYSIZE(gameCrtItems) - 1);
 							std::vector<const char*> translatedGameCrtItems;
 							translatedGameCrtItems.reserve(IM_ARRAYSIZE(gameCrtItems));
-							for (int i = 0; i < IM_ARRAYSIZE(gameCrtItems); ++i)
-								translatedGameCrtItems.push_back(SofiTranslate(gameCrtItems[i]));
-							ImGui::SetNextItemWidth(260.0f);
+							for (int i = 0; i < IM_ARRAYSIZE(gameCrtItems); ++i) translatedGameCrtItems.push_back(SofiTranslate(gameCrtItems[i]));
+							ImGui::SetNextItemWidth(300.0f);
 							if (ImGui::Combo(SofiTranslate("CRT Filter"), &selectedFilter, translatedGameCrtItems.data(), IM_ARRAYSIZE(gameCrtItems)))
 							{
-								if (SofiLauncherSaveGameProfileFilter(SofiLauncherExePath, selectedFilter))
-									SofiLauncherProfileStatus = "Perfil del juego guardado.";
-								else
-									SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
+								const std::string cyclesValue = (hasProfile && currentProfile.hasCyclesMax) ? currentProfile.cyclesMax : SofiLauncherGlobalCyclesMax();
+								if (SofiLauncherSaveGameProfile(SofiLauncherExePath, selectedFilter, cyclesValue)) SofiLauncherProfileStatus = "Perfil del juego guardado.";
+								else SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
 							}
-							if (!SofiLauncherExePath.empty())
-								ImGui::TextDisabled("El filtro se guarda por separado para este juego.");
+
+							const retro_core_option_v2_definition* cyclesOption = NULL;
+							int selectedCycles = 0;
+							mtxCoreOptions.Lock();
+							cyclesOption = SofiLauncherFindCoreOption("dosbox_pure_cycles_max");
+							if (cyclesOption && cyclesOption->values && cyclesOption->values[0].value)
+							{
+								const char* activeCycles = (hasProfile && currentProfile.hasCyclesMax) ? currentProfile.cyclesMax.c_str() : GetSetting("dosbox_pure_cycles_max", cyclesOption->default_value);
+								for (int i = 0; cyclesOption->values[i].value; ++i)
+									if (!strcmp(activeCycles ? activeCycles : cyclesOption->default_value, cyclesOption->values[i].value)) { selectedCycles = i; break; }
+							}
+							mtxCoreOptions.Unlock();
+							ImGui::SetNextItemWidth(300.0f);
+							if (!cyclesOption || !cyclesOption->values || !cyclesOption->values[0].value)
+								ImGui::TextDisabled("%s: %s", SofiTranslate("Maximum Emulated Performance"), SofiTranslate("unavailable"));
+							else
+							{
+								const char* cyclesPreview = SofiTranslate(cyclesOption->values[selectedCycles].label ? cyclesOption->values[selectedCycles].label : cyclesOption->values[selectedCycles].value);
+								if (ImGui::BeginCombo(SofiTranslate("Maximum Emulated Performance"), cyclesPreview))
+								{
+									for (int i = 0; cyclesOption->values[i].value; ++i)
+									{
+										const char* itemLabel = SofiTranslate(cyclesOption->values[i].label ? cyclesOption->values[i].label : cyclesOption->values[i].value);
+										const bool isSelected = (i == selectedCycles);
+										if (ImGui::Selectable(itemLabel, isSelected))
+										{
+											const int filterValue = hasProfile ? currentProfile.filter : selectedFilter;
+											if (SofiLauncherSaveGameProfile(SofiLauncherExePath, filterValue, cyclesOption->values[i].value)) SofiLauncherProfileStatus = "Perfil del juego guardado.";
+											else SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
+										}
+										if (isSelected) ImGui::SetItemDefaultFocus();
+									}
+									ImGui::EndCombo();
+								}
+							}
+							if (!SofiLauncherExePath.empty()) ImGui::TextDisabled("Estas opciones se guardan por separado para este juego.");
 							if (!SofiLauncherProfileStatus.empty())
 								ImGui::TextWrapped("%s", SofiLauncherProfileStatus.c_str());
 							ImGui::EndTabItem();
