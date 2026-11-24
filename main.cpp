@@ -90,7 +90,7 @@ static bool ImGuiReady = false;
 static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
-static std::string SofiLauncherExePath;
+static std::string SofiLauncherExePath, SofiLauncherSetupPath;
 static bool SofiLauncherProfileFilterActive = false;
 static int SofiLauncherProfileFilter = 0;
 static bool SofiLauncherProfileCyclesMaxActive = false;
@@ -2101,6 +2101,58 @@ static void OnKeyUp(ZL_KeyboardEvent& e)
 	retro_keyboard_event_cb(false, (unsigned)ZLKtoRETROKEY[e.key], 0, 0);
 }
 
+static bool SofiLauncherSelectSetup()
+{
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+	wchar_t selectedPath[32768] = {};
+	static const wchar_t fileFilter[] = L"Instaladores (*.exe;*.msi)\0*.exe;*.msi\0Todos los archivos (*.*)\0*.*\0\0";
+	OPENFILENAMEW dialog = {};
+	dialog.lStructSize = sizeof(dialog);
+	dialog.lpstrFilter = fileFilter;
+	dialog.lpstrFile = selectedPath;
+	dialog.nMaxFile = (DWORD)(sizeof(selectedPath) / sizeof(selectedPath[0]));
+	dialog.lpstrTitle = L"Seleccionar instalador del juego";
+	dialog.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+	HMODULE commonDialogs = LoadLibraryW(L"comdlg32.dll");
+	if (!commonDialogs) return false;
+	typedef BOOL (WINAPI *SofiGetOpenFileNameW)(LPOPENFILENAMEW);
+	SofiGetOpenFileNameW showOpenDialog = (SofiGetOpenFileNameW)GetProcAddress(commonDialogs, "GetOpenFileNameW");
+	const bool accepted = showOpenDialog && showOpenDialog(&dialog);
+	FreeLibrary(commonDialogs);
+	if (!accepted) return false;
+	const int length = WideCharToMultiByte(CP_UTF8, 0, selectedPath, -1, NULL, 0, NULL, NULL);
+	if (length <= 1) return false;
+	std::vector<char> utf8((size_t)length);
+	if (!WideCharToMultiByte(CP_UTF8, 0, selectedPath, -1, utf8.data(), length, NULL, NULL)) return false;
+	SofiLauncherSetupPath.assign(utf8.data());
+	ZL_Application::SettingsSet("interface_launcher_setup", SofiLauncherSetupPath.c_str());
+	DirtySettings();
+	return true;
+#else
+	return false;
+#endif
+}
+
+static void SofiLauncherRunSetup()
+{
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+	if (SofiLauncherSetupPath.empty()) return;
+	std::wstring widePath;
+	if (!SofiUtf8ToWide(SofiLauncherSetupPath, widePath)) return;
+	std::wstring command = L"\"" + widePath + L"\"";
+	std::vector<wchar_t> mutableCommand(command.begin(), command.end());
+	mutableCommand.push_back(0);
+	STARTUPINFOW startup = {};
+	startup.cb = sizeof(startup);
+	PROCESS_INFORMATION process = {};
+	if (CreateProcessW(NULL, mutableCommand.data(), NULL, NULL, FALSE, 0, NULL, NULL, &startup, &process))
+	{
+		CloseHandle(process.hThread);
+		CloseHandle(process.hProcess);
+	}
+#endif
+}
+
 static bool SofiLauncherSelectExe()
 {
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
@@ -3109,6 +3161,7 @@ static struct sDOSBoxPure : public ZL_Application
 		#endif
 		ZL_Application::SettingsInit(basePath.c_str());
 		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
+					SofiLauncherSetupPath.assign(ZL_Application::SettingsGet("interface_launcher_setup"));
 		SofiLauncherDataPath.assign(basePath.c_str());
 		SofiLauncherImagePath.assign(ZL_Application::SettingsGet("interface_launcher_image"));
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
