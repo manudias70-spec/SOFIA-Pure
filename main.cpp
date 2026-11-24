@@ -3150,7 +3150,31 @@ static struct sDOSBoxPure : public ZL_Application
 						if (ImGui::BeginTabItem("IMAGEN"))
 							ImGui::EndTabItem();
 						if (ImGui::BeginTabItem("CONFIG"))
+						{
+							// This selector always writes to the current game's override, never the global setting.
+							static const char* gameCrtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
+							static const char* gameCrtValues[] = { "false", "1", "2", "3", "4", "5" };
+							int selectedFilter = 0;
+							{
+								mtxCoreOptions.Lock();
+								const char* activeFilter = GetSetting("interface_crtfilter", "false");
+								for (int i = 0; i < IM_ARRAYSIZE(gameCrtValues); ++i)
+									if (!strcmp(activeFilter ? activeFilter : "false", gameCrtValues[i])) { selectedFilter = i; break; }
+								mtxCoreOptions.Unlock();
+							}
+							std::vector<const char*> translatedGameCrtItems;
+							translatedGameCrtItems.reserve(IM_ARRAYSIZE(gameCrtItems));
+							for (int i = 0; i < IM_ARRAYSIZE(gameCrtItems); ++i)
+								translatedGameCrtItems.push_back(SofiTranslate(gameCrtItems[i]));
+							ImGui::SetNextItemWidth(260.0f);
+							if (ImGui::Combo(SofiTranslate("CRT Filter"), &selectedFilter, translatedGameCrtItems.data(), IM_ARRAYSIZE(gameCrtItems)))
+							{
+								if (!DBPS_IsConfigOverride("interface_crtfilter"))
+									DBPS_ToggleConfigOverride("interface_crtfilter", "false");
+								SofiVideoSetSetting("interface_crtfilter", gameCrtValues[selectedFilter]);
+							}
 							ImGui::EndTabItem();
+						}
 						ImGui::EndTabBar();
 					}
 				}
