@@ -42,6 +42,12 @@
 #include "sofia_splash.h"
 #include "imgui.h"
 #include "backends/imgui_impl_opengl3.h"
+#include <cmath>
+#define STBI_NO_STDIO
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 #include <dosbox_pure_sta.h>
 int DBPS_SaveSlotIndex;
@@ -2121,6 +2127,103 @@ static bool SofiLauncherSelectExe()
 #endif
 }
 
+
+// Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
+static std::string SofiLauncherDataPath, SofiLauncherImagePath;
+static unsigned int SofiLauncherImageTexture = 0;
+static bool SofiLauncherTextureAttempted = false;
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+static bool SofiUtf8ToWide(const std::string& in, std::wstring& out)
+{
+	int n=MultiByteToWideChar(CP_UTF8,0,in.c_str(),-1,NULL,0); if(n<=1) return false;
+	std::vector<wchar_t> b((size_t)n); if(!MultiByteToWideChar(CP_UTF8,0,in.c_str(),-1,b.data(),n)) return false;
+	out.assign(b.data()); return true;
+}
+static bool SofiReadImageBytes(const std::wstring& path, std::vector<unsigned char>& bytes)
+{
+	HANDLE f=CreateFileW(path.c_str(),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(f==INVALID_HANDLE_VALUE) return false;
+	LARGE_INTEGER sz; bool valid=GetFileSizeEx(f,&sz)&&sz.QuadPart>0&&sz.QuadPart<=50*1024*1024;
+	if(!valid){CloseHandle(f);return false;} bytes.resize((size_t)sz.QuadPart);
+	DWORD got=0; bool ok=ReadFile(f,bytes.data(),(DWORD)bytes.size(),&got,NULL)&&got==bytes.size(); CloseHandle(f);
+	if(!ok) bytes.clear(); return ok;
+}
+static void SofiJpegWrite(void* ctx,void* data,int size)
+{
+	std::vector<unsigned char>* out=(std::vector<unsigned char>*)ctx;
+	const unsigned char* p=(const unsigned char*)data; out->insert(out->end(),p,p+size);
+}
+static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wstring& output)
+{
+	std::vector<unsigned char> fileBytes; if(!SofiReadImageBytes(input,fileBytes)) return false;
+	int sw=0,sh=0,ch=0; unsigned char* src=stbi_load_from_memory(fileBytes.data(),(int)fileBytes.size(),&sw,&sh,&ch,3);
+	if(!src||sw<=0||sh<=0){if(src)stbi_image_free(src);return false;}
+	const double ar=16.0/9.0; double cw=sw,hh=sh;
+	if(cw/hh>ar) cw=hh*ar; else hh=cw/ar;
+	double ox=(sw-cw)*0.5,oy=(sh-hh)*0.5;
+	std::vector<unsigned char> pixels(320*180*3);
+	for(int y=0;y<180;y++) for(int x=0;x<320;x++)
+	{
+		double fx=ox+((x+0.5)*cw/320.0)-0.5, fy=oy+((y+0.5)*hh/180.0)-0.5;
+		int x0=(int)std::max(0.0,std::min((double)sw-1.0,std::floor(fx))), y0=(int)std::max(0.0,std::min((double)sh-1.0,std::floor(fy)));
+		int x1=std::min(x0+1,sw-1),y1=std::min(y0+1,sh-1);
+		double dx=std::max(0.0,std::min(1.0,fx-std::floor(fx))),dy=std::max(0.0,std::min(1.0,fy-std::floor(fy)));
+		for(int c=0;c<3;c++){
+			double a=src[(y0*sw+x0)*3+c],b=src[(y0*sw+x1)*3+c],d=src[(y1*sw+x0)*3+c],e=src[(y1*sw+x1)*3+c];
+			double top=a+(b-a)*dx,bot=d+(e-d)*dx; pixels[(y*320+x)*3+c]=(unsigned char)(top+(bot-top)*dy+0.5);
+		}
+	}
+	stbi_image_free(src);
+	std::vector<unsigned char> jpg; bool ok=false;
+	for(int q=90;q>=35;q-=5){jpg.clear();if(!stbi_write_jpg_to_func(SofiJpegWrite,&jpg,320,180,3,pixels.data(),q))return false;if(jpg.size()<=300*1024){ok=true;break;}}
+	if(!ok)return false;
+	HANDLE f=CreateFileW(output.c_str(),GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(f==INVALID_HANDLE_VALUE)return false; DWORD put=0; bool saved=WriteFile(f,jpg.data(),(DWORD)jpg.size(),&put,NULL)&&put==jpg.size(); CloseHandle(f); return saved;
+}
+static void SofiLauncherLoadImageTexture()
+{
+	if(SofiLauncherImagePath.empty())return; std::wstring path; if(!SofiUtf8ToWide(SofiLauncherImagePath,path))return;
+	std::vector<unsigned char> bytes;if(!SofiReadImageBytes(path,bytes))return;
+	int w=0,h=0,c=0;unsigned char* px=stbi_load_from_memory(bytes.data(),(int)bytes.size(),&w,&h,&c,3);if(!px)return;
+	typedef void (APIENTRY *GenFn)(int,unsigned int*); typedef void (APIENTRY *BindFn)(unsigned int,unsigned int);
+	typedef void (APIENTRY *ParamFn)(unsigned int,unsigned int,int); typedef void (APIENTRY *ImageFn)(unsigned int,int,int,int,int,int,unsigned int,unsigned int,const void*);
+	typedef void (APIENTRY *DeleteFn)(int,const unsigned int*);
+	GenFn gen=(GenFn)SDL_GL_GetProcAddress("glGenTextures");BindFn bind=(BindFn)SDL_GL_GetProcAddress("glBindTexture");
+	ParamFn param=(ParamFn)SDL_GL_GetProcAddress("glTexParameteri");ImageFn image=(ImageFn)SDL_GL_GetProcAddress("glTexImage2D");
+	DeleteFn del=(DeleteFn)SDL_GL_GetProcAddress("glDeleteTextures");
+	if(!gen||!bind||!param||!image||!del){stbi_image_free(px);return;}
+	if(SofiLauncherImageTexture)del(1,&SofiLauncherImageTexture);gen(1,&SofiLauncherImageTexture);bind(0x0DE1,SofiLauncherImageTexture);
+	param(0x0DE1,0x2801,0x2601);param(0x0DE1,0x2800,0x2601);param(0x0DE1,0x2802,0x812F);param(0x0DE1,0x2803,0x812F);
+	image(0x0DE1,0,0x1907,w,h,0,0x1907,0x1401,px);bind(0x0DE1,0);stbi_image_free(px);SofiLauncherTextureAttempted=true;
+}
+static bool SofiLauncherSelectImage()
+{
+	wchar_t selected[32768]={};static const wchar_t filter[]=L"Imágenes (*.png;*.jpg;*.jpeg)\0*.png;*.jpg;*.jpeg\0Todos los archivos (*.*)\0*.*\0\0";
+	OPENFILENAMEW d={};d.lStructSize=sizeof(d);d.lpstrFilter=filter;d.lpstrFile=selected;d.nMaxFile=32768;d.lpstrTitle=L"Seleccionar imagen para la tarjeta";
+	d.Flags=OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;
+	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib)return false;
+	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);FreeLibrary(lib);if(!accepted)return false;
+	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder))return false;folder.append(L"\\GLImage");
+	if(!CreateDirectoryW(folder.c_str(),NULL)&&GetLastError()!=ERROR_ALREADY_EXISTS)return false;
+	std::wstring dest=folder+L"\\game_01.jpg";if(!SofiLauncherCreateCardImage(selected,dest))return false;
+	int n=WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,NULL,0,NULL,NULL);if(n<=1)return false;
+	std::vector<char> utf8((size_t)n);if(!WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,utf8.data(),n,NULL,NULL))return false;
+	SofiLauncherImagePath.assign(utf8.data());ZL_Application::SettingsSet("interface_launcher_image",SofiLauncherImagePath.c_str());DirtySettings();
+	SofiLauncherTextureAttempted=false;SofiLauncherLoadImageTexture();return true;
+}
+#else
+static bool SofiLauncherSelectImage(){return false;}
+#endif
+static void SofiLauncherEnsureImageTexture()
+{
+	if(!SofiLauncherImageTexture&&!SofiLauncherTextureAttempted){
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+		SofiLauncherLoadImageTexture();
+#endif
+	}
+}
+
+
 static void OnDropFile(const ZL_String& path)
 {
 	DBPS_OpenContent(path.c_str());
@@ -2858,6 +2961,8 @@ static struct sDOSBoxPure : public ZL_Application
 
 		ZL_Application::SettingsInit(basePath.c_str());
 		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
+		SofiLauncherDataPath.assign(basePath.c_str());
+		SofiLauncherImagePath.assign(ZL_Application::SettingsGet("interface_launcher_image"));
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
 		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
 		SofiCommanderGeometryPath.assign(SofiCommanderIniPath).append(".geometry");
@@ -3121,7 +3226,20 @@ static struct sDOSBoxPure : public ZL_Application
 						? "JUEGO 01\n\nSIN EJECUTABLE\n\nAGREGÁ UN EXE ABAJO"
 						: std::string("JUEGO 01\n\n") + exeName + "\n\nPULSAR PARA INICIAR";
 
-					if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
+					SofiLauncherEnsureImageTexture();
+					if (SofiLauncherImageTexture)
+					{
+						ImGui::Image((ImTextureID)SofiLauncherImageTexture, ImVec2(320.0f, 180.0f));
+						ImGui::TextWrapped("%s", exeName);
+						if (ImGui::Button("PULSAR PARA INICIAR", ImVec2(340.0f, 42.0f)) && !SofiLauncherExePath.empty())
+						{
+							SofiLauncherWaitingForGameExit = true;
+							SofiLauncherGameWasRunning = false;
+							SofiUIVisible = false;
+							DBPS_OpenContent(SofiLauncherExePath.c_str());
+						}
+					}
+					else if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
 					{
 						SofiLauncherWaitingForGameExit = true;
 						SofiLauncherGameWasRunning = false;
@@ -3148,7 +3266,19 @@ static struct sDOSBoxPure : public ZL_Application
 					if (ImGui::BeginTabBar("##SofiGamePropertiesTabs"))
 					{
 						if (ImGui::BeginTabItem("IMAGEN"))
+						{
+							ImGui::TextDisabled("IMAGEN DE LA TARJETA  //  320 x 180");
+							if (ImGui::Button("SELECCIONAR IMAGEN", ImVec2(220.0f, 36.0f))) SofiLauncherSelectImage();
+							SofiLauncherEnsureImageTexture();
+							if (SofiLauncherImageTexture)
+							{
+								ImGui::Spacing();
+								ImGui::Image((ImTextureID)SofiLauncherImageTexture, ImVec2(320.0f, 180.0f));
+								ImGui::TextDisabled("Copia optimizada guardada en GLImage. El original no se modifica.");
+							}
+							else ImGui::TextDisabled("Todavía no hay una imagen seleccionada.");
 							ImGui::EndTabItem();
+						}
 						if (ImGui::BeginTabItem("CONFIG"))
 						{
 							// This selector always writes to the current game's override, never the global setting.
