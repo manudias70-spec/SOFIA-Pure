@@ -85,9 +85,12 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	SofiOSDPanelOpen = false;
 	SofiInputPanelOpen = false;
 	SofiCorePanelOpen = false;
+	SofiLauncherOpen = false;
 	panelOpen = shouldOpen;
 }
 static bool SofiUIVisible = true;
+static bool SofiLauncherOpen = false;
+static std::string SofiLauncherExePath;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
@@ -2078,6 +2081,13 @@ static void OnKeyUp(ZL_KeyboardEvent& e)
 
 static void OnDropFile(const ZL_String& path)
 {
+	if (SofiUIVisible && SofiLauncherOpen)
+	{
+		SofiLauncherExePath = path.c_str();
+		ZL_Application::SettingsSet("interface_launcher_exe", SofiLauncherExePath.c_str());
+		DirtySettings();
+		return;
+	}
 	DBPS_OpenContent(path.c_str());
 }
 
@@ -2797,6 +2807,7 @@ static struct sDOSBoxPure : public ZL_Application
 		}
 
 		ZL_Application::SettingsInit(basePath.c_str());
+		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
 		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
 		SofiCommanderGeometryPath.assign(SofiCommanderIniPath).append(".geometry");
@@ -2927,7 +2938,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// SOFI Space navigation: keep Explorer as the only visible navigation button.
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 320.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(96.0f, 390.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
@@ -2963,6 +2974,16 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiCommanderFocused = false;
 				}
 			}
+			ImGui::PopStyleColor(4);
+			const bool launcherSelected = SofiLauncherOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				launcherSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				launcherSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("GAME LAUNCHER", ImVec2(88.0f, 44.0f)))
+				SofiToggleMainPanel(SofiLauncherOpen);
 			ImGui::PopStyleColor(4);
 			const bool coreSelected = SofiCorePanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
@@ -3018,6 +3039,50 @@ static struct sDOSBoxPure : public ZL_Application
 
 			ImGui::PopStyleVar(2);
 			ImGui::End();
+
+			// Minimal Game Launcher experiment: one empty profile, assigned by dropping an EXE.
+			if (SofiLauncherOpen)
+			{
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(560.0f, 420.0f), ImGuiCond_FirstUseEver);
+				if (ImGui::Begin("GAME LAUNCHER", &SofiLauncherOpen, ImGuiWindowFlags_NoCollapse))
+				{
+					ImGui::TextDisabled("PRUEBA EXPERIMENTAL  //  PERFIL ÚNICO");
+					ImGui::Separator();
+					ImGui::BeginChild("##SofiGameLauncherCard", ImVec2(340.0f, 230.0f), true);
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "JUEGO 01");
+					ImGui::Spacing();
+					if (SofiLauncherExePath.empty())
+					{
+						ImGui::TextDisabled("TARJETA VACÍA");
+						ImGui::Spacing();
+						ImGui::TextWrapped("Arrastrá y soltá aquí un archivo .EXE para asignarlo a esta tarjeta.");
+					}
+					else
+					{
+						ImGui::TextWrapped("EJECUTABLE ASIGNADO:");
+						ImGui::TextWrapped("%s", SofiLauncherExePath.c_str());
+						ImGui::Spacing();
+						if (ImGui::Button("EJECUTAR", ImVec2(150.0f, 38.0f)))
+						{
+							SofiUIVisible = false;
+						SofiLauncherOpen = false;
+						DBPS_OpenContent(SofiLauncherExePath.c_str());
+						SofiLauncherOpen = true;
+					}
+						ImGui::SameLine();
+						if (ImGui::Button("QUITAR EXE", ImVec2(120.0f, 38.0f)))
+						{
+							SofiLauncherExePath.clear();
+							ZL_Application::SettingsDel("interface_launcher_exe");
+							DirtySettings();
+						}
+					}
+					ImGui::EndChild();
+					ImGui::TextDisabled("La asignación se conserva al cerrar SOFIA-Pure. Esta prueba no modifica opciones del emulador.");
+				}
+				ImGui::End();
+			}
 
 			// AUDIO uses the same live settings path as VIDEO; MIDI uses the core's dynamic list.
 			if (SofiAudioPanelOpen)
