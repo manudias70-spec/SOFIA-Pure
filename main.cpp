@@ -74,6 +74,8 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
+static bool SofiLauncherOpen = false;
+static std::string SofiLauncherExePath;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
 
 // Main SOFI settings panels are mutually exclusive. Explorer is intentionally independent.
@@ -92,8 +94,6 @@ static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
-static bool SofiLauncherOpen = false;
-static std::string SofiLauncherExePath;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
 static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
 static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
