@@ -27,6 +27,11 @@
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
 
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+#include <windows.h>
+#include <commdlg.h>
+#endif
+
 #include <cfloat>
 #include <vector>
 
@@ -2079,17 +2084,43 @@ static void OnKeyUp(ZL_KeyboardEvent& e)
 	retro_keyboard_event_cb(false, (unsigned)ZLKtoRETROKEY[e.key], 0, 0);
 }
 
+static bool SofiLauncherSelectExe()
+{
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+	wchar_t selectedPath[32768] = {};
+	static const wchar_t fileFilter[] = L"Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0\0";
+	OPENFILENAMEW dialog = {};
+	dialog.lStructSize = sizeof(dialog);
+	dialog.lpstrFilter = fileFilter;
+	dialog.lpstrFile = selectedPath;
+	dialog.nMaxFile = (DWORD)(sizeof(selectedPath) / sizeof(selectedPath[0]));
+	dialog.lpstrTitle = L"Seleccionar ejecutable del juego";
+	dialog.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+
+	// Resolve the common-dialog function dynamically so no extra linker dependency is needed.
+	HMODULE commonDialogs = LoadLibraryW(L"comdlg32.dll");
+	if (!commonDialogs) return false;
+	typedef BOOL (WINAPI *SofiGetOpenFileNameW)(LPOPENFILENAMEW);
+	SofiGetOpenFileNameW showOpenDialog = (SofiGetOpenFileNameW)GetProcAddress(commonDialogs, "GetOpenFileNameW");
+	const bool accepted = (showOpenDialog && showOpenDialog(&dialog));
+	FreeLibrary(commonDialogs);
+	if (!accepted) return false;
+
+	const int utf8Length = WideCharToMultiByte(CP_UTF8, 0, selectedPath, -1, NULL, 0, NULL, NULL);
+	if (utf8Length <= 1) return false;
+	std::vector<char> utf8Path((size_t)utf8Length);
+	if (!WideCharToMultiByte(CP_UTF8, 0, selectedPath, -1, utf8Path.data(), utf8Length, NULL, NULL)) return false;
+	SofiLauncherExePath.assign(utf8Path.data());
+	ZL_Application::SettingsSet("interface_launcher_exe", SofiLauncherExePath.c_str());
+	DirtySettings();
+	return true;
+#else
+	return false;
+#endif
+}
+
 static void OnDropFile(const ZL_String& path)
 {
-	if (SofiUIVisible && SofiLauncherOpen)
-	{
-		const char* ext = strrchr(path.c_str(), '.');
-		if (!ext || strlen(ext) != 4 || (ext[1] | 0x20) != 'e' || (ext[2] | 0x20) != 'x' || (ext[3] | 0x20) != 'e') return;
-		SofiLauncherExePath = path.c_str();
-		ZL_Application::SettingsSet("interface_launcher_exe", SofiLauncherExePath.c_str());
-		DirtySettings();
-		return;
-	}
 	DBPS_OpenContent(path.c_str());
 }
 
@@ -3042,7 +3073,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
-			// Minimal Game Launcher experiment: one empty profile, assigned by dropping an EXE.
+			// Minimal Game Launcher experiment: one card, native EXE picker, click card to launch.
 			if (SofiLauncherOpen)
 			{
 				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
@@ -3051,35 +3082,27 @@ static struct sDOSBoxPure : public ZL_Application
 				{
 					ImGui::TextDisabled("PRUEBA EXPERIMENTAL  //  PERFIL ÚNICO");
 					ImGui::Separator();
-					ImGui::BeginChild("##SofiGameLauncherCard", ImVec2(340.0f, 230.0f), true);
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "JUEGO 01");
+
+					const char* exeName = SofiLauncherExePath.c_str();
+					const char* backslash = strrchr(exeName, '\\');
+					const char* slash = strrchr(exeName, '/');
+					if (slash && (!backslash || slash > backslash)) backslash = slash;
+					if (backslash) exeName = backslash + 1;
+					const std::string cardLabel = SofiLauncherExePath.empty()
+						? "JUEGO 01\n\nSIN EJECUTABLE\n\nAGREGÁ UN EXE ABAJO"
+						: std::string("JUEGO 01\n\n") + exeName + "\n\nPULSAR PARA INICIAR";
+
+					if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
+					{
+						SofiUIVisible = false;
+						DBPS_OpenContent(SofiLauncherExePath.c_str());
+					}
+
 					ImGui::Spacing();
-					if (SofiLauncherExePath.empty())
-					{
-						ImGui::TextDisabled("TARJETA VACÍA");
-						ImGui::Spacing();
-						ImGui::TextWrapped("Con esta ventana abierta, arrastrá y soltá un archivo .EXE sobre SOFIA-Pure para asignarlo a esta tarjeta.");
-					}
-					else
-					{
-						ImGui::TextWrapped("EJECUTABLE ASIGNADO:");
-						ImGui::TextWrapped("%s", SofiLauncherExePath.c_str());
-						ImGui::Spacing();
-						if (ImGui::Button("EJECUTAR", ImVec2(150.0f, 38.0f)))
-						{
-							SofiUIVisible = false;
-							DBPS_OpenContent(SofiLauncherExePath.c_str());
-						}
-						ImGui::SameLine();
-						if (ImGui::Button("QUITAR EXE", ImVec2(120.0f, 38.0f)))
-						{
-							SofiLauncherExePath.clear();
-							ZL_Application::SettingsDel("interface_launcher_exe");
-							DirtySettings();
-						}
-					}
-					ImGui::EndChild();
-					ImGui::TextDisabled("La asignación se conserva al cerrar SOFIA-Pure. Esta prueba no modifica opciones del emulador.");
+					if (ImGui::Button("AGREGAR EXE", ImVec2(340.0f, 42.0f)))
+						SofiLauncherSelectExe();
+
+					ImGui::TextDisabled("El ejecutable seleccionado se conserva al cerrar SOFIA-Pure.");
 				}
 				ImGui::End();
 			}
