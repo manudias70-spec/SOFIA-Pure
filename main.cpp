@@ -2084,7 +2084,7 @@ static void OnDropFile(const ZL_String& path)
 	if (SofiUIVisible && SofiLauncherOpen)
 	{
 		const char* ext = strrchr(path.c_str(), '.');
-		if (!ext || (ext[1] | 0x20) != 'e' || (ext[2] | 0x20) != 'x' || (ext[3] | 0x20) != 'e' || ext[4] != '\0') return;
+		if (!ext || strlen(ext) != 4 || (ext[1] | 0x20) != 'e' || (ext[2] | 0x20) != 'x' || (ext[3] | 0x20) != 'e') return;
 		SofiLauncherExePath = path.c_str();
 		ZL_Application::SettingsSet("interface_launcher_exe", SofiLauncherExePath.c_str());
 		DirtySettings();
