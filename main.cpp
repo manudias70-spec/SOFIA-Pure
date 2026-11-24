@@ -80,6 +80,7 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiLauncherOpen = false;
+static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
@@ -3097,6 +3098,18 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Begin("GAME LAUNCHER", &SofiLauncherOpen, ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("PRUEBA EXPERIMENTAL  //  PERFIL ÚNICO");
+					ImGui::SameLine(ImGui::GetWindowWidth() - 42.0f);
+					if (ImGui::Button("##SofiGameProperties", ImVec2(28.0f, 26.0f)))
+						SofiLauncherPropertiesOpen = true;
+					{
+						const ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
+						const float cx = (a.x + b.x) * 0.5f, cy = (a.y + b.y) * 0.5f;
+						ImDrawList* draw = ImGui::GetWindowDrawList();
+						const ImU32 dotsColor = IM_COL32(225, 240, 250, 255);
+						draw->AddCircleFilled(ImVec2(cx, cy - 5.0f), 1.7f, dotsColor);
+						draw->AddCircleFilled(ImVec2(cx, cy), 1.7f, dotsColor);
+						draw->AddCircleFilled(ImVec2(cx, cy + 5.0f), 1.7f, dotsColor);
+					}
 					ImGui::Separator();
 
 					const char* exeName = SofiLauncherExePath.c_str();
@@ -3121,6 +3134,25 @@ static struct sDOSBoxPure : public ZL_Application
 						SofiLauncherSelectExe();
 
 					ImGui::TextDisabled("El ejecutable seleccionado se conserva al cerrar SOFIA-Pure.");
+				}
+				ImGui::End();
+			}
+
+			// Empty per-game properties window: only the two requested tabs for this first step.
+			if (SofiLauncherPropertiesOpen)
+			{
+				ImGui::SetNextWindowPos(ImVec2(180.0f, 150.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(460.0f, 340.0f), ImGuiCond_FirstUseEver);
+				if (ImGui::Begin("PROPIEDADES DEL JUEGO", &SofiLauncherPropertiesOpen, ImGuiWindowFlags_NoCollapse))
+				{
+					if (ImGui::BeginTabBar("##SofiGamePropertiesTabs"))
+					{
+						if (ImGui::BeginTabItem("IMAGEN"))
+							ImGui::EndTabItem();
+						if (ImGui::BeginTabItem("CONFIG"))
+							ImGui::EndTabItem();
+						ImGui::EndTabBar();
+					}
 				}
 				ImGui::End();
 			}
