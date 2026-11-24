@@ -2167,9 +2167,9 @@ static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wst
 	for(int y=0;y<180;y++) for(int x=0;x<320;x++)
 	{
 		double fx=ox+((x+0.5)*cw/320.0)-0.5, fy=oy+((y+0.5)*hh/180.0)-0.5;
-		int x0=(int)std::max(0.0,std::min((double)sw-1.0,std::floor(fx))), y0=(int)std::max(0.0,std::min((double)sh-1.0,std::floor(fy)));
-		int x1=std::min(x0+1,sw-1),y1=std::min(y0+1,sh-1);
-		double dx=std::max(0.0,std::min(1.0,fx-std::floor(fx))),dy=std::max(0.0,std::min(1.0,fy-std::floor(fy)));
+		int x0=(int)(std::max)(0.0,(std::min)((double)sw-1.0,std::floor(fx))), y0=(int)(std::max)(0.0,(std::min)((double)sh-1.0,std::floor(fy)));
+		int x1=(std::min)(x0+1,sw-1),y1=(std::min)(y0+1,sh-1);
+		double dx=(std::max)(0.0,(std::min)(1.0,fx-std::floor(fx))),dy=(std::max)(0.0,(std::min)(1.0,fy-std::floor(fy)));
 		for(int c=0;c<3;c++){
 			double a=src[(y0*sw+x0)*3+c],b=src[(y0*sw+x1)*3+c],d=src[(y1*sw+x0)*3+c],e=src[(y1*sw+x1)*3+c];
 			double top=a+(b-a)*dx,bot=d+(e-d)*dx; pixels[(y*320+x)*3+c]=(unsigned char)(top+(bot-top)*dy+0.5);
