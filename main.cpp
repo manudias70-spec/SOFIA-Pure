@@ -1089,7 +1089,7 @@ static void SofiMidiCombo()
 	{
 		for (int i = 0; option->values[i].value; ++i)
 		{
-			const char* label = option->values[i].label ? option->values[i].label : option->values[i].value;
+			const char* label = SofiTranslate(option->values[i].label ? option->values[i].label : option->values[i].value);
 			const bool isSelected = (i == selected);
 			if (ImGui::Selectable(label, isSelected)) SofiVideoSetSetting("dosbox_pure_midi", option->values[i].value);
 			if (isSelected) ImGui::SetItemDefaultFocus();
