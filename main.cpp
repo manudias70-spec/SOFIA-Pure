@@ -2614,12 +2614,10 @@ static struct sDOSBoxPure : public ZL_Application
 			// AUDIO uses the same live settings path as VIDEO; MIDI uses the core's dynamic list.
 			if (SofiAudioPanelOpen)
 			{
-				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("SOFI AUDIO", &SofiAudioPanelOpen,
-					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR");
 					ImGui::Separator();
@@ -2700,12 +2698,10 @@ static struct sDOSBoxPure : public ZL_Application
 			// through the same settings path used by the Libretro environment callbacks.
 			if (SofiVideoPanelOpen)
 			{
-				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("SOFI VIDEO", &SofiVideoPanelOpen,
-					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR");
 					ImGui::Separator();
@@ -2798,12 +2794,10 @@ static struct sDOSBoxPure : public ZL_Application
 			// same settings/update path used by the DOSBox Pure core options.
 			if (SofiOSDPanelOpen)
 			{
-				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("SOFI OSD", &SofiOSDPanelOpen,
-					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("GENERAL  //  CONFIGURACIÓN");
 					ImGui::Separator();
@@ -2850,12 +2844,10 @@ static struct sDOSBoxPure : public ZL_Application
 			// Controller assignments use the existing frontend capture/binding API.
 			if (SofiInputPanelOpen)
 			{
-				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("SOFI INPUT", &SofiInputPanelOpen,
-					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
 					ImGui::Separator();
@@ -2943,12 +2935,10 @@ static struct sDOSBoxPure : public ZL_Application
 			// the same live core-option path already used by INPUT.
 			if (SofiCorePanelOpen)
 			{
-				const float panelHeight = ImGui::GetIO().DisplaySize.y - 132.0f;
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(448.0f, panelHeight > 240.0f ? panelHeight : 240.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("SOFI CORE", &SofiCorePanelOpen,
-					ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS");
 					ImGui::Separator();
