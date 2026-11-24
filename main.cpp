@@ -91,6 +91,8 @@ static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath;
+static bool SofiLauncherProfileFilterActive = false;
+static int SofiLauncherProfileFilter = 0;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
 
 // Main SOFI settings panels are mutually exclusive. Explorer is intentionally independent.
@@ -2132,6 +2134,62 @@ static bool SofiLauncherSelectExe()
 
 // Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
 static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImageStatus;
+static std::string SofiLauncherProfileStatus;
+
+static std::string SofiLauncherGameProfilePath(const std::string& exePath)
+{
+	if (exePath.empty() || SofiLauncherDataPath.empty()) return std::string();
+	std::string folder = SofiLauncherDataPath;
+	folder.append(1, CROSS_FILESPLIT);
+	folder += "GLProfiles";
+	char filename[40];
+	const unsigned int hash = ZL_Checksum::CRC32(exePath.c_str(), (unsigned int)exePath.size(), 0);
+	snprintf(filename, sizeof(filename), "game_%08X.cfg", hash);
+	folder.append(1, CROSS_FILESPLIT);
+	folder += filename;
+	return folder;
+}
+
+// Each profile belongs to the full executable path. Store the path too, so a hash collision cannot apply another game's settings.
+static bool SofiLauncherLoadGameProfileFilter(const std::string& exePath, int& filter)
+{
+	const std::string path = SofiLauncherGameProfilePath(exePath);
+	if (path.empty()) return false;
+	FILE* f = fopen_wrap(path.c_str(), "rb");
+	if (!f) return false;
+	if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return false; }
+	const long size = ftell(f);
+	if (size <= 0 || size > 131072 || fseek(f, 0, SEEK_SET) != 0) { fclose(f); return false; }
+	std::vector<char> data((size_t)size + 1, 0);
+	const size_t read = fread(data.data(), 1, (size_t)size, f);
+	fclose(f);
+	if (read != (size_t)size) return false;
+	const std::string contents(data.data(), read);
+	const size_t first = contents.find('\n');
+	if (first == std::string::npos || contents.substr(0, first) != "SOFIA_GAME_PROFILE_V1") return false;
+	const size_t second = contents.find('\n', first + 1);
+	if (second == std::string::npos || contents.substr(first + 1, second - first - 1) != exePath) return false;
+	char* end = NULL;
+	const long value = strtol(contents.c_str() + second + 1, &end, 10);
+	if (end == contents.c_str() + second + 1 || value < 0 || value > 5) return false;
+	filter = (int)value;
+	return true;
+}
+
+static bool SofiLauncherSaveGameProfileFilter(const std::string& exePath, int filter)
+{
+	const std::string path = SofiLauncherGameProfilePath(exePath);
+	if (path.empty() || filter < 0 || filter > 5) return false;
+	std::string folder = SofiLauncherDataPath;
+	folder.append(1, CROSS_FILESPLIT);
+	folder += "GLProfiles";
+	if (retro_vfs_mkdir_impl(folder.c_str()) == -1) return false;
+	FILE* f = fopen_wrap(path.c_str(), "wb");
+	if (!f) return false;
+	bool ok = fprintf(f, "SOFIA_GAME_PROFILE_V1\n%s\n%d\n", exePath.c_str(), filter) > 0 && !ferror(f);
+	if (fclose(f) != 0) ok = false;
+	return ok;
+}
 static unsigned int SofiLauncherImageTexture = 0;
 static bool SofiLauncherTextureAttempted = false;
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
@@ -2603,7 +2661,7 @@ static void ApplyInterfaceOptions()
 	UseMiddleMouseMenu = ((GetSetting("interface_middlemouse", "false")[0]|0x20) == 't');
 	DrawStretched = !strcmp(GetSetting("dosbox_pure_aspect_correction", "false"), "fill");
 	Scaling = (GetSetting("interface_scaling", "default")[0]&0x5f);
-	CRTFilter = atoi(GetSetting("interface_crtfilter", "false"));
+	CRTFilter = (SofiLauncherProfileFilterActive ? SofiLauncherProfileFilter : atoi(GetSetting("interface_crtfilter", "false")));
 	const int audlatency = ZL_Math::Max(atoi(GetSetting("interface_audiolatency", "25")), 5);
 
 	static const char* sLastShaderSrc;
@@ -2764,6 +2822,8 @@ static void OnDraw()
 		{
 			SofiLauncherWaitingForGameExit = false;
 			SofiLauncherGameWasRunning = false;
+			SofiLauncherProfileFilterActive = false;
+			DoApplyInterfaceOptions = true;
 			SofiUIVisible = true;
 		}
 	}
@@ -3245,6 +3305,8 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::TextWrapped("%s", exeName);
 						if (ImGui::Button("PULSAR PARA INICIAR", ImVec2(340.0f, 42.0f)) && !SofiLauncherExePath.empty())
 						{
+							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfileFilter(SofiLauncherExePath, SofiLauncherProfileFilter);
+							DoApplyInterfaceOptions = true;
 							SofiLauncherWaitingForGameExit = true;
 							SofiLauncherGameWasRunning = false;
 							SofiUIVisible = false;
@@ -3253,6 +3315,8 @@ static struct sDOSBoxPure : public ZL_Application
 					}
 					else if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
 					{
+						SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfileFilter(SofiLauncherExePath, SofiLauncherProfileFilter);
+						DoApplyInterfaceOptions = true;
 						SofiLauncherWaitingForGameExit = true;
 						SofiLauncherGameWasRunning = false;
 						SofiUIVisible = false;
@@ -3294,17 +3358,17 @@ static struct sDOSBoxPure : public ZL_Application
 						}
 						if (ImGui::BeginTabItem("CONFIG"))
 						{
-							// This selector always writes to the current game's override, never the global setting.
+							// The template stores this option in its own per-game profile, never in global settings.
 							static const char* gameCrtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
-							static const char* gameCrtValues[] = { "false", "1", "2", "3", "4", "5" };
 							int selectedFilter = 0;
+							if (!SofiLauncherLoadGameProfileFilter(SofiLauncherExePath, selectedFilter))
 							{
 								mtxCoreOptions.Lock();
-								const char* activeFilter = GetSetting("interface_crtfilter", "false");
-								for (int i = 0; i < IM_ARRAYSIZE(gameCrtValues); ++i)
-									if (!strcmp(activeFilter ? activeFilter : "false", gameCrtValues[i])) { selectedFilter = i; break; }
+								const char* globalFilter = GetSetting("interface_crtfilter", "false");
+								selectedFilter = atoi(globalFilter ? globalFilter : "false");
 								mtxCoreOptions.Unlock();
 							}
+							selectedFilter = ZL_Math::Clamp(selectedFilter, 0, IM_ARRAYSIZE(gameCrtItems) - 1);
 							std::vector<const char*> translatedGameCrtItems;
 							translatedGameCrtItems.reserve(IM_ARRAYSIZE(gameCrtItems));
 							for (int i = 0; i < IM_ARRAYSIZE(gameCrtItems); ++i)
@@ -3312,10 +3376,15 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::SetNextItemWidth(260.0f);
 							if (ImGui::Combo(SofiTranslate("CRT Filter"), &selectedFilter, translatedGameCrtItems.data(), IM_ARRAYSIZE(gameCrtItems)))
 							{
-								if (!DBPS_IsConfigOverride("interface_crtfilter"))
-									DBPS_ToggleConfigOverride("interface_crtfilter", "false");
-								SofiVideoSetSetting("interface_crtfilter", gameCrtValues[selectedFilter]);
+								if (SofiLauncherSaveGameProfileFilter(SofiLauncherExePath, selectedFilter))
+									SofiLauncherProfileStatus = "Perfil del juego guardado.";
+								else
+									SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
 							}
+							if (!SofiLauncherExePath.empty())
+								ImGui::TextDisabled("El filtro se guarda por separado para este juego.");
+							if (!SofiLauncherProfileStatus.empty())
+								ImGui::TextWrapped("%s", SofiLauncherProfileStatus.c_str());
 							ImGui::EndTabItem();
 						}
 						ImGui::EndTabBar();
