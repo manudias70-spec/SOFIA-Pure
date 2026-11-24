@@ -3350,36 +3350,37 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 420.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("GAME LAUNCHER", &SofiLauncherOpen, ImGuiWindowFlags_NoCollapse))
 				{
-					ImGui::TextDisabled("PRUEBA EXPERIMENTAL  //  PERFIL ÚNICO");
-					ImGui::SameLine(ImGui::GetWindowWidth() - 42.0f);
-					if (ImGui::Button("##SofiGameProperties", ImVec2(28.0f, 26.0f)))
-						SofiLauncherPropertiesOpen = true;
-					{
-						const ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
-						const float cx = (a.x + b.x) * 0.5f, cy = (a.y + b.y) * 0.5f;
-						ImDrawList* draw = ImGui::GetWindowDrawList();
-						const ImU32 dotsColor = IM_COL32(225, 240, 250, 255);
-						draw->AddCircleFilled(ImVec2(cx, cy - 5.0f), 1.7f, dotsColor);
-						draw->AddCircleFilled(ImVec2(cx, cy), 1.7f, dotsColor);
-						draw->AddCircleFilled(ImVec2(cx, cy + 5.0f), 1.7f, dotsColor);
-					}
-					ImGui::Separator();
-
-					const char* exeName = SofiLauncherExePath.c_str();
-					const char* backslash = strrchr(exeName, '\\');
-					const char* slash = strrchr(exeName, '/');
-					if (slash && (!backslash || slash > backslash)) backslash = slash;
-					if (backslash) exeName = backslash + 1;
-					const std::string cardLabel = SofiLauncherExePath.empty()
-						? "JUEGO 01\n\nSIN EJECUTABLE\n\nAGREGÁ UN EXE ABAJO"
-						: std::string("JUEGO 01\n\n") + exeName + "\n\nPULSAR PARA INICIAR";
-
+					// Minimal card: click the artwork to launch; the top-right dots open its actions.
 					SofiLauncherEnsureImageTexture();
+					const ImVec2 cardSize(320.0f, 180.0f);
 					if (SofiLauncherImageTexture)
 					{
-						ImGui::Image((ImTextureID)SofiLauncherImageTexture, ImVec2(320.0f, 180.0f));
-						ImGui::TextWrapped("%s", exeName);
-						if (ImGui::Button("PULSAR PARA INICIAR", ImVec2(340.0f, 42.0f)) && !SofiLauncherExePath.empty())
+						ImGui::Image((ImTextureID)SofiLauncherImageTexture, cardSize);
+						const bool launchClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						const ImVec2 imageMin = ImGui::GetItemRectMin();
+						const ImVec2 imageMax = ImGui::GetItemRectMax();
+						const ImVec2 menuMin(imageMax.x - 34.0f, imageMin.y + 6.0f);
+						const ImVec2 menuMax(imageMax.x - 6.0f, imageMin.y + 34.0f);
+						const bool menuHovered = ImGui::IsMouseHoveringRect(menuMin, menuMax, true);
+						ImDrawList* cardDraw = ImGui::GetWindowDrawList();
+						cardDraw->AddRectFilled(menuMin, menuMax, IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 6.0f);
+						const float dotX = (menuMin.x + menuMax.x) * 0.5f;
+						const float dotY = (menuMin.y + menuMax.y) * 0.5f;
+						for (int dot = -1; dot <= 1; ++dot)
+							cardDraw->AddCircleFilled(ImVec2(dotX + dot * 6.0f, dotY), 1.7f, IM_COL32(240, 248, 255, 255));
+						ImGui::SetCursorScreenPos(menuMin);
+						ImGui::InvisibleButton("##SofiGameCardMenu", ImVec2(menuMax.x - menuMin.x, menuMax.y - menuMin.y));
+						if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) ImGui::OpenPopup("##SofiGameCardActions");
+						if (ImGui::BeginPopup("##SofiGameCardActions"))
+						{
+							if (ImGui::MenuItem("Seleccionar EXE")) SofiLauncherSelectExe();
+							if (ImGui::MenuItem("Seleccionar SETUP")) SofiLauncherSelectSetup();
+							if (ImGui::MenuItem("CONFIG")) SofiLauncherPropertiesOpen = true;
+							ImGui::Separator();
+							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty())) SofiLauncherRunSetup();
+							ImGui::EndPopup();
+						}
+						if (launchClicked && !SofiLauncherExePath.empty())
 						{
 							SofiLauncherGameProfile launchProfile;
 							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
@@ -3395,27 +3396,13 @@ static struct sDOSBoxPure : public ZL_Application
 							DBPS_OpenContent(SofiLauncherExePath.c_str());
 						}
 					}
-					else if (ImGui::Button(cardLabel.c_str(), ImVec2(340.0f, 230.0f)) && !SofiLauncherExePath.empty())
+					else
 					{
-						SofiLauncherGameProfile launchProfile;
-						SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
-						SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
-						SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
-						SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
-						SofiLauncherRestoreProfileCyclesMax();
-						if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
-						DoApplyInterfaceOptions = true;
-						SofiLauncherWaitingForGameExit = true;
-						SofiLauncherGameWasRunning = false;
-						SofiUIVisible = false;
-						DBPS_OpenContent(SofiLauncherExePath.c_str());
+						ImGui::Button("##SofiEmptyGameCard", cardSize);
+						ImGui::GetWindowDrawList()->AddText(ImGui::GetItemRectMin(), IM_COL32(190, 205, 220, 255), "SELECCIONA UN EJECUTABLE");
 					}
-
-					ImGui::Spacing();
-					if (ImGui::Button("AGREGAR EXE", ImVec2(340.0f, 42.0f)))
-						SofiLauncherSelectExe();
-
-					ImGui::TextDisabled("El ejecutable seleccionado se conserva al cerrar SOFIA-Pure.");
+					// Reserved space for the game name; naming is added with the Add Game flow.
+					ImGui::Dummy(ImVec2(cardSize.x, 28.0f));
 				}
 				ImGui::End();
 			}
