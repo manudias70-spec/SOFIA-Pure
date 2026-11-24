@@ -618,6 +618,114 @@ static const char* SofiText(const char* spanish, const char* english)
 	return SofiIsEnglish() ? english : spanish;
 }
 
+static const char* SofiTranslate(const char* text)
+{
+	struct SofiTranslation { const char* spanish; const char* english; };
+	static const SofiTranslation translations[] = {
+		{"CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR", "ACTIVE CONFIGURATION  //  CHANGES IN THE EMULATOR"},
+		{"CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR", "ACTIVE CONFIGURATION  //  CHANGES APPLIED TO THE EMULATOR"},
+		{"ADAPTADORES DE VIDEO", "VIDEO ADAPTERS"}, {"PRESENTACIÓN DE IMAGEN", "IMAGE PRESENTATION"},
+		{"AVANZADO", "ADVANCED"}, {"VOLUMEN", "VOLUME"}, {"ATAJOS", "SHORTCUTS"},
+		{"GENERAL  //  CONFIGURACIÓN", "GENERAL  //  SETTINGS"},
+		{"INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES", "INPUT  //  KEYBOARD, MOUSE AND CONTROLLER SETTINGS"},
+		{"CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS", "CORE  //  HARDWARE, OTHER OS AND STATISTICS"},
+		{"GENERAL INPUT", "ENTRADA GENERAL"}, {"MOUSE", "MOUSE"}, {"HARDWARE", "HARDWARE"},
+		{"OTROS SO", "OTHER OS"}, {"ESTADÍSTICAS", "STATISTICS"}, {"SOUNDBLASTER", "SOUNDBLASTER"},
+		{"MIDI OUTPUT", "SALIDA MIDI"}, {"MIDI Output", "Salida MIDI"},
+		{"Audio Latency", "Latencia de audio"}, {"SoundBlaster Settings", "Configuración de Sound Blaster"},
+		{"Sound Blaster", "Sound Blaster"}, {"MIDI Synthesizer", "Sintetizador MIDI"},
+		{"Adlib", "AdLib"}, {"PC-Speaker", "Altavoz de PC"}, {"CD-ROM Audio", "Audio de CD-ROM"},
+		{"Other Devices", "Otros dispositivos"}, {"SoundBlaster Type (restart required)", "Tipo de Sound Blaster (requiere reinicio)"},
+		{"SoundBlaster Adlib/FM Mode", "Modo AdLib/FM de Sound Blaster"},
+		{"SoundBlaster Adlib Provider", "Proveedor AdLib de Sound Blaster"},
+		{"Enable Gravis Ultrasound (restart required)", "Activar Gravis Ultrasound (requiere reinicio)"},
+		{"Enable Tandy Sound Device (restart required)", "Activar sonido Tandy (requiere reinicio)"},
+		{"Swap Stereo Channels", "Intercambiar canales estéreo"},
+		{"Emulated Graphics Chip (restart required)", "Chip gráfico emulado (requiere reinicio)"},
+		{"SVGA Mode (restart required)", "Modo SVGA (requiere reinicio)"},
+		{"SVGA Memory (restart required)", "Memoria SVGA (requiere reinicio)"},
+		{"CGA Mode", "Modo CGA"}, {"Hercules Color Mode", "Modo de color Hercules"},
+		{"3dfx Voodoo Emulation", "Emulación 3dfx Voodoo"}, {"3dfx Voodoo Performance", "Rendimiento 3dfx Voodoo"},
+		{"3dfx Voodoo OpenGL Scaling", "Escalado OpenGL de 3dfx Voodoo"},
+		{"3dfx Voodoo Gamma Correction", "Corrección gamma de 3dfx Voodoo"},
+		{"Scaling", "Escalado"}, {"CRT Filter", "Filtro CRT"},
+		{"CRT Filter Scanline Intensity", "Intensidad de líneas de barrido CRT"},
+		{"CRT Filter Blur/Sharpness", "Desenfoque/nitidez del filtro CRT"},
+		{"CRT Filter Phosphor Mask Strength", "Intensidad de máscara de fósforo CRT"},
+		{"CRT Filter Curvature", "Curvatura del filtro CRT"},
+		{"CRT Filter Rounded Corner", "Esquinas redondeadas del filtro CRT"},
+		{"Aspect Ratio Correction", "Corrección de relación de aspecto"},
+		{"Overscan Border Size", "Tamaño del borde overscan"},
+		{"Mouse Input Mode", "Modo de entrada del mouse"}, {"Mouse Sensitivity", "Sensibilidad del mouse"},
+		{"Horizontal Mouse Sensitivity", "Sensibilidad horizontal del mouse"},
+		{"Automatic Game Pad Mappings", "Asignaciones automáticas del control"},
+		{"Keyboard Layout", "Distribución del teclado"},
+		{"Joystick Analog Deadzone", "Zona muerta analógica del joystick"},
+		{"Enable Joystick Timed Intervals", "Activar intervalos temporizados del joystick"},
+		{"Emulated Performance", "Rendimiento emulado"},
+		{"Maximum Emulated Performance", "Rendimiento emulado máximo"},
+		{"Performance Scale", "Escala de rendimiento"}, {"Limit CPU Usage", "Limitar uso de CPU"},
+		{"Memory Size (restart required)", "Tamaño de memoria (requiere reinicio)"},
+		{"CPU Type (restart required)", "Tipo de CPU (requiere reinicio)"},
+		{"CPU Core", "Núcleo de CPU"}, {"Modem Type", "Tipo de módem"},
+		{"OS Disk Modifications (restart required)", "Modificaciones del disco del SO (requiere reinicio)"},
+		{"Free Space on D: in OS (restart required)", "Espacio libre en D: del SO (requiere reinicio)"},
+		{"Force Normal Core in OS", "Forzar núcleo normal en el SO"},
+		{"Show Performance Statistics", "Mostrar estadísticas de rendimiento"},
+		{"Connect a controller to configure its inputs.", "Conectá un control para configurar sus entradas."},
+		{"Select Assign, then press a controller input. Right-click cancels.", "Seleccioná Asignar y luego presioná un botón del control. El clic derecho cancela."},
+		{"Unassigned", "Sin asignar"}, {"Assign", "Asignar"},
+		{"D-Pad Up", "Cruceta arriba"}, {"D-Pad Down", "Cruceta abajo"},
+		{"D-Pad Left", "Cruceta izquierda"}, {"D-Pad Right", "Cruceta derecha"},
+		{"Select", "Seleccionar"}, {"Start", "Inicio"},
+		{"Left Stick Up", "Stick izquierdo arriba"}, {"Left Stick Down", "Stick izquierdo abajo"},
+		{"Left Stick Left", "Stick izquierdo izquierda"}, {"Left Stick Right", "Stick izquierdo derecha"},
+		{"Right Stick Up", "Stick derecho arriba"}, {"Right Stick Down", "Stick derecho abajo"},
+		{"Right Stick Left", "Stick derecho izquierda"}, {"Right Stick Right", "Stick derecho derecha"},
+		{"Maximum speed", "Velocidad máxima"}, {"None", "Ninguno"},
+		{"Auto", "Automático"}, {"Default", "Predeterminado"}, {"Disabled", "Desactivado"},
+		{"Enabled", "Activado"}, {"Off", "Desactivado"}, {"On", "Activado"},
+		{"Only Scanlines", "Solo líneas de barrido"}, {"TV style phosphors", "Fósforo estilo televisor"},
+		{"Aperture-grille phosphors", "Fósforo de rejilla de apertura"},
+		{"Stretched VGA style phosphors", "Fósforo VGA estirado"}, {"VGA style phosphors", "Fósforo estilo VGA"},
+		{"No scanline gaps", "Sin espacios entre líneas"}, {"Weaker gaps", "Espacios muy tenues"},
+		{"Weak gaps", "Espacios tenues"}, {"Normal gaps", "Espacios normales"},
+		{"Strong gaps", "Espacios marcados"}, {"Stronger gaps", "Espacios más marcados"},
+		{"Strongest gaps", "Espacios máximos"}, {"Blurry", "Desenfocado"},
+		{"Smooth", "Suave"}, {"Pixely", "Pixelado"}, {"Sharper", "Más nítido"},
+		{"Sharpest", "Máxima nitidez"}, {"Weak", "Débil"}, {"Strong", "Fuerte"},
+		{"Very Strong", "Muy fuerte"}, {"Small", "Pequeño"}, {"Medium", "Mediano"},
+		{"Large", "Grande"}, {"Black & white", "Blanco y negro"},
+		{"Black & amber", "Negro y ámbar"}, {"Black & green", "Negro y verde"},
+		{"Early model, composite mode auto", "Modelo temprano, modo compuesto automático"},
+		{"Early model, composite mode on", "Modelo temprano, modo compuesto activado"},
+		{"Early model, composite mode off", "Modelo temprano, modo compuesto desactivado"},
+		{"Late model, composite mode auto", "Modelo tardío, modo compuesto automático"},
+		{"Late model, composite mode on", "Modelo tardío, modo compuesto activado"},
+		{"Late model, composite mode off", "Modelo tardío, modo compuesto desactivado"},
+		{"Enabled - 8MB memory", "Activado - 8 MB de memoria"},
+		{"Enabled - 12MB memory, Dual Texture", "Activado - 12 MB de memoria, textura dual"},
+		{"Enabled - 4MB memory, Low Resolution Only", "Activado - 4 MB de memoria, solo baja resolución"},
+		{"Hardware OpenGL", "OpenGL por hardware"}, {"Software Multi Threaded", "Software multinúcleo"},
+		{"Software Multi Threaded, low quality", "Software multinúcleo, baja calidad"},
+		{"Software Single Threaded, low quality", "Software mononúcleo, baja calidad"},
+		{"Software Single Threaded", "Software mononúcleo"},
+		{"Sharp Scaling (default)", "Escalado nítido (predeterminado)"},
+		{"Simple Scaling (nearest neighbor)", "Escalado simple (vecino más cercano)"},
+		{"Bilinear Scaling", "Escalado bilineal"}, {"Integer Scaling", "Escalado entero"},
+		{"Off (default)", "Desactivado (predeterminado)"}, {"On", "Activado"},
+		{"F12 sin modificador se envía al programa DOS.", "F12 without a modifier is sent to the DOS program."},
+		{"VOLVER A SOFI UI", "BACK TO SOFI UI"}
+	};
+	if (!text) return "";
+	for (int i = 0; i < IM_ARRAYSIZE(translations); ++i)
+	{
+		if (!strcmp(text, translations[i].spanish)) return SofiIsEnglish() ? translations[i].english : translations[i].spanish;
+		if (!strcmp(text, translations[i].english)) return SofiIsEnglish() ? translations[i].english : translations[i].spanish;
+	}
+	return text;
+}
+
 static void SofiVideoCombo(const char* label, const char* key,
 	const char* const* items, const char* const* values, int count, const char* defaultValue)
 {
@@ -630,7 +738,10 @@ static void SofiVideoCombo(const char* label, const char* key,
 		mtxCoreOptions.Unlock();
 	}
 	ImGui::SetNextItemWidth(260.0f);
-	if (ImGui::Combo(label, &selected, items, count))
+	std::vector<const char*> translatedItems;
+	translatedItems.reserve(count);
+	for (int i = 0; i < count; ++i) translatedItems.push_back(SofiTranslate(items[i]));
+	if (ImGui::Combo(SofiTranslate(label), &selected, translatedItems.data(), count))
 		SofiVideoSetSetting(key, values[selected]);
 }
 
@@ -654,10 +765,10 @@ static void SofiCoreOptionCombo(const char* label, const char* key)
 	ImGui::SetNextItemWidth(300.0f);
 	if (!option || !option->values || !option->values[0].value)
 	{
-		ImGui::TextDisabled("%s: unavailable", label);
+		ImGui::TextDisabled("%s: %s", SofiTranslate(label), SofiTranslate("unavailable"));
 		return;
 	}
-	if (ImGui::BeginCombo(label, preview))
+	if (ImGui::BeginCombo(SofiTranslate(label), preview))
 	{
 		for (int i = 0; option->values[i].value; ++i)
 		{
@@ -688,8 +799,8 @@ static void SofiMidiCombo()
 	}
 	mtxCoreOptions.Unlock();
 	ImGui::SetNextItemWidth(300.0f);
-	if (!option || !option->values || !option->values[0].value) { ImGui::TextDisabled("MIDI options unavailable."); return; }
-	if (ImGui::BeginCombo("MIDI Output", preview))
+	if (!option || !option->values || !option->values[0].value) { ImGui::TextDisabled("%s", SofiTranslate("MIDI options unavailable.")); return; }
+	if (ImGui::BeginCombo(SofiTranslate("MIDI Output"), preview))
 	{
 		for (int i = 0; option->values[i].value; ++i)
 		{
@@ -2630,19 +2741,19 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Begin("SOFI AUDIO", &SofiAudioPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
-					ImGui::TextDisabled("CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR");
+					ImGui::TextDisabled(SofiTranslate("CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiAudioOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AUDIO");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("AUDIO"));
 					static const char* latencyItems[] = { "10 ms", "15 ms", "20 ms", "25 ms", "30 ms", "35 ms", "40 ms", "45 ms", "50 ms", "55 ms", "60 ms", "65 ms", "70 ms", "75 ms", "80 ms", "85 ms", "90 ms", "95 ms", "100 ms" };
 					static const char* latencyValues[] = { "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100" };
 					SofiVideoCombo("Audio Latency", "interface_audiolatency", latencyItems, latencyValues, IM_ARRAYSIZE(latencyItems), "25");
 					ImGui::TextDisabled("Standalone build: sample rate is fixed by the build; latency is configurable.");
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "SOUNDBLASTER");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("SOUNDBLASTER"));
 					static const char* sbConfigItems[] = {
 						"Port 0x220, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5", "Port 0x220, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5",
 						"Port 0x240, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5", "Port 0x240, IRQ 7, 8-Bit DMA 3, 16-bit DMA 7",
@@ -2654,13 +2765,13 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiVideoCombo("SoundBlaster Settings", "dosbox_pure_sblaster_conf", sbConfigItems, sbConfigValues, IM_ARRAYSIZE(sbConfigItems), "A220 I7 D1 H5");
 
 					ImGui::Spacing();
- 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MIDI OUTPUT");
+ 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("MIDI OUTPUT"));
 					SofiMidiCombo();
 
 					static const char* volumeItems[] = { "5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%", "55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%", "110%", "120%", "130%", "140%", "150%", "160%", "170%", "180%", "190%", "200%", "225%", "250%", "275%", "300%", "325%", "350%", "375%", "400%", "425%", "450%", "475%", "500%" };
 					static const char* volumeValues[] = { "0.05", "0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5", "0.55", "0.6", "0.65", "0.7", "0.75", "0.8", "0.85", "0.9", "0.95", "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0", "2.25", "2.5", "2.75", "3.0", "3.25", "3.5", "3.75", "4.0", "4.25", "4.5", "4.75", "5.0" };
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "VOLUMEN");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("VOLUMEN"));
 					SofiVideoCombo("Sound Blaster", "dosbox_pure_volume_sb", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
 					SofiVideoCombo("MIDI Synthesizer", "dosbox_pure_volume_midi", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
 					SofiVideoCombo("Adlib", "dosbox_pure_volume_adlib", volumeItems, volumeValues, IM_ARRAYSIZE(volumeItems), "1.0");
@@ -2682,7 +2793,7 @@ static struct sDOSBoxPure : public ZL_Application
 					static const char* stereoValues[] = { "false", "true" };
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "AVANZADO");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("AVANZADO"));
 					SofiVideoCombo("SoundBlaster Type (restart required)", "dosbox_pure_sblaster_type", sbTypeItems, sbTypeValues, IM_ARRAYSIZE(sbTypeItems), "sb16");
 					{
 						mtxCoreOptions.Lock();
@@ -2714,12 +2825,12 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Begin("SOFI VIDEO", &SofiVideoPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
-					ImGui::TextDisabled("CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR");
+					ImGui::TextDisabled(SofiTranslate("CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiVideoOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ADAPTADORES DE VIDEO");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("ADAPTADORES DE VIDEO"));
 					static const char* machineItems[] = { "SVGA (Super Video Graphics Array)", "VGA (Video Graphics Array)", "EGA (Enhanced Graphics Adapter)", "CGA (Color Graphics Adapter)", "Tandy (Tandy Graphics Adapter)", "Hercules (Hercules Graphics Card)", "PCjr" };
 					static const char* machineValues[] = { "svga", "vga", "ega", "cga", "tandy", "hercules", "pcjr" };
 					SofiVideoCombo("Emulated Graphics Chip (restart required)", "dosbox_pure_machine", machineItems, machineValues, IM_ARRAYSIZE(machineItems), "svga");
@@ -2741,7 +2852,7 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiVideoCombo("Hercules Color Mode", "dosbox_pure_hercules", herculesItems, herculesValues, IM_ARRAYSIZE(herculesItems), "white");
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "3DFX VOODOO");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("3DFX VOODOO"));
 					static const char* voodooItems[] = { "Enabled - 8MB memory", "Enabled - 12MB memory, Dual Texture", "Enabled - 4MB memory, Low Resolution Only", "Disabled" };
 					static const char* voodooValues[] = { "8mb", "12mb", "4mb", "off" };
 					SofiVideoCombo("3dfx Voodoo Emulation", "dosbox_pure_voodoo", voodooItems, voodooValues, IM_ARRAYSIZE(voodooItems), "8mb");
@@ -2759,7 +2870,7 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiVideoCombo("3dfx Voodoo Gamma Correction", "dosbox_pure_voodoo_gamma", gammaItems, gammaValues, IM_ARRAYSIZE(gammaItems), "-2");
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "PRESENTACIÓN DE IMAGEN");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("PRESENTACIÓN DE IMAGEN"));
 					static const char* scalingItems[] = { "Sharp Scaling (default)", "Simple Scaling (nearest neighbor)", "Bilinear Scaling", "Integer Scaling", "xBRZ 4x" };
 					static const char* scalingValues[] = { "default", "nearest", "bilinear", "integer", "xbrz" };
 					SofiVideoCombo("Scaling", "interface_scaling", scalingItems, scalingValues, IM_ARRAYSIZE(scalingItems), "default");
@@ -2820,7 +2931,7 @@ static struct sDOSBoxPure : public ZL_Application
 						languageItems, languageValues, IM_ARRAYSIZE(languageItems), "es");
 
 					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("HOTKEYS"));
 					static const char* hotkeyItems[] = { "CTRL", "ALT", "SHIFT", "CTRL+ALT", "CTRL+SHIFT", "ALT+SHIFT", "CTRL+ALT+SHIFT", "WIN", "MENU", "None" };
 					static const char* hotkeyValues[] = { "1", "2", "4", "3", "5", "6", "7", "8", "16", "0" };
 					SofiVideoCombo(SofiText("Modificador de atajo", "Hotkey Modifier"), "interface_hotkeymod", hotkeyItems, hotkeyValues, IM_ARRAYSIZE(hotkeyItems), "1");
@@ -2866,18 +2977,18 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Begin("SOFI INPUT", &SofiInputPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
-					ImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
+					ImGui::TextDisabled(SofiTranslate("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiInputOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "MOUSE");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("MOUSE"));
 					SofiCoreOptionCombo("Mouse Input Mode", "dosbox_pure_mouse_input");
 					SofiCoreOptionCombo("Mouse Sensitivity", "dosbox_pure_mouse_speed_factor");
 					SofiCoreOptionCombo("Horizontal Mouse Sensitivity", "dosbox_pure_mouse_speed_factor_x");
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "GENERAL INPUT");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("GENERAL INPUT"));
 					SofiCoreOptionCombo("Automatic Game Pad Mappings", "dosbox_pure_auto_mapping");
 					SofiCoreOptionCombo("Keyboard Layout", "dosbox_pure_keyboard_layout");
 					SofiCoreOptionCombo("Joystick Analog Deadzone", "dosbox_pure_joystick_analog_deadzone");
@@ -2889,7 +3000,7 @@ static struct sDOSBoxPure : public ZL_Application
 					{
 					ImGui::Spacing();
 					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "INPUT MAPPING");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("INPUT MAPPING"));
 					static int inputMappingPort = 0;
 					static const char* inputPortItems[] = { "Port 1", "Port 2", "Port 3", "Port 4" };
 					ImGui::SetNextItemWidth(180.0f);
@@ -2936,9 +3047,9 @@ static struct sDOSBoxPure : public ZL_Application
 						std::string joyName, bindName;
 						const bool assigned = DBPS_GetJoyBind((unsigned)inputMappingPort, inputBinds[i].device,
 							inputBinds[i].index, inputBinds[i].id, inputBinds[i].axispos, joyName, bindName, "");
-						ImGui::Text("%s", inputBinds[i].label);
+						ImGui::Text("%s", SofiTranslate(inputBinds[i].label));
 						ImGui::SameLine(150.0f);
-						ImGui::TextDisabled("%s", (assigned ? bindName.c_str() : "Unassigned"));
+						ImGui::TextDisabled("%s", (assigned ? bindName.c_str() : SofiTranslate("Unassigned")));
 						ImGui::SameLine(350.0f);
 						char assignLabel[32];
 						snprintf(assignLabel, sizeof(assignLabel), "Assign##SofiInputBind%d", i);
@@ -2962,12 +3073,12 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Begin("SOFI CORE", &SofiCorePanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
-					ImGui::TextDisabled("CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS");
+					ImGui::TextDisabled(SofiTranslate("CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiCoreOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HARDWARE");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("HARDWARE"));
 					SofiCoreOptionCombo("Emulated Performance", "dosbox_pure_cycles");
 					SofiCoreOptionCombo("Maximum Emulated Performance", "dosbox_pure_cycles_max");
 					SofiCoreOptionCombo("Performance Scale", "dosbox_pure_cycles_scale");
@@ -2979,14 +3090,14 @@ static struct sDOSBoxPure : public ZL_Application
 
 					ImGui::Spacing();
 					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "OTROS SO");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("OTROS SO"));
 					SofiCoreOptionCombo("OS Disk Modifications (restart required)", "dosbox_pure_bootos_ramdisk");
 					SofiCoreOptionCombo("Free Space on D: in OS (restart required)", "dosbox_pure_bootos_dfreespace");
 					SofiCoreOptionCombo("Force Normal Core in OS", "dosbox_pure_bootos_forcenormal");
 
 					ImGui::Spacing();
 					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ESTADÍSTICAS");
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("ESTADÍSTICAS"));
 					SofiCoreOptionCombo("Show Performance Statistics", "dosbox_pure_perfstats");
 
 					ImGui::EndChild();
@@ -3215,7 +3326,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 					ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
 					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
-				if (ImGui::Button("VOLVER A SOFI UI", ImVec2(138.0f, 32.0f)))
+				if (ImGui::Button(SofiTranslate("VOLVER A SOFI UI"), ImVec2(138.0f, 32.0f)))
 					SofiUIVisible = true;
 				ImGui::End();
 			}
