@@ -2137,9 +2137,11 @@ static void SofiLauncherRunSetup()
 {
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 	if (SofiLauncherSetupPath.empty()) return;
-	std::wstring widePath;
-	if (!SofiUtf8ToWide(SofiLauncherSetupPath, widePath)) return;
-	std::wstring command = L"\"" + widePath + L"\"";
+	const int wideLength = MultiByteToWideChar(CP_UTF8, 0, SofiLauncherSetupPath.c_str(), -1, NULL, 0);
+	if (wideLength <= 1) return;
+	std::vector<wchar_t> widePath((size_t)wideLength);
+	if (!MultiByteToWideChar(CP_UTF8, 0, SofiLauncherSetupPath.c_str(), -1, widePath.data(), wideLength)) return;
+	std::wstring command = L"\"" + std::wstring(widePath.data()) + L"\"";
 	std::vector<wchar_t> mutableCommand(command.begin(), command.end());
 	mutableCommand.push_back(0);
 	STARTUPINFOW startup = {};
