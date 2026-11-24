@@ -2981,6 +2981,18 @@ static struct sDOSBoxPure : public ZL_Application
 	virtual void Load(int argc, char *argv[])
 	{
 		ZL_String basePath;
+		#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+		// Windows portable mode: all settings and launcher data live beside the executable.
+		Cross::MakePathAbsolute(Cross::NormalizePath(basePath.assign(argc ? argv[0] : "1").append("/../DOSBoxPure")));
+		if (libretro_vfs_implementation_dir *d = retro_vfs_opendir_impl(basePath.c_str(), true))
+		{
+			retro_vfs_closedir_impl(d);
+		}
+		else
+		{
+			retro_vfs_mkdir_impl(basePath.c_str());
+		}
+		#else
 		if (FILE* curdirf = fopen_wrap("DOSBoxPure.cfg", "rb")) // If cfg file exists in current working directory, use that
 		{
 			fclose(curdirf);
@@ -2989,18 +3001,6 @@ static struct sDOSBoxPure : public ZL_Application
 		else
 		{
 			bool useHome = false;
-			#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
-			// On Windows we use app data only if user has created a DOSBoxPure directory manually
-			wchar_t appDataBuf[300];
-			if (GetEnvironmentVariableW(L"APPDATA", appDataBuf, 300) < 300)
-			{
-				extern char* utf16_to_utf8_string_alloc(const wchar_t*);
-				char* appDataU8 = utf16_to_utf8_string_alloc(appDataBuf);
-				basePath.assign(appDataU8).append("\\DOSBoxPure");
-				free(appDataU8);
-				if (libretro_vfs_implementation_dir *d = retro_vfs_opendir_impl(basePath.c_str(), true)) { useHome = true; retro_vfs_closedir_impl(d); }
-			}
-			#else
 			// On Linux/macOS we default to home directory
 			if (const char* homeEnvU8 = getenv("HOME"))
 			{
@@ -3011,7 +3011,6 @@ static struct sDOSBoxPure : public ZL_Application
 				#endif
 				useHome = (retro_vfs_mkdir_impl(basePath.c_str()) != -1);
 			}
-			#endif
 
 			if (useHome)
 			{
@@ -3022,15 +3021,11 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 			if (!useHome)
 			{
-				// Otherwise default to directory of EXE (on Windows) or current working directory (on Linux/macOS)
-				#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
-				Cross::MakePathAbsolute(Cross::NormalizePath(basePath.assign(argc ? argv[0] : "1").append("/../DOSBoxPure")));
-				#else
+				// Otherwise use the current working directory on Linux/macOS.
 				Cross::MakePathAbsolute(basePath.assign("DOSBoxPure")); // relative to current working directory
-				#endif
 			}
 		}
-
+		#endif
 		ZL_Application::SettingsInit(basePath.c_str());
 		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
 		SofiLauncherDataPath.assign(basePath.c_str());
