@@ -75,6 +75,18 @@ static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
 static bool SofiVideoPanelOpen = false, SofiAudioPanelOpen = false, SofiOSDPanelOpen = false, SofiInputPanelOpen = false, SofiCorePanelOpen = false;
+
+// Main SOFI settings panels are mutually exclusive. Explorer is intentionally independent.
+static void SofiToggleMainPanel(bool& panelOpen)
+{
+	const bool shouldOpen = !panelOpen;
+	SofiVideoPanelOpen = false;
+	SofiAudioPanelOpen = false;
+	SofiOSDPanelOpen = false;
+	SofiInputPanelOpen = false;
+	SofiCorePanelOpen = false;
+	panelOpen = shouldOpen;
+}
 static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
@@ -2552,7 +2564,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				coreSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("CORE", ImVec2(88.0f, 44.0f)))
-				SofiCorePanelOpen = !SofiCorePanelOpen;
+				SofiToggleMainPanel(SofiCorePanelOpen);
 			ImGui::PopStyleColor(4);
 			const bool videoSelected = SofiVideoPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
@@ -2562,7 +2574,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				videoSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
-				SofiVideoPanelOpen = !SofiVideoPanelOpen;
+				SofiToggleMainPanel(SofiVideoPanelOpen);
 			ImGui::PopStyleColor(4);
 			const bool audioSelected = SofiAudioPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
@@ -2572,7 +2584,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				audioSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
-				SofiAudioPanelOpen = !SofiAudioPanelOpen;
+				SofiToggleMainPanel(SofiAudioPanelOpen);
 			ImGui::PopStyleColor(4);
 			const bool osdSelected = SofiOSDPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
@@ -2582,7 +2594,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				osdSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
-				SofiOSDPanelOpen = !SofiOSDPanelOpen;
+				SofiToggleMainPanel(SofiOSDPanelOpen);
 			ImGui::PopStyleColor(4);
 
 			const bool inputSelected = SofiInputPanelOpen;
@@ -2593,7 +2605,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 			if (ImGui::Button("INPUT", ImVec2(88.0f, 44.0f)))
-				SofiInputPanelOpen = !SofiInputPanelOpen;
+				SofiToggleMainPanel(SofiInputPanelOpen);
 			ImGui::PopStyleColor(4);
 
 			ImGui::PopStyleVar(2);
