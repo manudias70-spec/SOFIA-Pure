@@ -2820,7 +2820,7 @@ static struct sDOSBoxPure : public ZL_Application
 						languageItems, languageValues, IM_ARRAYSIZE(languageItems), "es");
 
 					ImGui::Separator();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiText("ATAJOS", "HOTKEYS"));
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");
 					static const char* hotkeyItems[] = { "CTRL", "ALT", "SHIFT", "CTRL+ALT", "CTRL+SHIFT", "ALT+SHIFT", "CTRL+ALT+SHIFT", "WIN", "MENU", "None" };
 					static const char* hotkeyValues[] = { "1", "2", "4", "3", "5", "6", "7", "8", "16", "0" };
 					SofiVideoCombo(SofiText("Modificador de atajo", "Hotkey Modifier"), "interface_hotkeymod", hotkeyItems, hotkeyValues, IM_ARRAYSIZE(hotkeyItems), "1");
@@ -2847,10 +2847,10 @@ static struct sDOSBoxPure : public ZL_Application
 
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ATAJOS");
-					ImGui::Text("%s", SofiText("F1  Pausa  |  F2  Cámara lenta  |  F3  Avance rápido", "F1  Pause  |  F2  Slow Motion  |  F3  Fast Forward"));
-					ImGui::Text("%s", SofiText("F5  Guardado rápido  |  F7  Pantalla completa  |  F9  Carga rápida", "F5  Quick Save  |  F7  Fullscreen  |  F9  Quick Load"));
-					ImGui::Text("%s", SofiText("MIDI NEXT: Scroll Lock  |  Modificador de atajo + F12", "MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12"));
-					ImGui::TextDisabled(SofiText("F12 sin modificador se envía al programa DOS.", "F12 without a modifier is sent to the DOS program."));
+					ImGui::Text("F1  Pausa  |  F2  Cámara lenta  |  F3  Avance rápido");
+					ImGui::Text("F5  Guardado rápido  |  F7  Pantalla completa  |  F9  Carga rápida");
+					ImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
+					ImGui::TextDisabled("F12 sin modificador se envía al programa DOS.");
 					ImGui::EndChild();
 				}
 				ImGui::End();
