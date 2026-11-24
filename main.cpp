@@ -89,11 +89,11 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	panelOpen = shouldOpen;
 }
 static bool SofiUIVisible = true;
-static bool SofiLauncherOpen = false;
-static std::string SofiLauncherExePath;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
+static bool SofiLauncherOpen = false;
+static std::string SofiLauncherExePath;
 static bool SofiCommanderOpen = false, SofiCommanderFocused = false, SofiCommanderFocusRequested = false;
 static bool SofiCommanderMinimized = false, SofiCommanderApplyMinimized = false;
 static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
@@ -2083,6 +2083,8 @@ static void OnDropFile(const ZL_String& path)
 {
 	if (SofiUIVisible && SofiLauncherOpen)
 	{
+		const char* ext = strrchr(path.c_str(), '.');
+		if (!ext || (ext[1] | 0x20) != 'e' || (ext[2] | 0x20) != 'x' || (ext[3] | 0x20) != 'e' || ext[4] != '\0') return;
 		SofiLauncherExePath = path.c_str();
 		ZL_Application::SettingsSet("interface_launcher_exe", SofiLauncherExePath.c_str());
 		DirtySettings();
@@ -3066,9 +3068,7 @@ static struct sDOSBoxPure : public ZL_Application
 						if (ImGui::Button("EJECUTAR", ImVec2(150.0f, 38.0f)))
 						{
 							SofiUIVisible = false;
-						SofiLauncherOpen = false;
-						DBPS_OpenContent(SofiLauncherExePath.c_str());
-						SofiLauncherOpen = true;
+							DBPS_OpenContent(SofiLauncherExePath.c_str());
 					}
 						ImGui::SameLine();
 						if (ImGui::Button("QUITAR EXE", ImVec2(120.0f, 38.0f)))
