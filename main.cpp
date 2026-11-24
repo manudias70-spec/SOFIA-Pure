@@ -2866,6 +2866,10 @@ static struct sDOSBoxPure : public ZL_Application
 					SofiCoreOptionCombo("Joystick Analog Deadzone", "dosbox_pure_joystick_analog_deadzone");
 					SofiCoreOptionCombo("Enable Joystick Timed Intervals", "dosbox_pure_joystick_timed");
 
+					// Legacy INPUT MAPPING UI hidden: native DOSBox Pure OSD remains the L3 mapping entry point.
+					// Keep the existing mapping implementation intact; this change only suppresses its presentation.
+					if (false)
+					{
 					ImGui::Spacing();
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "INPUT MAPPING");
@@ -2926,6 +2930,7 @@ static struct sDOSBoxPure : public ZL_Application
 								inputBinds[i].index, inputBinds[i].id, inputBinds[i].axispos);
 					}
 
+					}
 					ImGui::EndChild();
 				}
 				ImGui::End();
