@@ -80,9 +80,9 @@ replace_once(
     main,
     """\t\t\t\t\tImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
 \t\t\t\t\tImGui::TextDisabled("F12 sin modificador se envía al programa DOS.");""",
-    """\t\t\t\t\tImGui::Text("MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12");
-\t\t\t\t\tImGui::Text("Controller Mapper: Hotkey Modifier + F11");
-\t\t\t\t\tImGui::TextDisabled("F12 y F11 sin modificador se envían al programa DOS.");"""
+    """\t\t\t\t\tImGui::Text(SofiText("MIDI NEXT: Scroll Lock  |  Modificador de atajo + F12", "MIDI NEXT: Scroll Lock  |  Hotkey Modifier + F12"));
+\t\t\t\t\tImGui::Text(SofiText("Controller Mapper: Modificador de atajo + F11", "Controller Mapper: Hotkey Modifier + F11"));
+\t\t\t\t\tImGui::TextDisabled(SofiText("F11 y F12 sin modificador se envían al programa DOS.", "F11 and F12 without a modifier are sent to the DOS program."));"""
 )
 
 replace_once(
@@ -90,6 +90,6 @@ replace_once(
     """\t\t\t\t\tImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
 \t\t\t\t\tImGui::Separator();""",
     """\t\t\t\t\tImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
-\t\t\t\t\tImGui::TextDisabled("Durante el juego: presiona L3 para abrir la configuración del control.");
+\t\t\t\t\tImGui::TextDisabled(SofiText("Durante el juego: presioná L3 para abrir la configuración del control.", "In-game: press L3 to open controller configuration."));
 \t\t\t\t\tImGui::Separator();"""
 )
