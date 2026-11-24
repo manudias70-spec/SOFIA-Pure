@@ -2208,7 +2208,7 @@ static bool SofiLauncherSelectImage()
 	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib){SofiLauncherImageStatus="No se pudo abrir el selector de archivos de Windows.";return false;}
 	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);DWORD dialogError=accepted?0:CommDlgExtendedError();FreeLibrary(lib);
 	// Let the file-dialog click sequence finish before restoring the SOFI UI.
-	Sleep(1000);
+	Sleep(500);
 	// The common dialog can leave the SDL host window minimized or behind other windows.
 	if(owner){ShowWindow(owner,SW_RESTORE);BringWindowToTop(owner);SetForegroundWindow(owner);}
 	if(!accepted){if(dialogError)SofiLauncherImageStatus="El selector de Windows informó un error ("+std::to_string(dialogError)+").";else SofiLauncherImageStatus="No se seleccionó ningún archivo.";return false;}
