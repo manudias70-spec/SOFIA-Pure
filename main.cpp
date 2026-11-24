@@ -2106,13 +2106,13 @@ static bool SofiLauncherSelectSetup()
 {
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 	wchar_t selectedPath[32768] = {};
-	static const wchar_t fileFilter[] = L"Instaladores (*.exe;*.msi)\0*.exe;*.msi\0Todos los archivos (*.*)\0*.*\0\0";
+	static const wchar_t fileFilter[] = L"Ejecutable MS-DOS (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0\0";
 	OPENFILENAMEW dialog = {};
 	dialog.lStructSize = sizeof(dialog);
 	dialog.lpstrFilter = fileFilter;
 	dialog.lpstrFile = selectedPath;
 	dialog.nMaxFile = (DWORD)(sizeof(selectedPath) / sizeof(selectedPath[0]));
-	dialog.lpstrTitle = L"Seleccionar instalador del juego";
+	dialog.lpstrTitle = L"Seleccionar ejecutable de configuración MS-DOS";
 	dialog.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
 	HMODULE commonDialogs = LoadLibraryW(L"comdlg32.dll");
 	if (!commonDialogs) return false;
@@ -2131,28 +2131,6 @@ static bool SofiLauncherSelectSetup()
 	return true;
 #else
 	return false;
-#endif
-}
-
-static void SofiLauncherRunSetup()
-{
-#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
-	if (SofiLauncherSetupPath.empty()) return;
-	const int wideLength = MultiByteToWideChar(CP_UTF8, 0, SofiLauncherSetupPath.c_str(), -1, NULL, 0);
-	if (wideLength <= 1) return;
-	std::vector<wchar_t> widePath((size_t)wideLength);
-	if (!MultiByteToWideChar(CP_UTF8, 0, SofiLauncherSetupPath.c_str(), -1, widePath.data(), wideLength)) return;
-	std::wstring command = L"\"" + std::wstring(widePath.data()) + L"\"";
-	std::vector<wchar_t> mutableCommand(command.begin(), command.end());
-	mutableCommand.push_back(0);
-	STARTUPINFOW startup = {};
-	startup.cb = sizeof(startup);
-	PROCESS_INFORMATION process = {};
-	if (CreateProcessW(NULL, mutableCommand.data(), NULL, NULL, FALSE, 0, NULL, NULL, &startup, &process))
-	{
-		CloseHandle(process.hThread);
-		CloseHandle(process.hProcess);
-	}
 #endif
 }
 
@@ -3446,7 +3424,24 @@ static struct sDOSBoxPure : public ZL_Application
 							if (ImGui::MenuItem("Seleccionar SETUP")) SofiLauncherSelectSetup();
 							if (ImGui::MenuItem("CONFIG")) SofiLauncherPropertiesOpen = true;
 							ImGui::Separator();
-							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty())) SofiLauncherRunSetup();
+							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty()))
+							{
+								if (!SofiLauncherSetupPath.empty())
+								{
+									SofiLauncherGameProfile setupProfile;
+									SofiLauncherProfileFilterActive = !SofiLauncherExePath.empty() && SofiLauncherLoadGameProfile(SofiLauncherExePath, setupProfile);
+									SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? setupProfile.filter : 0;
+									SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && setupProfile.hasCyclesMax;
+									SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? setupProfile.cyclesMax : "";
+									SofiLauncherRestoreProfileCyclesMax();
+									if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
+									DoApplyInterfaceOptions = true;
+									SofiLauncherWaitingForGameExit = true;
+									SofiLauncherGameWasRunning = false;
+									SofiUIVisible = false;
+									DBPS_OpenContent(SofiLauncherSetupPath.c_str());
+								}
+							}
 							ImGui::EndPopup();
 						}
 						if (launchDoubleClicked && !menuClicked && !SofiLauncherExePath.empty())
