@@ -41,6 +41,10 @@ shortcut_section = """\t\t\t\t\tImGui::Separator();
 \t\t\t\t\tImGui::BulletText(SofiText("Controller Mapper: Modificador de atajo + F11", "Controller Mapper: Hotkey Modifier + F11"));
 \t\t\t\t\tImGui::TextDisabled(SofiText("F11 y F12 sin modificador se envían al programa DOS.", "F11 and F12 without a modifier are sent to the DOS program."));"""
 
+translated_shortcut_section = shortcut_section.replace(
+    'ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ATAJOS");',
+    'ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiText("ATAJOS", "SHORTCUTS"));'
+)
 replace_once(main, shortcut_section, "")
 replace_once(
     main,
