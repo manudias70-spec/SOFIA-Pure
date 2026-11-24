@@ -3425,7 +3425,8 @@ static struct sDOSBoxPure : public ZL_Application
 							cardDraw->AddCircleFilled(ImVec2(dotX + dot * 6.0f, dotY), 1.7f, IM_COL32(240, 248, 255, 255));
 						ImGui::SetCursorScreenPos(menuMin);
 						ImGui::InvisibleButton("##SofiGameCardMenu", ImVec2(menuMax.x - menuMin.x, menuMax.y - menuMin.y));
-						if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) ImGui::OpenPopup("##SofiGameCardActions");
+						const bool menuClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						if (menuClicked) ImGui::OpenPopup("##SofiGameCardActions");
 						if (ImGui::BeginPopup("##SofiGameCardActions"))
 						{
 							if (ImGui::MenuItem("Seleccionar EXE")) SofiLauncherSelectExe();
@@ -3435,7 +3436,7 @@ static struct sDOSBoxPure : public ZL_Application
 							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty())) SofiLauncherRunSetup();
 							ImGui::EndPopup();
 						}
-						if (launchClicked && !SofiLauncherExePath.empty())
+						if (launchClicked && !menuClicked && !SofiLauncherExePath.empty())
 						{
 							SofiLauncherGameProfile launchProfile;
 							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
