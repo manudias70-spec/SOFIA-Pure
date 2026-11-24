@@ -30,7 +30,7 @@ replace_once(
 
 # Move the complete ATAJOS section to the very beginning of SOFI OSD.
 shortcut_section = """\\t\\t\\t\\t\\tImGui::Separator();
-\\t\\t\\t\\t\\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiText("ATAJOS", "SHORTCUTS"));
+\\t\\t\\t\\t\\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "ATAJOS");
 \\t\\t\\t\\t\\tImGui::BulletText(SofiText("F1: Pausa", "F1: Pause"));
 \\t\\t\\t\\t\\tImGui::BulletText(SofiText("F2: Cámara lenta", "F2: Slow motion"));
 \\t\\t\\t\\t\\tImGui::BulletText(SofiText("F3: Avance rápido", "F3: Fast forward"));
@@ -44,7 +44,7 @@ shortcut_section = """\\t\\t\\t\\t\\tImGui::Separator();
 replace_once(main, shortcut_section, "")
 replace_once(
     main,
-    """\t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiText("ATAJOS", "SHORTCUTS"));""",
+    """\t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");""",
     shortcut_section + """
 \t\t\t\t\tImGui::Separator();
 \t\t\t\t\tImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "HOTKEYS");"""
