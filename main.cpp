@@ -3058,7 +3058,7 @@ static struct sDOSBoxPure : public ZL_Application
 					{
 						ImGui::TextDisabled("TARJETA VACÍA");
 						ImGui::Spacing();
-						ImGui::TextWrapped("Arrastrá y soltá aquí un archivo .EXE para asignarlo a esta tarjeta.");
+						ImGui::TextWrapped("Con esta ventana abierta, arrastrá y soltá un archivo .EXE sobre SOFIA-Pure para asignarlo a esta tarjeta.");
 					}
 					else
 					{
@@ -3069,7 +3069,7 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							SofiUIVisible = false;
 							DBPS_OpenContent(SofiLauncherExePath.c_str());
-					}
+						}
 						ImGui::SameLine();
 						if (ImGui::Button("QUITAR EXE", ImVec2(120.0f, 38.0f)))
 						{
