@@ -2331,7 +2331,10 @@ static bool SofiLauncherSelectSetup()
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 	wchar_t selectedPath[32768] = {};
 	static const wchar_t fileFilter[] = L"Ejecutable MS-DOS (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0\0";
+	HWND owner = GetActiveWindow();
+	if (!owner) owner = GetForegroundWindow();
 	OPENFILENAMEW dialog = {};
+	dialog.hwndOwner = owner;
 	dialog.lStructSize = sizeof(dialog);
 	dialog.lpstrFilter = fileFilter;
 	dialog.lpstrFile = selectedPath;
@@ -2344,6 +2347,13 @@ static bool SofiLauncherSelectSetup()
 	SofiGetOpenFileNameW showOpenDialog = (SofiGetOpenFileNameW)GetProcAddress(commonDialogs, "GetOpenFileNameW");
 	const bool accepted = showOpenDialog && showOpenDialog(&dialog);
 	FreeLibrary(commonDialogs);
+	Sleep(500);
+	if (owner)
+	{
+		ShowWindow(owner, SW_RESTORE);
+		BringWindowToTop(owner);
+		SetForegroundWindow(owner);
+	}
 	if (!accepted) return false;
 	const int length = WideCharToMultiByte(CP_UTF8, 0, selectedPath, -1, NULL, 0, NULL, NULL);
 	if (length <= 1) return false;
@@ -2363,7 +2373,10 @@ static bool SofiLauncherSelectExe()
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 	wchar_t selectedPath[32768] = {};
 	static const wchar_t fileFilter[] = L"Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0\0";
+	HWND owner = GetActiveWindow();
+	if (!owner) owner = GetForegroundWindow();
 	OPENFILENAMEW dialog = {};
+	dialog.hwndOwner = owner;
 	dialog.lStructSize = sizeof(dialog);
 	dialog.lpstrFilter = fileFilter;
 	dialog.lpstrFile = selectedPath;
@@ -2378,6 +2391,13 @@ static bool SofiLauncherSelectExe()
 	SofiGetOpenFileNameW showOpenDialog = (SofiGetOpenFileNameW)GetProcAddress(commonDialogs, "GetOpenFileNameW");
 	const bool accepted = (showOpenDialog && showOpenDialog(&dialog));
 	FreeLibrary(commonDialogs);
+	Sleep(500);
+	if (owner)
+	{
+		ShowWindow(owner, SW_RESTORE);
+		BringWindowToTop(owner);
+		SetForegroundWindow(owner);
+	}
 	if (!accepted) return false;
 
 	const int utf8Length = WideCharToMultiByte(CP_UTF8, 0, selectedPath, -1, NULL, 0, NULL, NULL);
