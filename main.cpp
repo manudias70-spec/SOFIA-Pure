@@ -4099,10 +4099,32 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMin.y + 58.0f));
 
 					// Each card owns its executable, setup path and stable profile identity.
-					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 					const float cardWidth = 153.0f;
 					const float cardNameAreaHeight = 31.5f; // 75% of the original 42 px name area.
-					const float cardHeight = 198.0f + cardNameAreaHeight;
+					const float cardHeight = 240.0f;
+					const ImVec2 cardsViewportPos = ImGui::GetWindowPos();
+					const ImVec2 cardsViewportSize = ImGui::GetWindowSize();
+					const ImVec2 cardsMousePos = ImGui::GetIO().MousePos;
+					if (ImGui::IsDragDropActive())
+					{
+						const float edgeZone = 42.0f;
+						const float scrollSpeed = 520.0f * ImGui::GetIO().DeltaTime;
+						const float scrollMaxX = ImGui::GetScrollMaxX();
+						const float scrollMaxY = ImGui::GetScrollMaxY();
+						float nextScrollX = ImGui::GetScrollX();
+						float nextScrollY = ImGui::GetScrollY();
+						if (cardsMousePos.x <= cardsViewportPos.x + edgeZone && nextScrollX > 0.0f)
+							nextScrollX -= scrollSpeed;
+						else if (cardsMousePos.x >= cardsViewportPos.x + cardsViewportSize.x - edgeZone && nextScrollX < scrollMaxX)
+							nextScrollX += scrollSpeed;
+						if (cardsMousePos.y <= cardsViewportPos.y + edgeZone && nextScrollY > 0.0f)
+							nextScrollY -= scrollSpeed;
+						else if (cardsMousePos.y >= cardsViewportPos.y + cardsViewportSize.y - edgeZone && nextScrollY < scrollMaxY)
+							nextScrollY += scrollSpeed;
+						ImGui::SetScrollX(nextScrollX);
+						ImGui::SetScrollY(nextScrollY);
+					}
 					const float availableWidth = ImGui::GetContentRegionAvail().x;
 					const float cardSpacingX = ImGui::GetStyle().ItemSpacing.x;
 					int columns = (int)((availableWidth + cardSpacingX) / (cardWidth + cardSpacingX));
@@ -4184,7 +4206,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 						const std::string& cardName = profile.Name();
 						const ImVec2 nameMin(cardPos.x + 12.0f, cardPos.y + 198.0f);
-						const ImVec2 nameMax(cardPos.x + cardWidth - 12.0f, cardPos.y + cardHeight);
+						const ImVec2 nameMax(cardPos.x + cardWidth - 12.0f, nameMin.y + cardNameAreaHeight);
 						const ImVec2 nameSize = ImGui::CalcTextSize(cardName.c_str());
 						const float nameY = nameMin.y + (cardNameAreaHeight - ImGui::GetTextLineHeight()) * 0.5f;
 						const bool nameHovered = ImGui::IsMouseHoveringRect(nameMin, nameMax, true);
