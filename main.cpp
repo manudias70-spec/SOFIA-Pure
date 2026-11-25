@@ -2369,7 +2369,7 @@ static std::string SofiLauncherGlobalCyclesMax()
 static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
-	if (path.empty() || filter < 0 || filter > 5 || !SofiLauncherIsValidCyclesMax(cyclesMax.c_str())) return false;
+	if (path.empty() || filter < 0 || filter > 5 || (!cyclesMax.empty() && !SofiLauncherIsValidCyclesMax(cyclesMax.c_str()))) return false;
 	for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
 	{
 		std::map<std::string, std::string>::const_iterator it = videoOptions.find(def.key);
@@ -3694,7 +3694,7 @@ static struct sDOSBoxPure : public ZL_Application
 									for (int i = 0; i < def.count; ++i) if (value == def.values[i]) { valid = true; break; }
 									SofiLauncherVideoDraft[def.key] = valid ? value : def.defaultValue;
 								}
-								SofiLauncherVideoDraftCyclesMax = hasProfile && loadedProfile.hasCyclesMax ? loadedProfile.cyclesMax : SofiLauncherGlobalCyclesMax();
+								SofiLauncherVideoDraftCyclesMax = hasProfile && loadedProfile.hasCyclesMax ? loadedProfile.cyclesMax : "";
 								SofiLauncherVideoDraftExe = SofiLauncherExePath;
 								SofiLauncherVideoDraftDirty = false;
 							}
