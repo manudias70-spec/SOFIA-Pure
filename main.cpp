@@ -2199,9 +2199,94 @@ static bool OnKeyUseHotKey(ZL_KeyboardEvent& e)
 	return false;
 }
 
+static bool SofiImGuiKeyboardCaptured = false;
+
+static ImGuiKey SofiImGuiKeyFromZL(int key)
+{
+	if (key >= ZLK_A && key <= ZLK_Z) return (ImGuiKey)(ImGuiKey_A + (key - ZLK_A));
+	if (key >= ZLK_1 && key <= ZLK_9) return (ImGuiKey)(ImGuiKey_1 + (key - ZLK_1));
+	switch (key)
+	{
+		case ZLK_0: return ImGuiKey_0;
+		case ZLK_RETURN: return ImGuiKey_Enter;
+		case ZLK_ESCAPE: return ImGuiKey_Escape;
+		case ZLK_BACKSPACE: return ImGuiKey_Backspace;
+		case ZLK_TAB: return ImGuiKey_Tab;
+		case ZLK_SPACE: return ImGuiKey_Space;
+		case ZLK_DELETE: return ImGuiKey_Delete;
+		case ZLK_INSERT: return ImGuiKey_Insert;
+		case ZLK_HOME: return ImGuiKey_Home;
+		case ZLK_END: return ImGuiKey_End;
+		case ZLK_PAGEUP: return ImGuiKey_PageUp;
+		case ZLK_PAGEDOWN: return ImGuiKey_PageDown;
+		case ZLK_LEFT: return ImGuiKey_LeftArrow;
+		case ZLK_RIGHT: return ImGuiKey_RightArrow;
+		case ZLK_UP: return ImGuiKey_UpArrow;
+		case ZLK_DOWN: return ImGuiKey_DownArrow;
+		case ZLK_LCTRL: case ZLK_RCTRL: return ImGuiKey_LeftCtrl;
+		case ZLK_LSHIFT: case ZLK_RSHIFT: return ImGuiKey_LeftShift;
+		case ZLK_LALT: case ZLK_RALT: return ImGuiKey_LeftAlt;
+		case ZLK_LGUI: case ZLK_RGUI: return ImGuiKey_LeftSuper;
+		default: return ImGuiKey_None;
+	}
+}
+
+static void SofiImGuiAddTextCharacter(const ZL_KeyboardEvent& e)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	const bool shift = (e.mod & ZLKMOD_SHIFT) != 0;
+	const bool caps = (e.mod & ZLKMOD_CAPS) != 0;
+	unsigned int c = 0;
+	if (e.key >= ZLK_A && e.key <= ZLK_Z)
+	{
+		c = (unsigned int)('a' + (e.key - ZLK_A));
+		if (shift != caps) c -= ('a' - 'A');
+	}
+	else if (e.key >= ZLK_1 && e.key <= ZLK_9)
+	{
+		static const char shifted[] = "!@#$%^&*(";
+		c = (unsigned int)(shift ? shifted[e.key - ZLK_1] : ('1' + (e.key - ZLK_1)));
+	}
+	else if (e.key == ZLK_0) c = shift ? ')' : '0';
+	else
+	{
+		switch (e.key)
+		{
+			case ZLK_SPACE: c = ' '; break;
+			case ZLK_MINUS: c = shift ? '_' : '-'; break;
+			case ZLK_EQUALS: c = shift ? '+' : '='; break;
+			case ZLK_LEFTBRACKET: c = shift ? '{' : '['; break;
+			case ZLK_RIGHTBRACKET: c = shift ? '}' : ']'; break;
+			case ZLK_BACKSLASH: c = shift ? '|' : 92; break;
+			case ZLK_SEMICOLON: c = shift ? ':' : ';'; break;
+			case ZLK_APOSTROPHE: c = shift ? '"' : 39; break;
+			case ZLK_GRAVE: c = shift ? '~' : 96; break;
+			case ZLK_COMMA: c = shift ? '<' : ','; break;
+			case ZLK_PERIOD: c = shift ? '>' : '.'; break;
+			case ZLK_SLASH: c = shift ? '?' : '/'; break;
+			case ZLK_SHARP: c = shift ? '~' : '#'; break;
+			default: break;
+		}
+	}
+	if (c) io.AddInputCharacter(c);
+}
+
 static void OnKeyDown(ZL_KeyboardEvent& e)
 {
 	if (IntroActive && e.is_down) { IntroDismissRequested = true; return; }
+	if (ImGuiReady && SofiUIVisible && !SofiCommanderCaptured && ImGui::GetIO().WantTextInput)
+	{
+		SofiImGuiKeyboardCaptured = true;
+		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiKey key = SofiImGuiKeyFromZL(e.key);
+		if (key != ImGuiKey_None) io.AddKeyEvent(key, true);
+		io.AddKeyEvent(ImGuiKey_ModCtrl, (e.mod & ZLKMOD_CTRL) != 0);
+		io.AddKeyEvent(ImGuiKey_ModShift, (e.mod & ZLKMOD_SHIFT) != 0);
+		io.AddKeyEvent(ImGuiKey_ModAlt, (e.mod & ZLKMOD_ALT) != 0);
+		io.AddKeyEvent(ImGuiKey_ModSuper, (e.mod & ZLKMOD_META) != 0);
+		if (!e.is_repeat) SofiImGuiAddTextCharacter(e);
+		return;
+	}
 	if (OnKeyUseHotKey(e)) return;
 	unsigned rk = (unsigned)ZLKtoRETROKEY[e.key];
 	if (e.is_repeat || rk == RETROK_UNKNOWN) return;
@@ -2219,6 +2304,19 @@ static void OnKeyDown(ZL_KeyboardEvent& e)
 
 static void OnKeyUp(ZL_KeyboardEvent& e)
 {
+	if (ImGuiReady && SofiUIVisible && !SofiCommanderCaptured &&
+		(SofiImGuiKeyboardCaptured || ImGui::GetIO().WantTextInput))
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiKey key = SofiImGuiKeyFromZL(e.key);
+		if (key != ImGuiKey_None) io.AddKeyEvent(key, false);
+		io.AddKeyEvent(ImGuiKey_ModCtrl, (e.mod & ZLKMOD_CTRL) != 0);
+		io.AddKeyEvent(ImGuiKey_ModShift, (e.mod & ZLKMOD_SHIFT) != 0);
+		io.AddKeyEvent(ImGuiKey_ModAlt, (e.mod & ZLKMOD_ALT) != 0);
+		io.AddKeyEvent(ImGuiKey_ModSuper, (e.mod & ZLKMOD_META) != 0);
+		SofiImGuiKeyboardCaptured = io.WantTextInput;
+		return;
+	}
 	if (OnKeyUseHotKey(e)) return;
 	unsigned rk = (unsigned)ZLKtoRETROKEY[e.key];
 	if (rk == RETROK_UNKNOWN || !RETROKDown[rk]) return;
