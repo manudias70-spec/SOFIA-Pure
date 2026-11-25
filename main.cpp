@@ -2913,11 +2913,12 @@ static bool SofiLauncherDeleteProfile(const std::string& profileId)
 	auto it = std::find_if(SofiLauncherProfiles.begin(), SofiLauncherProfiles.end(), [&](const SofiGameProfileTemplate& p) { return p.Id() == profileId; });
 	if (it == SofiLauncherProfiles.end()) return false;
 	const size_t index = (size_t)(it - SofiLauncherProfiles.begin());
-	const std::string imagePath = it->imagePath;
+	const SofiGameProfileTemplate removedProfile = *it;
+	const std::string imagePath = removedProfile.imagePath;
 	SofiLauncherProfiles.erase(it);
 	if (!SofiLauncherSaveLibrary())
 	{
-		SofiLauncherProfiles.insert(SofiLauncherProfiles.begin() + index, *it);
+		SofiLauncherProfiles.insert(SofiLauncherProfiles.begin() + index, removedProfile);
 		SofiLauncherProfileStatus = "No se pudo eliminar el perfil de la biblioteca.";
 		return false;
 	}
