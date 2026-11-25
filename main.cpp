@@ -4002,7 +4002,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 					// Each card owns its executable, setup path and stable profile identity.
 					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
-					const float cardWidth = 320.0f;
+					const float cardWidth = 240.0f;
 					const float cardHeight = 232.0f;
 					const float availableWidth = ImGui::GetContentRegionAvail().x;
 					const int columns = availableWidth >= cardWidth * 2.0f + ImGui::GetStyle().ItemSpacing.x ? 2 : 1;
