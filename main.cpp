@@ -97,6 +97,7 @@ static bool SofiLauncherCreateProfileOpen = false;
 static char SofiLauncherNewProfileName[128] = {};
 static unsigned int SofiLauncherNextProfileId = 1;
 static std::vector<SofiGameProfileTemplate> SofiLauncherProfiles;
+static std::string SofiLauncherSelectedProfileId;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath, SofiLauncherSetupPath;
 static bool SofiLauncherProfileFilterActive = false;
@@ -2320,9 +2321,16 @@ static bool SofiLauncherSaveLibrary()
 	else retro_vfs_mkdir_impl(folder.c_str());
 	FILE* f = fopen_wrap(SofiLauncherLibraryPath().c_str(), "wb");
 	if (!f) return false;
-	bool ok = fprintf(f, "SOFIA_LIBRARY_V1\n%u\n", SofiLauncherNextProfileId) >= 0;
+	bool ok = fprintf(f, "SOFIA_LIBRARY_V2\n%u\n", SofiLauncherNextProfileId) >= 0;
 	for (const SofiGameProfileTemplate& profile : SofiLauncherProfiles)
-		if (ok && fprintf(f, "%s\t%s\n", profile.Id().c_str(), profile.Name().c_str()) < 0) ok = false;
+	{
+		const char* fields[] = { profile.Id().c_str(), profile.Name().c_str(), profile.exePath.c_str(), profile.setupPath.c_str(), profile.imagePath.c_str() };
+		for (int i = 0; i < 5 && ok; ++i)
+		{
+			if (strchr(fields[i], '\t') || strchr(fields[i], '\r') || strchr(fields[i], '\n')) { ok = false; break; }
+			if (fprintf(f, "%s%s", fields[i], i == 4 ? "\n" : "\t") < 0) ok = false;
+		}
+	}
 	if (ferror(f)) ok = false;
 	if (fclose(f) != 0) ok = false;
 	return ok;
@@ -2335,8 +2343,11 @@ static void SofiLauncherLoadLibrary()
 	if (path.empty()) return;
 	FILE* f = fopen_wrap(path.c_str(), "rb");
 	if (!f) return;
-	char line[1024] = {};
-	if (!fgets(line, sizeof(line), f) || strcmp(line, "SOFIA_LIBRARY_V1\n") != 0) { fclose(f); return; }
+	char line[65536] = {};
+	if (!fgets(line, sizeof(line), f)) { fclose(f); return; }
+	const bool version1 = !strcmp(line, "SOFIA_LIBRARY_V1\n");
+	const bool version2 = !strcmp(line, "SOFIA_LIBRARY_V2\n");
+	if (!version1 && !version2) { fclose(f); return; }
 	if (fgets(line, sizeof(line), f))
 	{
 		const unsigned long next = strtoul(line, NULL, 10);
@@ -2346,10 +2357,20 @@ static void SofiLauncherLoadLibrary()
 	{
 		size_t len = strlen(line);
 		while (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) line[--len] = 0;
-		char* tab = strchr(line, '\t');
-		if (!tab || tab == line || !tab[1]) continue;
-		*tab++ = 0;
-		SofiLauncherProfiles.push_back(SofiGameProfileTemplate(line, tab));
+		char* fields[5] = {};
+		fields[0] = line;
+		int count = 1;
+		for (size_t i = 0; i < len && count < (version2 ? 5 : 2); ++i)
+			if (line[i] == '\t') { line[i] = 0; fields[count++] = line + i + 1; }
+		if (count < 2 || !fields[0][0] || !fields[1][0]) continue;
+		SofiGameProfileTemplate profile(fields[0], fields[1]);
+		if (version2)
+		{
+			if (count > 2) profile.exePath = fields[2];
+			if (count > 3) profile.setupPath = fields[3];
+			if (count > 4) profile.imagePath = fields[4];
+		}
+		SofiLauncherProfiles.push_back(profile);
 	}
 	fclose(f);
 }
@@ -2367,7 +2388,21 @@ static bool SofiLauncherCreateProfile(const char* name)
 		--SofiLauncherNextProfileId;
 		return false;
 	}
+	SofiLauncherSelectedProfileId = id;
 	return true;
+}
+static SofiGameProfileTemplate* SofiLauncherFindProfile(const std::string& id)
+{
+	for (SofiGameProfileTemplate& profile : SofiLauncherProfiles)
+		if (profile.Id() == id) return &profile;
+	return NULL;
+}
+static bool SofiLauncherSaveProfileLibraryEntry(SofiGameProfileTemplate& profile)
+{
+	(void)profile;
+	if (SofiLauncherSaveLibrary()) return true;
+	SofiLauncherProfileStatus = "No se pudieron guardar los cambios de esta tarjeta.";
+	return false;
 }
 
 static std::string SofiLauncherGameProfilePath(const std::string& exePath)
@@ -2749,6 +2784,36 @@ static void SofiLauncherEnsureImageTexture()
 	}
 }
 
+
+static void SofiLauncherActivateProfile(SofiGameProfileTemplate& profile, bool runSetup)
+{
+	const std::string& target = runSetup ? profile.setupPath : profile.exePath;
+	if (target.empty()) return;
+	SofiLauncherSelectedProfileId = profile.Id();
+	SofiLauncherExePath = profile.exePath;
+	SofiLauncherSetupPath = profile.setupPath;
+	SofiLauncherImagePath = profile.imagePath;
+	SofiLauncherGameProfile launchProfile;
+	SofiLauncherRestoreProfileVideoOverrides();
+	SofiLauncherRestoreProfileCoreOverrides();
+	SofiLauncherProfileFilterActive = !profile.exePath.empty() && SofiLauncherLoadGameProfile(profile.exePath, launchProfile);
+	SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
+	SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
+	SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
+	SofiLauncherRestoreProfileCyclesMax();
+	if (SofiLauncherProfileFilterActive)
+	{
+		SofiLauncherApplyVideoOverrides(launchProfile.videoOptions);
+		SofiLauncherApplyAudioOverrides(launchProfile.audioOptions);
+		SofiLauncherApplyCoreOverrides(launchProfile.coreOptions);
+	}
+	if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
+	DoApplyInterfaceOptions = true;
+	SofiLauncherWaitingForGameExit = true;
+	SofiLauncherGameWasRunning = false;
+	SofiUIVisible = false;
+	DBPS_OpenContent(target.c_str());
+}
 
 static void OnDropFile(const ZL_String& path)
 {
@@ -3765,107 +3830,101 @@ static struct sDOSBoxPure : public ZL_Application
 					hubDraw->AddLine(ImVec2(hubMin.x + 18.0f, hubMin.y + 42.0f), ImVec2(hubMax.x - 18.0f, hubMin.y + 42.0f), IM_COL32(65, 145, 205, 150), 1.0f);
 					ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMin.y + 58.0f));
 
-					// The hub is a permanent card container, not a floating game window.
-					// Its contents are intentionally skin-neutral at this stage.
-					// Minimal card: click the artwork to launch; the top-right dots open its actions.
-					SofiLauncherEnsureImageTexture();
-					const ImVec2 cardSize(320.0f, 180.0f);
-					if (SofiLauncherImageTexture)
-					{
-						ImGui::Image((ImTextureID)SofiLauncherImageTexture, cardSize);
-						const ImVec2 imageMin = ImGui::GetItemRectMin();
-						const ImVec2 imageMax = ImGui::GetItemRectMax();
-						const ImVec2 menuMin(imageMax.x - 34.0f, imageMin.y + 6.0f);
-						const ImVec2 menuMax(imageMax.x - 6.0f, imageMin.y + 34.0f);
-						const bool menuHovered = ImGui::IsMouseHoveringRect(menuMin, menuMax, true);
-						const bool imageHovered = ImGui::IsMouseHoveringRect(imageMin, imageMax, true) && !menuHovered;
-						const bool leftClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-						const bool launchDoubleClicked = imageHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-						if (leftClicked)
-						{
-							if (imageHovered) SofiLauncherCardSelected = true;
-						else if (!menuHovered && ImGui::IsWindowHovered()) SofiLauncherCardSelected = false;
-						}
-						ImDrawList* cardDraw = ImGui::GetWindowDrawList();
-						if (SofiLauncherCardSelected)
-						{
-							cardDraw->AddRectFilled(imageMin, imageMax, IM_COL32(255, 255, 255, 48));
-						cardDraw->AddRect(imageMin, imageMax, IM_COL32(180, 205, 255, 230), 0.0f, 0, 2.0f);
-						}
-						cardDraw->AddRectFilled(menuMin, menuMax, IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 6.0f);
-						const float dotX = (menuMin.x + menuMax.x) * 0.5f;
-						const float dotY = (menuMin.y + menuMax.y) * 0.5f;
-						for (int dot = -1; dot <= 1; ++dot)
-							cardDraw->AddCircleFilled(ImVec2(dotX + dot * 6.0f, dotY), 1.7f, IM_COL32(240, 248, 255, 255));
-						ImGui::SetCursorScreenPos(menuMin);
-						ImGui::InvisibleButton("##SofiGameCardMenu", ImVec2(menuMax.x - menuMin.x, menuMax.y - menuMin.y));
-						const bool menuClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
-						if (menuClicked) ImGui::OpenPopup("##SofiGameCardActions");
-						if (ImGui::BeginPopup("##SofiGameCardActions"))
-						{
-							if (ImGui::MenuItem("Seleccionar EXE")) SofiLauncherSelectExe();
-							if (ImGui::MenuItem("Seleccionar SETUP")) SofiLauncherSelectSetup();
-							if (ImGui::MenuItem("CONFIG")) SofiLauncherPropertiesOpen = true;
-							ImGui::Separator();
-							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !SofiLauncherSetupPath.empty()))
-							{
-								if (!SofiLauncherSetupPath.empty())
-								{
-									SofiLauncherGameProfile setupProfile;
-									SofiLauncherRestoreProfileVideoOverrides();
-									SofiLauncherRestoreProfileCoreOverrides();
-									SofiLauncherProfileFilterActive = !SofiLauncherExePath.empty() && SofiLauncherLoadGameProfile(SofiLauncherExePath, setupProfile);
-									SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? setupProfile.filter : 0;
-									SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && setupProfile.hasCyclesMax;
-									SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? setupProfile.cyclesMax : "";
-									SofiLauncherRestoreProfileCyclesMax();
-									if (SofiLauncherProfileFilterActive) { SofiLauncherApplyVideoOverrides(setupProfile.videoOptions); SofiLauncherApplyAudioOverrides(setupProfile.audioOptions); SofiLauncherApplyCoreOverrides(setupProfile.coreOptions); }
-									if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
-									DoApplyInterfaceOptions = true;
-									SofiLauncherWaitingForGameExit = true;
-									SofiLauncherGameWasRunning = false;
-									SofiUIVisible = false;
-									DBPS_OpenContent(SofiLauncherSetupPath.c_str());
-								}
-							}
-							ImGui::EndPopup();
-						}
-						if (launchDoubleClicked && !menuClicked && !SofiLauncherExePath.empty())
-						{
-							SofiLauncherGameProfile launchProfile;
-							SofiLauncherRestoreProfileVideoOverrides();
-							SofiLauncherRestoreProfileCoreOverrides();
-							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
-							SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
-							SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
-							SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
-							SofiLauncherRestoreProfileCyclesMax();
-							if (SofiLauncherProfileFilterActive) { SofiLauncherApplyVideoOverrides(launchProfile.videoOptions); SofiLauncherApplyAudioOverrides(launchProfile.audioOptions); SofiLauncherApplyCoreOverrides(launchProfile.coreOptions); }
-							if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
-							DoApplyInterfaceOptions = true;
-							SofiLauncherWaitingForGameExit = true;
-							SofiLauncherGameWasRunning = false;
-							SofiUIVisible = false;
-							DBPS_OpenContent(SofiLauncherExePath.c_str());
-						}
-					}
-					else
-					{
-						ImGui::Button("##SofiEmptyGameCard", cardSize);
-						ImGui::GetWindowDrawList()->AddText(ImGui::GetItemRectMin(), IM_COL32(190, 205, 220, 255), "SELECCIONA UN EJECUTABLE");
-					}
-					// Persistent profiles are displayed as named cards in the hub.
+					// Each card owns its executable, setup path and stable profile identity.
+					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+					const float cardWidth = 320.0f;
+					const float cardHeight = 232.0f;
+					const float availableWidth = ImGui::GetContentRegionAvail().x;
+					const int columns = availableWidth >= cardWidth * 2.0f + ImGui::GetStyle().ItemSpacing.x ? 2 : 1;
 					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
 					{
-						const SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
-						const ImVec2 p = ImGui::GetCursorScreenPos();
-						const ImVec2 q(p.x + 320.0f, p.y + 54.0f);
+						SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
+						ImGui::BeginGroup();
+						const ImVec2 cardPos = ImGui::GetCursorScreenPos();
+						const ImVec2 cardMax(cardPos.x + cardWidth, cardPos.y + cardHeight);
+						const ImVec2 imageMax(cardPos.x + cardWidth, cardPos.y + 180.0f);
 						ImDrawList* draw = ImGui::GetWindowDrawList();
-						draw->AddRectFilled(p, q, IM_COL32(15, 31, 49, 225), 3.0f);
-						draw->AddRect(p, q, IM_COL32(65, 145, 205, 210), 3.0f, 0, 1.0f);
-						draw->AddText(ImVec2(p.x + 12.0f, p.y + 9.0f), IM_COL32(225, 238, 250, 255), profile.Name().c_str());
-						ImGui::Dummy(ImVec2(320.0f, 60.0f));
+						draw->AddRectFilled(cardPos, cardMax, IM_COL32(15, 31, 49, 235), 5.0f);
+						draw->AddRectFilled(cardPos, imageMax, IM_COL32(7, 17, 29, 255), 5.0f);
+						draw->AddRect(cardPos, cardMax, IM_COL32(65, 145, 205, 210), 5.0f, 0, 1.0f);
+						if (profile.imagePath.empty())
+						{
+							const char* placeholder = "SIN IMAGEN";
+							const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
+							draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 82.0f), IM_COL32(125, 155, 180, 255), placeholder);
+						}
+						else draw->AddText(ImVec2(cardPos.x + 12.0f, cardPos.y + 82.0f), IM_COL32(160, 190, 215, 255), "IMAGEN CONFIGURADA");
+						if (SofiLauncherSelectedProfileId == profile.Id())
+							draw->AddRect(cardPos, cardMax, IM_COL32(180, 205, 255, 230), 5.0f, 0, 2.0f);
+
+						ImGui::SetCursorScreenPos(cardPos);
+						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth, 180.0f));
+						const bool cardClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						const bool cardDoubleClicked = cardClicked && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+						if (cardClicked)
+						{
+							SofiLauncherSelectedProfileId = profile.Id();
+							SofiLauncherCardSelected = true;
+							SofiLauncherExePath = profile.exePath;
+							SofiLauncherSetupPath = profile.setupPath;
+							SofiLauncherImagePath = profile.imagePath;
+						}
+						if (cardDoubleClicked && !profile.exePath.empty())
+							SofiLauncherActivateProfile(profile, false);
+
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + 12.0f, cardPos.y + 190.0f));
+						ImGui::TextUnformatted(profile.Name().c_str());
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 34.0f, cardPos.y + 6.0f));
+						const ImVec2 menuPos = ImGui::GetCursorScreenPos();
+						if (ImGui::InvisibleButton(("##SofiCardMenu_" + profile.Id()).c_str(), ImVec2(28.0f, 28.0f)))
+							ImGui::OpenPopup(("##SofiCardActions_" + profile.Id()).c_str());
+						const bool menuHovered = ImGui::IsItemHovered();
+						draw->AddRectFilled(menuPos, ImVec2(menuPos.x + 28.0f, menuPos.y + 28.0f),
+							IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 5.0f);
+						for (int dot = -1; dot <= 1; ++dot)
+							draw->AddCircleFilled(ImVec2(menuPos.x + 14.0f, menuPos.y + 14.0f + dot * 6.0f), 1.7f, IM_COL32(240, 248, 255, 255));
+						if (ImGui::BeginPopup(("##SofiCardActions_" + profile.Id()).c_str()))
+						{
+							if (ImGui::MenuItem("Agregar ejecutable..."))
+							{
+								SofiLauncherExePath = profile.exePath;
+								if (SofiLauncherSelectExe())
+								{
+									profile.exePath = SofiLauncherExePath;
+									SofiLauncherSelectedProfileId = profile.Id();
+									SofiLauncherSaveProfileLibraryEntry(profile);
+								}
+							}
+							if (ImGui::MenuItem("Agregar SETUP..."))
+							{
+								SofiLauncherSetupPath = profile.setupPath;
+								if (SofiLauncherSelectSetup())
+								{
+									profile.setupPath = SofiLauncherSetupPath;
+									SofiLauncherSelectedProfileId = profile.Id();
+									SofiLauncherSaveProfileLibraryEntry(profile);
+								}
+							}
+							if (ImGui::MenuItem("CONFIG", NULL, false, !profile.exePath.empty()))
+							{
+								SofiLauncherSelectedProfileId = profile.Id();
+								SofiLauncherExePath = profile.exePath;
+								SofiLauncherSetupPath = profile.setupPath;
+								SofiLauncherImagePath = profile.imagePath;
+								SofiLauncherPropertiesOpen = true;
+							}
+							ImGui::Separator();
+							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !profile.setupPath.empty()))
+								SofiLauncherActivateProfile(profile, true);
+							ImGui::EndPopup();
+						}
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 180.0f));
+						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 180.0f));
+						ImGui::EndGroup();
+						if (columns == 2 && (profileIndex % 2) == 0 && profileIndex + 1 < SofiLauncherProfiles.size())
+							ImGui::SameLine();
 					}
+					ImGui::EndChild();
 					ImGui::SetCursorScreenPos(ImVec2(hubMax.x - 58.0f, hubMax.y - 58.0f));
 					if (ImGui::Button("+", ImVec2(40.0f, 40.0f)))
 					{
