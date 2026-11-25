@@ -2809,24 +2809,28 @@ static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wst
 	std::vector<unsigned char> fileBytes; if(!SofiReadImageBytes(input,fileBytes)){SofiLauncherImageStatus="No se pudo leer el archivo seleccionado.";return false;}
 	int sw=0,sh=0,ch=0; unsigned char* src=stbi_load_from_memory(fileBytes.data(),(int)fileBytes.size(),&sw,&sh,&ch,3);
 	if(!src||sw<=0||sh<=0){if(src)stbi_image_free(src);SofiLauncherImageStatus="El archivo no es una imagen válida o no se pudo decodificar.";return false;}
-	const double ar=16.0/9.0; double cw=sw,hh=sh;
-	if(cw/hh>ar) cw=hh*ar; else hh=cw/ar;
-	double ox=(sw-cw)*0.5,oy=(sh-hh)*0.5;
-	std::vector<unsigned char> pixels(320*180*3);
-	for(int y=0;y<180;y++) for(int x=0;x<320;x++)
+	const int targetW=153,targetH=198;
+	const double scale=(std::min)(targetW/(double)sw,targetH/(double)sh);
+	const int drawW=(std::max)(1,(int)std::floor(sw*scale+0.5));
+	const int drawH=(std::max)(1,(int)std::floor(sh*scale+0.5));
+	const int offsetX=(targetW-drawW)/2,offsetY=(targetH-drawH)/2;
+	std::vector<unsigned char> pixels(targetW*targetH*3);
+	for(int i=0;i<targetW*targetH;i++){pixels[i*3+0]=7;pixels[i*3+1]=17;pixels[i*3+2]=29;}
+	for(int y=0;y<drawH;y++) for(int x=0;x<drawW;x++)
 	{
-		double fx=ox+((x+0.5)*cw/320.0)-0.5, fy=oy+((y+0.5)*hh/180.0)-0.5;
+		double fx=((x+0.5)*sw/drawW)-0.5, fy=((y+0.5)*sh/drawH)-0.5;
 		int x0=(int)(std::max)(0.0,(std::min)((double)sw-1.0,std::floor(fx))), y0=(int)(std::max)(0.0,(std::min)((double)sh-1.0,std::floor(fy)));
 		int x1=(std::min)(x0+1,sw-1),y1=(std::min)(y0+1,sh-1);
 		double dx=(std::max)(0.0,(std::min)(1.0,fx-std::floor(fx))),dy=(std::max)(0.0,(std::min)(1.0,fy-std::floor(fy)));
 		for(int c=0;c<3;c++){
 			double a=src[(y0*sw+x0)*3+c],b=src[(y0*sw+x1)*3+c],d=src[(y1*sw+x0)*3+c],e=src[(y1*sw+x1)*3+c];
-			double top=a+(b-a)*dx,bot=d+(e-d)*dx; pixels[(y*320+x)*3+c]=(unsigned char)(top+(bot-top)*dy+0.5);
+			double top=a+(b-a)*dx,bot=d+(e-d)*dx;
+			pixels[((y+offsetY)*targetW+(x+offsetX))*3+c]=(unsigned char)(top+(bot-top)*dy+0.5);
 		}
 	}
 	stbi_image_free(src);
 	std::vector<unsigned char> jpg; bool ok=false;
-	for(int q=90;q>=35;q-=5){jpg.clear();if(!stbi_write_jpg_to_func(SofiJpegWrite,&jpg,320,180,3,pixels.data(),q))return false;if(jpg.size()<=300*1024){ok=true;break;}}
+	for(int q=90;q>=35;q-=5){jpg.clear();if(!stbi_write_jpg_to_func(SofiJpegWrite,&jpg,targetW,targetH,3,pixels.data(),q))return false;if(jpg.size()<=300*1024){ok=true;break;}}
 	if(!ok){SofiLauncherImageStatus="No se pudo optimizar la imagen por debajo de 300 KB.";return false;}
 	HANDLE f=CreateFileW(output.c_str(),GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(f==INVALID_HANDLE_VALUE){SofiLauncherImageStatus="No se pudo crear el archivo de imagen en GLImage (error "+std::to_string(GetLastError())+").";return false;} DWORD put=0; bool saved=WriteFile(f,jpg.data(),(DWORD)jpg.size(),&put,NULL)&&put==jpg.size(); DWORD writeError=saved?0:GetLastError(); CloseHandle(f); if(!saved){SofiLauncherImageStatus="No se pudo escribir la imagen optimizada (error "+std::to_string(writeError)+").";return false;} return true;
@@ -4215,13 +4219,13 @@ static struct sDOSBoxPure : public ZL_Application
 					{
 						if (ImGui::BeginTabItem("IMAGEN"))
 						{
-							ImGui::TextDisabled("IMAGEN DE LA TARJETA  //  320 x 180");
+							ImGui::TextDisabled("IMAGEN DE LA TARJETA  //  153 x 198");
 							if (ImGui::Button("SELECCIONAR IMAGEN", ImVec2(220.0f, 36.0f))) SofiLauncherSelectImage();
 							const unsigned int previewTexture = SofiLauncherEnsureImageTexture();
 							if (previewTexture)
 							{
 								ImGui::Spacing();
-								ImGui::Image((ImTextureID)(intptr_t)previewTexture, ImVec2(320.0f, 180.0f));
+								ImGui::Image((ImTextureID)(intptr_t)previewTexture, ImVec2(153.0f, 198.0f));
 								ImGui::TextDisabled("Copia optimizada guardada en GLImage. El original no se modifica.");
 							}
 							else ImGui::TextDisabled("Todavía no hay una imagen seleccionada.");
