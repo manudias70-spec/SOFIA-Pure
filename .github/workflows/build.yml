@@ -65,8 +65,8 @@ jobs:
         MSBuild.exe DOSBoxPure-vs.vcxproj /p:Configuration=ReleaseGLCORE /p:Platform=x64
     - uses: actions/upload-artifact@main
       with:
-        name: dosbox-pure-unleashed_win64
-        path: main/Release-vs2026x64/DOSBoxPure.exe
+        name: sofia-space_win64
+        path: main/Release-vs2026x64/SOFIA Space.exe
 
   build-win32-msvc:
     runs-on: windows-latest
@@ -117,8 +117,8 @@ jobs:
         MSBuild.exe DOSBoxPure-vs.vcxproj /p:Configuration=ReleaseGLCORE /p:Platform=Win32
     - uses: actions/upload-artifact@main
       with:
-        name: dosbox-pure-unleashed_win32
-        path: main/Release-vs2026/DOSBoxPure.exe
+        name: sofia-space_win32
+        path: main/Release-vs2026/SOFIA Space.exe
 
 # Rebuild Commander maximize/restore toggle.
 

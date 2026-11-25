@@ -12,12 +12,12 @@ ZL ICON "DOSBoxPure.ico"
 	{
 		BLOCK "040904b0"
 		{
-			VALUE "FileDescription", "DOSBoxPure"
+			VALUE "FileDescription", "SOFIA Space"
 			VALUE "FileVersion", DOSBOX_PURE_VERSION_STR
 			VALUE "ProductName", "DOSBoxPure"
 			VALUE "ProductVersion", DOSBOX_PURE_VERSION_STR
 			VALUE "InternalName", "DOSBoxPure"
-			VALUE "OriginalFilename", "DOSBoxPure.exe"
+			VALUE "OriginalFilename", "SOFIA Space.exe"
 			VALUE "LegalCopyright", "2025"
 		}
 	}
