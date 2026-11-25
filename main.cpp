@@ -3662,13 +3662,25 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
-			// Minimal Game Launcher experiment: one card, native EXE picker, click card to launch.
+			// Permanent launcher hub workspace. The active skin will own its visual treatment;
+			// game cards remain children of this stable, transparent area.
 			if (SofiLauncherOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
-				ImGui::SetNextWindowSize(ImVec2(560.0f, 420.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("GAME LAUNCHER", &SofiLauncherOpen, ImGuiWindowFlags_NoCollapse))
+				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
+				const ImVec2 hubPos(112.0f, 76.0f);
+				const ImVec2 hubSize(
+					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
+					(hubDisplaySize.y > 104.0f) ? hubDisplaySize.y - 104.0f : 16.0f);
+				ImGui::SetNextWindowPos(hubPos, ImGuiCond_Always);
+				ImGui::SetNextWindowSize(hubSize, ImGuiCond_Always);
+				if (ImGui::Begin("##SofiLauncherHub", NULL,
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
+					ImGuiWindowFlags_NoBackground))
 				{
+					// The hub is a permanent card container, not a floating game window.
+					// Its contents are intentionally skin-neutral at this stage.
 					// Minimal card: click the artwork to launch; the top-right dots open its actions.
 					SofiLauncherEnsureImageTexture();
 					const ImVec2 cardSize(320.0f, 180.0f);
