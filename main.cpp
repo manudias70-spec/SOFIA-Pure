@@ -3955,9 +3955,15 @@ static struct sDOSBoxPure : public ZL_Application
 						if (SofiLauncherSelectedProfileId == profile.Id())
 							draw->AddRect(cardPos, cardMax, IM_COL32(180, 205, 255, 230), 5.0f, 0, 2.0f);
 
+						// Keep the card's selection hit-area separate from the three-dot menu.
+						// Overlapping ImGui items otherwise let the larger card button consume the click.
+						bool cardClicked = false;
 						ImGui::SetCursorScreenPos(cardPos);
-						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth, 180.0f));
-						const bool cardClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth - 40.0f, 180.0f));
+						cardClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 40.0f, cardPos.y + 40.0f));
+						if (ImGui::InvisibleButton(("##SofiCardBodyRight_" + profile.Id()).c_str(), ImVec2(40.0f, 140.0f)))
+							cardClicked = true;
 						const bool cardDoubleClicked = cardClicked && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 						if (cardClicked)
 						{
