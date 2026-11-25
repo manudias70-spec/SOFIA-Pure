@@ -4076,21 +4076,20 @@ static struct sDOSBoxPure : public ZL_Application
 			{
 				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
 				const ImVec2 hubPos(112.0f, 76.0f);
-				const ImVec2 hubSize(
+				const ImVec2 hubDefaultSize(
 					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
 					(hubDisplaySize.y > 104.0f) ? hubDisplaySize.y - 104.0f : 16.0f);
-				ImGui::SetNextWindowPos(hubPos, ImGuiCond_Always);
-				ImGui::SetNextWindowSize(hubSize, ImGuiCond_Always);
+				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_FirstUseEver);
 				const ImGuiWindowFlags hubFlags =
-					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
-					ImGuiWindowFlags_NoBackground |
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground |
 					(SofiLauncherPropertiesOpen ? ImGuiWindowFlags_NoBringToFrontOnFocus : 0);
 				if (ImGui::Begin("##SofiLauncherHub", NULL, hubFlags))
 				{
 					// Temporary visible hub frame; the active skin will replace this treatment later.
 					const ImVec2 hubMin = ImGui::GetWindowPos();
+					const ImVec2 hubSize = ImGui::GetWindowSize();
 					const ImVec2 hubMax(hubMin.x + hubSize.x, hubMin.y + hubSize.y);
 					ImDrawList* hubDraw = ImGui::GetWindowDrawList();
 					hubDraw->AddRectFilled(hubMin, hubMax, IM_COL32(7, 17, 31, 220), 12.0f);
