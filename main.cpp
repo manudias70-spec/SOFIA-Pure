@@ -4003,7 +4003,7 @@ static struct sDOSBoxPure : public ZL_Application
 					// Each card owns its executable, setup path and stable profile identity.
 					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 					const float cardWidth = 240.0f;
-					const float cardHeight = 232.0f;
+					const float cardHeight = 377.0f;
 					const float availableWidth = ImGui::GetContentRegionAvail().x;
 					const int columns = availableWidth >= cardWidth * 2.0f + ImGui::GetStyle().ItemSpacing.x ? 2 : 1;
 					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
@@ -4012,7 +4012,7 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::BeginGroup();
 						const ImVec2 cardPos = ImGui::GetCursorScreenPos();
 						const ImVec2 cardMax(cardPos.x + cardWidth, cardPos.y + cardHeight);
-						const ImVec2 imageMax(cardPos.x + cardWidth, cardPos.y + 180.0f);
+						const ImVec2 imageMax(cardPos.x + cardWidth, cardPos.y + 325.0f);
 						ImDrawList* draw = ImGui::GetWindowDrawList();
 						draw->AddRectFilled(cardPos, cardMax, IM_COL32(15, 31, 49, 235), 5.0f);
 						draw->AddRectFilled(cardPos, imageMax, IM_COL32(7, 17, 29, 255), 5.0f);
@@ -4021,7 +4021,7 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							const char* placeholder = "SIN IMAGEN";
 							const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
-							draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 82.0f), IM_COL32(125, 155, 180, 255), placeholder);
+							draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 154.0f), IM_COL32(125, 155, 180, 255), placeholder);
 						}
 						else
 						{
@@ -4031,7 +4031,7 @@ static struct sDOSBoxPure : public ZL_Application
 							{
 								const char* placeholder = "IMAGEN NO DISPONIBLE";
 								const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
-								draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 82.0f), IM_COL32(220, 150, 130, 255), placeholder);
+								draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 154.0f), IM_COL32(220, 150, 130, 255), placeholder);
 							}
 						}
 						if (SofiLauncherSelectedProfileId == profile.Id())
@@ -4041,10 +4041,10 @@ static struct sDOSBoxPure : public ZL_Application
 						// Overlapping ImGui items otherwise let the larger card button consume the click.
 						bool cardClicked = false;
 						ImGui::SetCursorScreenPos(cardPos);
-						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth - 40.0f, 180.0f));
+						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth - 40.0f, 325.0f));
 						cardClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 40.0f, cardPos.y + 40.0f));
-						if (ImGui::InvisibleButton(("##SofiCardBodyRight_" + profile.Id()).c_str(), ImVec2(40.0f, 140.0f)))
+						if (ImGui::InvisibleButton(("##SofiCardBodyRight_" + profile.Id()).c_str(), ImVec2(40.0f, 285.0f)))
 							cardClicked = true;
 						const bool cardDoubleClicked = cardClicked && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 						if (cardClicked)
@@ -4058,7 +4058,7 @@ static struct sDOSBoxPure : public ZL_Application
 						if (cardDoubleClicked && !profile.exePath.empty())
 							SofiLauncherActivateProfile(profile, false);
 
-						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + 12.0f, cardPos.y + 190.0f));
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + 12.0f, cardPos.y + 335.0f));
 						ImGui::TextUnformatted(profile.Name().c_str());
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 34.0f, cardPos.y + 6.0f));
 						const ImVec2 menuPos = ImGui::GetCursorScreenPos();
@@ -4111,8 +4111,8 @@ static struct sDOSBoxPure : public ZL_Application
 							}
 							ImGui::EndPopup();
 						}
-						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 180.0f));
-						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 180.0f));
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 325.0f));
+						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 325.0f));
 						ImGui::EndGroup();
 						if (columns == 2 && (profileIndex % 2) == 0 && profileIndex + 1 < SofiLauncherProfiles.size())
 							ImGui::SameLine();
