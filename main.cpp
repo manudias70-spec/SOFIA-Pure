@@ -2356,16 +2356,6 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	return true;
 }
 
-static std::string SofiLauncherGlobalCyclesMax()
-{
-	mtxCoreOptions.Lock();
-	const retro_core_option_v2_definition* option = SofiLauncherFindCoreOption("dosbox_pure_cycles_max");
-	const char* value = option ? GetSetting("dosbox_pure_cycles_max", option->default_value) : NULL;
-	std::string result = value ? value : "";
-	mtxCoreOptions.Unlock();
-	return result;
-}
-
 static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
