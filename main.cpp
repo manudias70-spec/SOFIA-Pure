@@ -2726,8 +2726,9 @@ static void SofiLauncherInitializePropertiesDrafts(const std::string& exePath)
 		if (!SofiLauncherIsValidCoreValue(def.key, value)) { mtxCoreOptions.Lock(); const retro_core_option_v2_definition* option = SofiLauncherFindCoreOption(def.key); value = option && option->default_value ? option->default_value : ""; mtxCoreOptions.Unlock(); }
 		SofiLauncherCoreDraft[def.key] = value;
 	}
-	SofiLauncherVideoDraftCyclesMax = hasProfile && loaded.hasCyclesMax ? loaded.cyclesMax : "";
-	if (SofiLauncherCoreDraft.find("dosbox_pure_cycles_max") != SofiLauncherCoreDraft.end()) SofiLauncherVideoDraftCyclesMax = SofiLauncherCoreDraft["dosbox_pure_cycles_max"];
+	if (hasProfile && loaded.hasCyclesMax)
+		SofiLauncherCoreDraft["dosbox_pure_cycles_max"] = loaded.cyclesMax;
+	SofiLauncherVideoDraftCyclesMax = SofiLauncherCoreDraft.find("dosbox_pure_cycles_max") != SofiLauncherCoreDraft.end() ? SofiLauncherCoreDraft["dosbox_pure_cycles_max"] : "";
 	SofiLauncherVideoDraftExe = exePath; SofiLauncherAudioDraftExe = exePath; SofiLauncherCoreDraftExe = exePath;
 	SofiLauncherVideoDraftDirty = false; SofiLauncherAudioDraftDirty = false; SofiLauncherCoreDraftDirty = false;
 	SofiLauncherPropertiesWasOpen = true;
@@ -4357,7 +4358,7 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							
 							ImGui::TextDisabled("PERFIL INDIVIDUAL  //  LOS CAMBIOS GLOBALES NO SE MODIFICAN");
-							ImGui::BeginChild("##SofiGameCoreOptions",ImVec2(0.0f,-48.0f),false,ImGuiWindowFlags_AlwaysVerticalScrollbar);
+							ImGui::BeginChild("##SofiGameCoreOptions",ImVec2(0.0f,-104.0f),false,ImGuiWindowFlags_AlwaysVerticalScrollbar);
 							const char* groupNames[]={"HARDWARE","OTROS SO","ESTADÍSTICAS"};
 							for(int group=0;group<3;++group)
 							{
@@ -4378,9 +4379,6 @@ static struct sDOSBoxPure : public ZL_Application
 								}
 							}
 							ImGui::EndChild();
-							
-							if(SofiLauncherCoreDraftDirty){ImGui::SameLine();ImGui::TextDisabled("CAMBIOS SIN GUARDAR");}
-							if(!SofiLauncherProfileStatus.empty())ImGui::TextWrapped("%s",SofiLauncherProfileStatus.c_str());
 							ImGui::EndTabItem();
 						}
 						ImGui::EndTabBar();
