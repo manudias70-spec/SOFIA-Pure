@@ -2855,13 +2855,17 @@ static unsigned int SofiLauncherLoadImageTexture(const std::string& imagePath)
 	BindFn bind=(BindFn)SDL_GL_GetProcAddress("glBindTexture");
 	ParamFn param=(ParamFn)SDL_GL_GetProcAddress("glTexParameteri");
 	ImageFn image=(ImageFn)SDL_GL_GetProcAddress("glTexImage2D");
-	if(!gen||!bind||!param||!image){stbi_image_free(px);SofiLauncherImageStatus="No se pudieron inicializar las funciones gráficas para mostrar la imagen.";return 0;}
+	typedef void (APIENTRY *PixelStoreFn)(unsigned int,int);
+	PixelStoreFn pixelStore=(PixelStoreFn)SDL_GL_GetProcAddress("glPixelStorei");
+	if(!gen||!bind||!param||!image||!pixelStore){stbi_image_free(px);SofiLauncherImageStatus="No se pudieron inicializar las funciones gráficas para mostrar la imagen.";return 0;}
 	unsigned int texture=0;
 	gen(1,&texture);
 	if(!texture){stbi_image_free(px);SofiLauncherImageStatus="No se pudo crear la textura de la imagen.";return 0;}
 	bind(0x0DE1,texture);
 	param(0x0DE1,0x2801,0x2601);param(0x0DE1,0x2800,0x2601);param(0x0DE1,0x2802,0x812F);param(0x0DE1,0x2803,0x812F);
+	pixelStore(0x0CF5,1); // GL_UNPACK_ALIGNMENT: RGB rows of 153 pixels are 459 bytes.
 	image(0x0DE1,0,0x1907,w,h,0,0x1907,0x1401,px);
+	pixelStore(0x0CF5,4); // Restore OpenGL default alignment.
 	bind(0x0DE1,0);stbi_image_free(px);
 	SofiLauncherImageTextures[imagePath]=texture;
 	SofiLauncherImageStatus="Imagen cargada correctamente.";
