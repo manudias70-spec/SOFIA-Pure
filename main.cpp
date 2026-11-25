@@ -4010,6 +4010,7 @@ static struct sDOSBoxPure : public ZL_Application
 					const float cardHeight = 240.0f;
 					const float availableWidth = ImGui::GetContentRegionAvail().x;
 					const int columns = availableWidth >= cardWidth * 2.0f + ImGui::GetStyle().ItemSpacing.x ? 2 : 1;
+					bool deletePopupRequested = false;
 					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
 					{
 						SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
@@ -4111,7 +4112,7 @@ static struct sDOSBoxPure : public ZL_Application
 							{
 								SofiLauncherDeleteProfileId = profile.Id();
 								SofiLauncherDeleteProfileOpen = true;
-								ImGui::OpenPopup("##SofiDeleteGameProfile");
+								deletePopupRequested = true;
 							}
 							ImGui::EndPopup();
 						}
@@ -4122,6 +4123,7 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::SameLine();
 					}
 					ImGui::EndChild();
+					if (deletePopupRequested) ImGui::OpenPopup("##SofiDeleteGameProfile");
 					if (SofiLauncherDeleteProfileOpen)
 					{
 						ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
