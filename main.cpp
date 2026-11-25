@@ -41,6 +41,7 @@
 #include "xbrz_shader.h"
 #include "sofia_splash.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "backends/imgui_impl_opengl3.h"
 #include <algorithm>
 #include <string>
@@ -3100,6 +3101,10 @@ static void OnDraw()
 			io.AddMouseButtonEvent(0, false);
 			io.AddMouseButtonEvent(1, false);
 			io.AddMouseButtonEvent(2, false);
+			// The game may have hidden SOFI while ImGui was dragging a window.
+			// Explicitly cancel both the active widget and ImGui's moving-window state.
+			ImGui::ClearActiveID();
+			ImGui::GetCurrentContext()->MovingWindow = NULL;
 			SofiCommanderCaptured = false;
 			ZL_Display::SetPointerLock(false);
 			SofiUIVisible = true;
