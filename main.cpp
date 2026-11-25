@@ -4106,7 +4106,10 @@ static struct sDOSBoxPure : public ZL_Application
 					const ImVec2 cardsViewportPos = ImGui::GetWindowPos();
 					const ImVec2 cardsViewportSize = ImGui::GetWindowSize();
 					const ImVec2 cardsMousePos = ImGui::GetIO().MousePos;
-					if (ImGui::IsDragDropActive())
+					const bool mouseInsideCardsViewport =
+						cardsMousePos.x >= cardsViewportPos.x && cardsMousePos.x <= cardsViewportPos.x + cardsViewportSize.x &&
+						cardsMousePos.y >= cardsViewportPos.y && cardsMousePos.y <= cardsViewportPos.y + cardsViewportSize.y;
+					if (mouseInsideCardsViewport)
 					{
 						const float edgeZone = 42.0f;
 						const float scrollSpeed = 520.0f * ImGui::GetIO().DeltaTime;
