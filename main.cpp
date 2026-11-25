@@ -4101,7 +4101,8 @@ static struct sDOSBoxPure : public ZL_Application
 					// Each card owns its executable, setup path and stable profile identity.
 					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 					const float cardWidth = 153.0f;
-					const float cardHeight = 240.0f;
+					const float cardNameAreaHeight = 31.5f; // 75% of the original 42 px name area.
+					const float cardHeight = 198.0f + cardNameAreaHeight;
 					const float availableWidth = ImGui::GetContentRegionAvail().x;
 					const float cardSpacingX = ImGui::GetStyle().ItemSpacing.x;
 					int columns = (int)((availableWidth + cardSpacingX) / (cardWidth + cardSpacingX));
@@ -4129,6 +4130,7 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::EndDragDropTarget();
 						}
 					};
+					static std::map<std::string, double> cardNameHoverStart;
 					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
 					{
 						SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
@@ -4139,7 +4141,6 @@ static struct sDOSBoxPure : public ZL_Application
 						ImDrawList* draw = ImGui::GetWindowDrawList();
 						draw->AddRectFilled(cardPos, cardMax, IM_COL32(15, 31, 49, 235), 5.0f);
 						draw->AddRectFilled(cardPos, imageMax, IM_COL32(7, 17, 29, 255), 5.0f);
-						draw->AddRect(cardPos, cardMax, IM_COL32(65, 145, 205, 210), 5.0f, 0, 1.0f);
 						if (profile.imagePath.empty())
 						{
 							const char* placeholder = "SIN IMAGEN";
@@ -4157,8 +4158,6 @@ static struct sDOSBoxPure : public ZL_Application
 								draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 91.0f), IM_COL32(220, 150, 130, 255), placeholder);
 							}
 						}
-						if (SofiLauncherSelectedProfileId == profile.Id())
-							draw->AddRect(cardPos, cardMax, IM_COL32(180, 205, 255, 230), 5.0f, 0, 2.0f);
 
 						// Keep the card's selection hit-area separate from the three-dot menu.
 						// Overlapping ImGui items otherwise let the larger card button consume the click.
@@ -4183,8 +4182,27 @@ static struct sDOSBoxPure : public ZL_Application
 						if (cardDoubleClicked && !profile.exePath.empty())
 							SofiLauncherActivateProfile(profile, false);
 
-						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + 12.0f, cardPos.y + 208.0f));
-						ImGui::TextUnformatted(profile.Name().c_str());
+						const std::string& cardName = profile.Name();
+						const ImVec2 nameMin(cardPos.x + 12.0f, cardPos.y + 198.0f);
+						const ImVec2 nameMax(cardPos.x + cardWidth - 12.0f, cardPos.y + cardHeight);
+						const ImVec2 nameSize = ImGui::CalcTextSize(cardName.c_str());
+						const float nameY = nameMin.y + (cardNameAreaHeight - ImGui::GetTextLineHeight()) * 0.5f;
+						const bool nameHovered = ImGui::IsMouseHoveringRect(nameMin, nameMax, true);
+						float nameX = nameMin.x;
+						if (nameHovered && nameSize.x > (nameMax.x - nameMin.x))
+						{
+							const std::string nameId = profile.Id();
+						if (cardNameHoverStart.find(nameId) == cardNameHoverStart.end())
+							cardNameHoverStart[nameId] = ImGui::GetTime();
+						const float scrollRange = nameSize.x + (nameMax.x - nameMin.x);
+						const float scrollOffset = (float)fmod((ImGui::GetTime() - cardNameHoverStart[nameId]) * 35.0, scrollRange);
+						nameX -= scrollOffset;
+					}
+					else if (!nameHovered)
+						cardNameHoverStart.erase(profile.Id());
+					draw->PushClipRect(nameMin, nameMax, true);
+					draw->AddText(ImVec2(nameX, nameY), IM_COL32(225, 240, 255, 255), cardName.c_str());
+					draw->PopClipRect();
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 34.0f, cardPos.y + 6.0f));
 						const ImVec2 menuPos = ImGui::GetCursorScreenPos();
 						if (ImGui::InvisibleButton(("##SofiCardMenu_" + profile.Id()).c_str(), ImVec2(28.0f, 28.0f)))
