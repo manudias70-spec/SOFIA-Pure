@@ -3664,7 +3664,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// Permanent launcher hub workspace. The active skin will own its visual treatment;
 			// game cards remain children of this stable, transparent area.
-			if (SofiLauncherOpen)
+			if (SofiUIVisible)
 			{
 				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
 				const ImVec2 hubPos(112.0f, 76.0f);
