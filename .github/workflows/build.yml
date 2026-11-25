@@ -1,3 +1,4 @@
+# SOFIA Space Windows branding build, based on validated build #599.
 name: Build
 # Commander without maximize state
 on:
