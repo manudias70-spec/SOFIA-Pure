@@ -93,6 +93,10 @@ static bool ImGuiReady = false;
 static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherCardSelected = false;
+static bool SofiLauncherCreateProfileOpen = false;
+static char SofiLauncherNewProfileName[128] = {};
+static unsigned int SofiLauncherNextProfileId = 1;
+static std::vector<SofiGameProfileTemplate> SofiLauncherProfiles;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
 static std::string SofiLauncherExePath, SofiLauncherSetupPath;
 static bool SofiLauncherProfileFilterActive = false;
@@ -2294,7 +2298,77 @@ static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImag
 static std::string SofiLauncherProfileStatus;
 static std::map<std::string, std::string> SofiLauncherVideoDraft, SofiLauncherAudioDraft, SofiLauncherCoreDraft;
 static std::string SofiLauncherVideoDraftExe, SofiLauncherAudioDraftExe, SofiLauncherCoreDraftExe, SofiLauncherVideoDraftCyclesMax;
+
 static bool SofiLauncherVideoDraftDirty = false, SofiLauncherAudioDraftDirty = false, SofiLauncherCoreDraftDirty = false, SofiLauncherPropertiesWasOpen = false;
+static std::string SofiLauncherLibraryPath()
+{
+	if (SofiLauncherDataPath.empty()) return std::string();
+	std::string path = SofiLauncherDataPath;
+	path.append(1, CROSS_FILESPLIT);
+	path += "GLProfiles";
+	path.append(1, CROSS_FILESPLIT);
+	path += "library.cfg";
+	return path;
+}
+static bool SofiLauncherSaveLibrary()
+{
+	if (SofiLauncherDataPath.empty()) return false;
+	std::string folder = SofiLauncherDataPath;
+	folder.append(1, CROSS_FILESPLIT);
+	folder += "GLProfiles";
+	if (libretro_vfs_implementation_dir* d = retro_vfs_opendir_impl(folder.c_str(), true)) retro_vfs_closedir_impl(d);
+	else retro_vfs_mkdir_impl(folder.c_str());
+	FILE* f = fopen_wrap(SofiLauncherLibraryPath().c_str(), "wb");
+	if (!f) return false;
+	bool ok = fprintf(f, "SOFIA_LIBRARY_V1\n%u\n", SofiLauncherNextProfileId) >= 0;
+	for (const SofiGameProfileTemplate& profile : SofiLauncherProfiles)
+		if (ok && fprintf(f, "%s\t%s\n", profile.Id().c_str(), profile.Name().c_str()) < 0) ok = false;
+	if (ferror(f)) ok = false;
+	if (fclose(f) != 0) ok = false;
+	return ok;
+}
+static void SofiLauncherLoadLibrary()
+{
+	SofiLauncherProfiles.clear();
+	SofiLauncherNextProfileId = 1;
+	const std::string path = SofiLauncherLibraryPath();
+	if (path.empty()) return;
+	FILE* f = fopen_wrap(path.c_str(), "rb");
+	if (!f) return;
+	char line[1024] = {};
+	if (!fgets(line, sizeof(line), f) || strcmp(line, "SOFIA_LIBRARY_V1\n") != 0) { fclose(f); return; }
+	if (fgets(line, sizeof(line), f))
+	{
+		const unsigned long next = strtoul(line, NULL, 10);
+		if (next > 0 && next <= 0x7fffffffUL) SofiLauncherNextProfileId = (unsigned int)next;
+	}
+	while (fgets(line, sizeof(line), f))
+	{
+		size_t len = strlen(line);
+		while (len && (line[len - 1] == '\n' || line[len - 1] == '\r')) line[--len] = 0;
+		char* tab = strchr(line, '\t');
+		if (!tab || tab == line || !tab[1]) continue;
+		*tab++ = 0;
+		SofiLauncherProfiles.push_back(SofiGameProfileTemplate(line, tab));
+	}
+	fclose(f);
+}
+static bool SofiLauncherCreateProfile(const char* name)
+{
+	if (!name || !*name || SofiLauncherNextProfileId == 0 || SofiLauncherNextProfileId >= 0x7fffffffU) return false;
+	for (const char* p = name; *p; ++p) if (*p == '\n' || *p == '\r' || *p == '\t') return false;
+	char id[32];
+	snprintf(id, sizeof(id), "game_%08u", SofiLauncherNextProfileId);
+	SofiLauncherProfiles.push_back(SofiGameProfileTemplate(id, name));
+	++SofiLauncherNextProfileId;
+	if (!SofiLauncherSaveLibrary())
+	{
+		SofiLauncherProfiles.pop_back();
+		--SofiLauncherNextProfileId;
+		return false;
+	}
+	return true;
+}
 
 static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 {
@@ -3430,6 +3504,7 @@ static struct sDOSBoxPure : public ZL_Application
 		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
 					SofiLauncherSetupPath.assign(ZL_Application::SettingsGet("interface_launcher_setup"));
 		SofiLauncherDataPath.assign(basePath.c_str());
+		SofiLauncherLoadLibrary();
 		SofiLauncherImagePath.assign(ZL_Application::SettingsGet("interface_launcher_image"));
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
 		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
@@ -3779,8 +3854,67 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::Button("##SofiEmptyGameCard", cardSize);
 						ImGui::GetWindowDrawList()->AddText(ImGui::GetItemRectMin(), IM_COL32(190, 205, 220, 255), "SELECCIONA UN EJECUTABLE");
 					}
-					// Reserved space for the game name; naming is added with the Add Game flow.
-					ImGui::Dummy(ImVec2(cardSize.x, 28.0f));
+					// Persistent profiles are displayed as named cards in the hub.
+					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
+					{
+						const SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
+						const ImVec2 p = ImGui::GetCursorScreenPos();
+						const ImVec2 q(p.x + 320.0f, p.y + 54.0f);
+						ImDrawList* draw = ImGui::GetWindowDrawList();
+						draw->AddRectFilled(p, q, IM_COL32(15, 31, 49, 225), 3.0f);
+						draw->AddRect(p, q, IM_COL32(65, 145, 205, 210), 3.0f, 0, 1.0f);
+						draw->AddText(ImVec2(p.x + 12.0f, p.y + 9.0f), IM_COL32(225, 238, 250, 255), profile.Name().c_str());
+						ImGui::Dummy(ImVec2(320.0f, 60.0f));
+					}
+					ImGui::SetCursorScreenPos(ImVec2(hubMax.x - 58.0f, hubMax.y - 58.0f));
+					if (ImGui::Button("+", ImVec2(40.0f, 40.0f)))
+					{
+						SofiLauncherNewProfileName[0] = 0;
+						SofiLauncherCreateProfileOpen = true;
+						ImGui::OpenPopup("##SofiCreateGameProfile");
+					}
+					if (SofiLauncherCreateProfileOpen)
+					{
+						ImGui::SetNextWindowSize(ImVec2(430.0f, 0.0f), ImGuiCond_Appearing);
+						if (ImGui::BeginPopupModal("##SofiCreateGameProfile", &SofiLauncherCreateProfileOpen, ImGuiWindowFlags_AlwaysAutoResize))
+						{
+							ImGui::TextUnformatted("CREAR PERFIL DE JUEGO");
+							ImGui::Spacing();
+							ImGui::TextUnformatted("Nombre del juego");
+							ImGui::SetNextItemWidth(-1.0f);
+							ImGui::InputText("##SofiNewGameName", SofiLauncherNewProfileName, sizeof(SofiLauncherNewProfileName));
+							ImGui::Spacing();
+							ImGui::TextWrapped("Una vez creado el perfil, el nombre del juego no podrá modificarse.");
+							ImGui::TextWrapped("Agregar ejecutable y configurar desde el menú de tres puntos (⋮) de la tarjeta.");
+							ImGui::Spacing();
+							const bool validName = SofiLauncherNewProfileName[0] != 0;
+							if (!validName) ImGui::BeginDisabled();
+							if (ImGui::Button("CREAR PERFIL", ImVec2(150.0f, 34.0f)))
+							{
+								if (SofiLauncherCreateProfile(SofiLauncherNewProfileName))
+								{
+									SofiLauncherCreateProfileOpen = false;
+								ImGui::CloseCurrentPopup();
+								SofiLauncherProfileStatus = "Perfil creado y guardado en la biblioteca.";
+								SofiLauncherNewProfileName[0] = 0;
+								}
+								else SofiLauncherProfileStatus = "No se pudo guardar el perfil. Revisá la carpeta DOSBoxPure.";
+							}
+							if (!validName) ImGui::EndDisabled();
+							ImGui::SameLine();
+							if (ImGui::Button("CANCELAR", ImVec2(120.0f, 34.0f)))
+							{
+								SofiLauncherCreateProfileOpen = false;
+								ImGui::CloseCurrentPopup();
+							}
+							ImGui::EndPopup();
+						}
+					}
+					if (!SofiLauncherProfileStatus.empty())
+					{
+						ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMax.y - 42.0f));
+						ImGui::TextDisabled("%s", SofiLauncherProfileStatus.c_str());
+					}
 				}
 				ImGui::End();
 			}
