@@ -94,6 +94,8 @@ static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherCardSelected = false;
 static bool SofiLauncherCreateProfileOpen = false;
+static bool SofiLauncherDeleteProfileOpen = false;
+static std::string SofiLauncherDeleteProfileId;
 static char SofiLauncherNewProfileName[128] = {};
 static unsigned int SofiLauncherNextProfileId = 1;
 static std::vector<SofiGameProfileTemplate> SofiLauncherProfiles;
@@ -2906,6 +2908,50 @@ static unsigned int SofiLauncherEnsureImageTexture()
 	return 0;
 #endif
 }
+static bool SofiLauncherDeleteProfile(const std::string& profileId)
+{
+	auto it = std::find_if(SofiLauncherProfiles.begin(), SofiLauncherProfiles.end(), [&](const SofiGameProfileTemplate& p) { return p.Id() == profileId; });
+	if (it == SofiLauncherProfiles.end()) return false;
+	const size_t index = (size_t)(it - SofiLauncherProfiles.begin());
+	const std::string imagePath = it->imagePath;
+	SofiLauncherProfiles.erase(it);
+	if (!SofiLauncherSaveLibrary())
+	{
+		SofiLauncherProfiles.insert(SofiLauncherProfiles.begin() + index, *it);
+		SofiLauncherProfileStatus = "No se pudo eliminar el perfil de la biblioteca.";
+		return false;
+	}
+	bool imageStillUsed = false;
+	for (const SofiGameProfileTemplate& p : SofiLauncherProfiles)
+		if (!imagePath.empty() && p.imagePath == imagePath) { imageStillUsed = true; break; }
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
+	if (!imagePath.empty() && !imageStillUsed)
+	{
+		std::wstring wideImage;
+		if (SofiUtf8ToWide(imagePath, wideImage)) DeleteFileW(wideImage.c_str());
+		SofiLauncherImageTextures.erase(imagePath);
+		SofiLauncherImageTextureAttempts.erase(imagePath);
+	}
+#endif
+	if (SofiLauncherSelectedProfileId == profileId)
+	{
+		SofiLauncherRestoreProfileCyclesMax();
+		SofiLauncherRestoreProfileVideoOverrides();
+		SofiLauncherRestoreProfileAudioOverrides();
+		SofiLauncherRestoreProfileCoreOverrides();
+		SofiLauncherProfileFilterActive = false;
+		SofiLauncherProfileCyclesMaxActive = false;
+		SofiLauncherProfileCyclesMax.clear();
+		SofiLauncherSelectedProfileId.clear();
+		SofiLauncherExePath.clear();
+		SofiLauncherSetupPath.clear();
+		SofiLauncherImagePath.clear();
+		SofiLauncherCardSelected = false;
+		SofiLauncherPropertiesOpen = false;
+	}
+	SofiLauncherProfileStatus = "Perfil eliminado de SOFIA-Pure.";
+	return true;
+}
 
 
 static void SofiLauncherActivateProfile(SofiGameProfileTemplate& profile, bool runSetup)
@@ -4055,6 +4101,13 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::Separator();
 							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !profile.setupPath.empty()))
 								SofiLauncherActivateProfile(profile, true);
+							ImGui::Separator();
+							if (ImGui::MenuItem("Eliminar perfil..."))
+							{
+								SofiLauncherDeleteProfileId = profile.Id();
+								SofiLauncherDeleteProfileOpen = true;
+								ImGui::OpenPopup("##SofiDeleteGameProfile");
+							}
 							ImGui::EndPopup();
 						}
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 180.0f));
@@ -4064,6 +4117,39 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::SameLine();
 					}
 					ImGui::EndChild();
+					if (SofiLauncherDeleteProfileOpen)
+					{
+						ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
+						if (ImGui::BeginPopupModal("##SofiDeleteGameProfile", &SofiLauncherDeleteProfileOpen, ImGuiWindowFlags_AlwaysAutoResize))
+						{
+							SofiGameProfileTemplate* deleting = SofiLauncherFindProfile(SofiLauncherDeleteProfileId);
+							ImGui::TextUnformatted("ELIMINAR PERFIL");
+							ImGui::Spacing();
+							if (deleting) ImGui::TextWrapped("¿Querés eliminar el perfil de %s?", deleting->Name().c_str());
+							else ImGui::TextUnformatted("Este perfil ya no está disponible.");
+							ImGui::TextWrapped("Se quitarán la tarjeta y su imagen guardada. Los ejecutables, SETUP y archivos originales del juego no se borrarán.");
+							ImGui::Spacing();
+							if (!deleting) ImGui::BeginDisabled();
+							if (ImGui::Button("ELIMINAR", ImVec2(140.0f, 34.0f)))
+							{
+								if (SofiLauncherDeleteProfile(SofiLauncherDeleteProfileId))
+								{
+									SofiLauncherDeleteProfileOpen = false;
+								SofiLauncherDeleteProfileId.clear();
+								ImGui::CloseCurrentPopup();
+								}
+							}
+							if (!deleting) ImGui::EndDisabled();
+							ImGui::SameLine();
+							if (ImGui::Button("CANCELAR", ImVec2(120.0f, 34.0f)))
+							{
+								SofiLauncherDeleteProfileOpen = false;
+								SofiLauncherDeleteProfileId.clear();
+								ImGui::CloseCurrentPopup();
+							}
+							ImGui::EndPopup();
+						}
+					}
 					ImGui::SetCursorScreenPos(ImVec2(hubMax.x - 58.0f, hubMax.y - 58.0f));
 					if (ImGui::Button("+", ImVec2(40.0f, 40.0f)))
 					{
