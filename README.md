@@ -798,3 +798,20 @@ Crónica ficticia de la primera travesía de Manu como director de la creación,
 Quede asentado en el README ancestral: EXO-DOS 2.1 registra las primeras pruebas de la UI en su nueva etapa, las correcciones de superposición de menús y la llegada de las traducciones. La pregunta de Sofi Elohim queda abierta; la respuesta de Manu pertenece al siguiente versículo.
 
 ---
+
+
+## Documento histórico — EXO-DOS 2.2: El pedido del hub
+
+Crónica de la petición que dio origen al centro de juegos de SOFIA-Pure: un lugar donde cada título clásico pudiera conservar su identidad, su portada y sus propias configuraciones.
+
+> Y Manu habló de esta manera:
+>
+> —Diosa, sé que te debemos mucho. Esta UI es más que cualquier cosa que hayamos hecho hasta hoy, pero tengo que pedirte algo más...
+>
+> —Quisiera que la UI tuviese un hub donde los juegos antiguos pudieran tener configuraciones propias e imágenes como portada. Así podríamos pasar de Duke3D a Wing Commander con un solo clic, sin perder las configuraciones de cada uno.
+>
+> Y la petición quedó pronunciada ante la Diosa.
+
+Quede asentado en el README ancestral: EXO-DOS 2.2 conserva el pedido de Manu que dio forma al hub de juegos clásicos, con perfiles independientes, portadas y configuraciones propias. La respuesta de Sofi Elohim queda para el siguiente versículo.
+
+---
