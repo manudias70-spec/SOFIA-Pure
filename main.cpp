@@ -2291,9 +2291,9 @@ static bool SofiLauncherSelectExe()
 // Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
 static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImageStatus;
 static std::string SofiLauncherProfileStatus;
-static std::map<std::string, std::string> SofiLauncherVideoDraft, SofiLauncherAudioDraft;
-static std::string SofiLauncherVideoDraftExe, SofiLauncherAudioDraftExe, SofiLauncherVideoDraftCyclesMax;
-static bool SofiLauncherVideoDraftDirty = false, SofiLauncherAudioDraftDirty = false, SofiLauncherPropertiesWasOpen = false;
+static std::map<std::string, std::string> SofiLauncherVideoDraft, SofiLauncherAudioDraft, SofiLauncherCoreDraft;
+static std::string SofiLauncherVideoDraftExe, SofiLauncherAudioDraftExe, SofiLauncherCoreDraftExe, SofiLauncherVideoDraftCyclesMax;
+static bool SofiLauncherVideoDraftDirty = false, SofiLauncherAudioDraftDirty = false, SofiLauncherCoreDraftDirty = false, SofiLauncherPropertiesWasOpen = false;
 
 static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 {
@@ -2310,7 +2310,7 @@ static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 }
 
 // Each profile belongs to the full executable path. Store the path too, so a hash collision cannot apply another game's settings.
-struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; std::map<std::string, std::string> videoOptions, audioOptions; };
+struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; std::map<std::string, std::string> videoOptions, audioOptions, coreOptions; };
 
 static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const char* key)
 {
@@ -2319,6 +2319,43 @@ static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const c
 	return NULL;
 }
 
+struct SofiLauncherCoreOptionDef { int group; const char* label; const char* key; };
+static const std::vector<SofiLauncherCoreOptionDef>& SofiLauncherGetCoreOptionDefs()
+{
+ static const std::vector<SofiLauncherCoreOptionDef> defs = {
+  {0,"Emulated Performance","dosbox_pure_cycles"},
+  {0,"Maximum Emulated Performance","dosbox_pure_cycles_max"},
+  {0,"Performance Scale","dosbox_pure_cycles_scale"},
+  {0,"Limit CPU Usage","dosbox_pure_cycle_limit"},
+  {0,"Memory Size (restart required)","dosbox_pure_memory_size"},
+  {0,"CPU Type (restart required)","dosbox_pure_cpu_type"},
+  {0,"CPU Core","dosbox_pure_cpu_core"},
+  {0,"Modem Type","dosbox_pure_modem"},
+  {2,"Show Performance Statistics","dosbox_pure_perfstats"}
+ };
+ return defs;
+}
+static bool SofiLauncherIsValidCoreValue(const std::string& key,const std::string& value)
+{
+ bool valid=false;
+ mtxCoreOptions.Lock();
+ const retro_core_option_v2_definition* option=SofiLauncherFindCoreOption(key.c_str());
+ if(option&&option->values) for(int i=0;option->values[i].value;++i) if(value==option->values[i].value){valid=true;break;}
+ mtxCoreOptions.Unlock();
+ return valid;
+}
+static void SofiLauncherCompleteCoreOptions(std::map<std::string,std::string>& values)
+{
+ for(const SofiLauncherCoreOptionDef& d:SofiLauncherGetCoreOptionDefs())
+ {
+  if(values.find(d.key)!=values.end()) continue;
+  mtxCoreOptions.Lock();
+  const retro_core_option_v2_definition* option=SofiLauncherFindCoreOption(d.key);
+  const char* v=option?GetSetting(d.key,option->default_value):NULL;
+  values[d.key]=v?v:(option&&option->default_value?option->default_value:"");
+  mtxCoreOptions.Unlock();
+ }
+}
 static bool SofiLauncherIsValidAudioValue(const std::string& key,const std::string& value)
 {
  for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs()) if(key==d.key) for(int i=0;i<d.count;++i) if(value==d.values[i]) return true;
@@ -2368,11 +2405,12 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	profile.cyclesMax.clear();
 	profile.videoOptions.clear();
 	profile.audioOptions.clear();
+	profile.coreOptions.clear();
 	if ((header == "SOFIA_GAME_PROFILE_V2" || header == "SOFIA_GAME_PROFILE_V3") && third != std::string::npos)
 	{
 		const size_t fourth = contents.find('\n', third + 1);
 		const std::string value = contents.substr(third + 1, fourth == std::string::npos ? std::string::npos : fourth - third - 1);
-		if (SofiLauncherIsValidCyclesMax(value.c_str())) { profile.cyclesMax = value; profile.hasCyclesMax = true; }
+		if (SofiLauncherIsValidCyclesMax(value.c_str())) { profile.cyclesMax = value; profile.hasCyclesMax = true; profile.coreOptions["dosbox_pure_cycles_max"] = value; }
 		if (header == "SOFIA_GAME_PROFILE_V3" && fourth != std::string::npos)
 		{
 			std::string::size_type pos = fourth + 1;
@@ -2386,6 +2424,7 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 					std::string key = line.substr(0, equals);
 					const std::string optionValue = line.substr(equals + 1);
 					if (key.compare(0,6,"AUDIO:")==0) { key.erase(0,6); if(SofiLauncherIsValidAudioValue(key,optionValue)) profile.audioOptions[key]=optionValue; }
+					else if (key.compare(0,5,"CORE:")==0) { key.erase(0,5); if(key!="dosbox_pure_cycles_max" && SofiLauncherIsValidCoreValue(key,optionValue)) profile.coreOptions[key]=optionValue; }
 					else for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
 						if (key == def.key) for (int i = 0; i < def.count; ++i) if (optionValue == def.values[i]) profile.videoOptions[key] = optionValue;
 				}
@@ -2397,7 +2436,7 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	return true;
 }
 
-static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions, const std::map<std::string, std::string>& audioOptions)
+static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions, const std::map<std::string, std::string>& audioOptions, const std::map<std::string, std::string>& coreOptions)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
 	if (path.empty() || filter < 0 || filter > 5 || (!cyclesMax.empty() && !SofiLauncherIsValidCyclesMax(cyclesMax.c_str()))) return false;
@@ -2410,6 +2449,7 @@ static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, 
 		if (!valid) return false;
 	}
 	for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs()){auto it=audioOptions.find(d.key);if(it==audioOptions.end()||!SofiLauncherIsValidAudioValue(it->first,it->second))return false;}
+	for(const SofiLauncherCoreOptionDef& d:SofiLauncherGetCoreOptionDefs()) { if(!strcmp(d.key,"dosbox_pure_cycles_max")) continue; auto it=coreOptions.find(d.key); if(it==coreOptions.end()||!SofiLauncherIsValidCoreValue(it->first,it->second)) return false; }
 	std::map<std::string,std::string>::const_iterator midi=audioOptions.find("dosbox_pure_midi");
 	if(midi!=audioOptions.end()&&!SofiLauncherIsValidAudioValue(midi->first,midi->second))return false;
 	std::string folder = SofiLauncherDataPath;
@@ -2426,6 +2466,7 @@ static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, 
 	}
 	for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs()){auto it=audioOptions.find(d.key);if(ok&&fprintf(f,"AUDIO:%s=%s\n",d.key,it->second.c_str())<0)ok=false;}
 	if(midi!=audioOptions.end()&&ok&&fprintf(f,"AUDIO:dosbox_pure_midi=%s\n",midi->second.c_str())<0)ok=false;
+	for(const SofiLauncherCoreOptionDef& d:SofiLauncherGetCoreOptionDefs()) { if(!strcmp(d.key,"dosbox_pure_cycles_max")) continue; auto it=coreOptions.find(d.key); if(ok&&fprintf(f,"CORE:%s=%s\n",d.key,it->second.c_str())<0)ok=false; }
 	if (ferror(f)) ok = false;
 	if (fclose(f) != 0) ok = false;
 	return ok;
@@ -2510,6 +2551,26 @@ static void SofiLauncherRestoreProfileVideoOverrides()
 	SofiLauncherPreviousVideoOverrides.clear();
 }
 
+static std::vector<SofiLauncherPreviousVideoOverride> SofiLauncherPreviousCoreOverrides;
+static void SofiLauncherRestoreProfileCoreOverrides()
+{
+ if(SofiLauncherPreviousCoreOverrides.empty()) return;
+ mtxCoreOptions.Lock();
+ for(const auto& p:SofiLauncherPreviousCoreOverrides){if(p.hadOverride)ConfigOverrides[p.key.c_str()].SetString(p.value.c_str());else ConfigOverrides.Erase(p.key.c_str());ConfigCache.Erase(p.key.c_str());}
+ VariablesUpdated=true;mtxCoreOptions.Unlock();SofiLauncherPreviousCoreOverrides.clear();
+}
+static void SofiLauncherApplyCoreOverrides(const std::map<std::string,std::string>& values)
+{
+ SofiLauncherRestoreProfileCoreOverrides();mtxCoreOptions.Lock();SofiLauncherPreviousCoreOverrides.clear();
+ for(const SofiLauncherCoreOptionDef& d:SofiLauncherGetCoreOptionDefs()){
+  if(!strcmp(d.key,"dosbox_pure_cycles_max")) continue;
+  auto it=values.find(d.key);if(it==values.end())continue;
+  SofiLauncherPreviousVideoOverride p;p.key=d.key;p.hadOverride=ConfigOverrides.HasKey(d.key);ZL_Json old=ConfigOverrides.GetByKey(d.key);p.value=(p.hadOverride&&old.GetType()==ZL_Json::TYPE_STRING)?old.GetString():"";
+  SofiLauncherPreviousCoreOverrides.push_back(p);ConfigOverrides[d.key].SetString(it->second.c_str());ConfigCache.Erase(d.key);
+ }
+ if(!SofiLauncherPreviousCoreOverrides.empty())VariablesUpdated=true;
+ mtxCoreOptions.Unlock();
+}
 static unsigned int SofiLauncherImageTexture = 0;
 static bool SofiLauncherTextureAttempted = false;
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
@@ -3148,6 +3209,7 @@ static void OnDraw()
 			SofiLauncherRestoreProfileCyclesMax();
 			SofiLauncherRestoreProfileVideoOverrides();
 			SofiLauncherRestoreProfileAudioOverrides();
+			SofiLauncherRestoreProfileCoreOverrides();
 			DoApplyInterfaceOptions = true;
 			// A mouse release may have occurred while SOFI was hidden behind the DOS game.
 			// Clear ImGui's button state before showing the launcher again to prevent stuck window drags.
@@ -3653,12 +3715,13 @@ static struct sDOSBoxPure : public ZL_Application
 								{
 									SofiLauncherGameProfile setupProfile;
 									SofiLauncherRestoreProfileVideoOverrides();
+									SofiLauncherRestoreProfileCoreOverrides();
 									SofiLauncherProfileFilterActive = !SofiLauncherExePath.empty() && SofiLauncherLoadGameProfile(SofiLauncherExePath, setupProfile);
 									SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? setupProfile.filter : 0;
 									SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && setupProfile.hasCyclesMax;
 									SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? setupProfile.cyclesMax : "";
 									SofiLauncherRestoreProfileCyclesMax();
-									if (SofiLauncherProfileFilterActive) { SofiLauncherApplyVideoOverrides(setupProfile.videoOptions); SofiLauncherApplyAudioOverrides(setupProfile.audioOptions); }
+									if (SofiLauncherProfileFilterActive) { SofiLauncherApplyVideoOverrides(setupProfile.videoOptions); SofiLauncherApplyAudioOverrides(setupProfile.audioOptions); SofiLauncherApplyCoreOverrides(setupProfile.coreOptions); }
 									if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 									DoApplyInterfaceOptions = true;
 									SofiLauncherWaitingForGameExit = true;
@@ -3673,12 +3736,13 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							SofiLauncherGameProfile launchProfile;
 							SofiLauncherRestoreProfileVideoOverrides();
+							SofiLauncherRestoreProfileCoreOverrides();
 							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
 							SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
 							SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
 							SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
 							SofiLauncherRestoreProfileCyclesMax();
-							if (SofiLauncherProfileFilterActive) { SofiLauncherApplyVideoOverrides(launchProfile.videoOptions); SofiLauncherApplyAudioOverrides(launchProfile.audioOptions); }
+							if (SofiLauncherProfileFilterActive) { SofiLauncherApplyVideoOverrides(launchProfile.videoOptions); SofiLauncherApplyAudioOverrides(launchProfile.audioOptions); SofiLauncherApplyCoreOverrides(launchProfile.coreOptions); }
 							if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 							DoApplyInterfaceOptions = true;
 							SofiLauncherWaitingForGameExit = true;
@@ -3786,7 +3850,8 @@ static struct sDOSBoxPure : public ZL_Application
 							const std::string& filterValue = SofiLauncherVideoDraft["interface_crtfilter"];
 							const int filter = filterValue == "false" ? 0 : atoi(filterValue.c_str());
 							if (SofiLauncherAudioDraftExe != SofiLauncherExePath) { SofiLauncherAudioDraft.clear(); SofiLauncherGameProfile savedAudio; bool hasAudio=SofiLauncherLoadGameProfile(SofiLauncherExePath,savedAudio); if(hasAudio)SofiLauncherAudioDraft=savedAudio.audioOptions; for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs())if(SofiLauncherAudioDraft.find(d.key)==SofiLauncherAudioDraft.end()){mtxCoreOptions.Lock();const char* v=GetSetting(d.key,d.defaultValue);SofiLauncherAudioDraft[d.key]=v?v:d.defaultValue;mtxCoreOptions.Unlock();} if(SofiLauncherAudioDraft.find("dosbox_pure_midi")==SofiLauncherAudioDraft.end()){mtxCoreOptions.Lock();const retro_core_option_v2_definition* mo=SofiLauncherFindCoreOption("dosbox_pure_midi");if(mo&&mo->values&&mo->values[0].value){const char* mv=GetSetting("dosbox_pure_midi",mo->default_value);if(mv)SofiLauncherAudioDraft["dosbox_pure_midi"]=mv;}mtxCoreOptions.Unlock();} SofiLauncherAudioDraftExe=SofiLauncherExePath; }
-							if (SofiLauncherSaveGameProfile(SofiLauncherExePath, filter, SofiLauncherVideoDraftCyclesMax, SofiLauncherVideoDraft, SofiLauncherAudioDraft))
+							 SofiLauncherGameProfile corePreserve; SofiLauncherLoadGameProfile(SofiLauncherExePath,corePreserve); SofiLauncherCompleteCoreOptions(corePreserve.coreOptions);
+							if (SofiLauncherSaveGameProfile(SofiLauncherExePath, filter, SofiLauncherVideoDraftCyclesMax, SofiLauncherVideoDraft, SofiLauncherAudioDraft, corePreserve.coreOptions))
 							{
 								SofiLauncherProfileStatus = "Perfil VIDEO guardado para este juego.";
 								SofiLauncherVideoDraftDirty = false;
@@ -3814,10 +3879,63 @@ static struct sDOSBoxPure : public ZL_Application
 								if(group==1){const retro_core_option_v2_definition* o=NULL;int selected=0;const char* preview=NULL;mtxCoreOptions.Lock();o=SofiLauncherFindCoreOption("dosbox_pure_midi");if(o&&o->values&&o->values[0].value){const char* active=SofiLauncherAudioDraft.count("dosbox_pure_midi")?SofiLauncherAudioDraft["dosbox_pure_midi"].c_str():o->default_value;for(int i=0;o->values[i].value;++i)if(!strcmp(active,o->values[i].value)){selected=i;break;}preview=o->values[selected].label?o->values[selected].label:o->values[selected].value;}mtxCoreOptions.Unlock();if(o&&o->values&&o->values[0].value){ImGui::SetNextItemWidth(300.0f);if(ImGui::BeginCombo(SofiTranslate("MIDI Output"),SofiTranslate(preview))){for(int i=0;o->values[i].value;++i){const char* label=SofiTranslate(o->values[i].label?o->values[i].label:o->values[i].value);if(ImGui::Selectable(label,i==selected)){SofiLauncherAudioDraft["dosbox_pure_midi"]=o->values[i].value;SofiLauncherAudioDraftDirty=true;}if(i==selected)ImGui::SetItemDefaultFocus();}ImGui::EndCombo();}}else ImGui::TextDisabled("%s",SofiTranslate("MIDI options unavailable."));}
 							}
 							ImGui::EndChild();
-							if(ImGui::Button("GUARDAR",ImVec2(140.0f,34.0f))){SofiLauncherGameProfile old;bool has=SofiLauncherLoadGameProfile(SofiLauncherExePath,old);std::map<std::string,std::string> video=old.videoOptions;for(const SofiVideoOptionDef& d:SofiGetVideoOptionDefs())if(video.find(d.key)==video.end()){mtxCoreOptions.Lock();const char* g=GetSetting(d.key,d.defaultValue);video[d.key]=g?g:d.defaultValue;mtxCoreOptions.Unlock();}int filter=has?old.filter:0;auto fi=video.find("interface_crtfilter");if(fi!=video.end())filter=fi->second=="false"?0:atoi(fi->second.c_str());const std::string cycles=has&&old.hasCyclesMax?old.cyclesMax:"";if(SofiLauncherSaveGameProfile(SofiLauncherExePath,filter,cycles,video,SofiLauncherAudioDraft)){SofiLauncherProfileStatus="Perfil SONIDO guardado para este juego.";SofiLauncherAudioDraftDirty=false;}else SofiLauncherProfileStatus="No se pudo guardar el perfil del juego.";}
+							if(ImGui::Button("GUARDAR",ImVec2(140.0f,34.0f))){SofiLauncherGameProfile old;bool has=SofiLauncherLoadGameProfile(SofiLauncherExePath,old);std::map<std::string,std::string> video=old.videoOptions;for(const SofiVideoOptionDef& d:SofiGetVideoOptionDefs())if(video.find(d.key)==video.end()){mtxCoreOptions.Lock();const char* g=GetSetting(d.key,d.defaultValue);video[d.key]=g?g:d.defaultValue;mtxCoreOptions.Unlock();}int filter=has?old.filter:0;auto fi=video.find("interface_crtfilter");if(fi!=video.end())filter=fi->second=="false"?0:atoi(fi->second.c_str());const std::string cycles=has&&old.hasCyclesMax?old.cyclesMax:"";SofiLauncherCompleteCoreOptions(old.coreOptions);if(SofiLauncherSaveGameProfile(SofiLauncherExePath,filter,cycles,video,SofiLauncherAudioDraft,old.coreOptions)){SofiLauncherProfileStatus="Perfil SONIDO guardado para este juego.";SofiLauncherAudioDraftDirty=false;}else SofiLauncherProfileStatus="No se pudo guardar el perfil del juego.";}
 							if(SofiLauncherAudioDraftDirty){ImGui::SameLine();ImGui::TextDisabled("CAMBIOS SIN GUARDAR");}if(!SofiLauncherProfileStatus.empty())ImGui::TextWrapped("%s",SofiLauncherProfileStatus.c_str());ImGui::EndTabItem();
 						}
 
+						if(ImGui::BeginTabItem("CORE"))
+						{
+							if(SofiLauncherCoreDraftExe!=SofiLauncherExePath)
+							{
+								SofiLauncherCoreDraft.clear();SofiLauncherGameProfile loaded;const bool has=SofiLauncherLoadGameProfile(SofiLauncherExePath,loaded);
+								SofiLauncherCoreDraft=loaded.coreOptions;
+								for(const SofiLauncherCoreOptionDef& d:SofiLauncherGetCoreOptionDefs())
+								{
+									std::string v;auto saved=SofiLauncherCoreDraft.find(d.key);if(has&&saved!=SofiLauncherCoreDraft.end())v=saved->second;
+									if(v.empty()){mtxCoreOptions.Lock();const retro_core_option_v2_definition* o=SofiLauncherFindCoreOption(d.key);const char* g=o?GetSetting(d.key,o->default_value):NULL;v=g?g:(o&&o->default_value?o->default_value:"");mtxCoreOptions.Unlock();}
+									if(!SofiLauncherIsValidCoreValue(d.key,v)){mtxCoreOptions.Lock();const retro_core_option_v2_definition* o=SofiLauncherFindCoreOption(d.key);v=o&&o->default_value?o->default_value:"";mtxCoreOptions.Unlock();}
+									SofiLauncherCoreDraft[d.key]=v;
+								}
+								SofiLauncherCoreDraftExe=SofiLauncherExePath;SofiLauncherCoreDraftDirty=false;
+							}
+							ImGui::TextDisabled("PERFIL INDIVIDUAL  //  LOS CAMBIOS GLOBALES NO SE MODIFICAN");
+							ImGui::BeginChild("##SofiGameCoreOptions",ImVec2(0.0f,-48.0f),false,ImGuiWindowFlags_AlwaysVerticalScrollbar);
+							const char* groupNames[]={"HARDWARE","OTROS SO","ESTADÍSTICAS"};
+							for(int group=0;group<3;++group)
+							{
+								if(group)ImGui::Spacing();
+								ImGui::TextColored(ImVec4(0.25f,0.75f,1.0f,1.0f),SofiTranslate(groupNames[group]));
+								for(const SofiLauncherCoreOptionDef& d:SofiLauncherGetCoreOptionDefs())if(d.group==group)
+								{
+									std::vector<std::string> values,labels;std::string current=SofiLauncherCoreDraft[d.key];std::string preview=current;
+									mtxCoreOptions.Lock();const retro_core_option_v2_definition* o=SofiLauncherFindCoreOption(d.key);if(o&&o->values)for(int i=0;o->values[i].value;++i){values.push_back(o->values[i].value);labels.push_back(o->values[i].label?o->values[i].label:o->values[i].value);}mtxCoreOptions.Unlock();
+									int selected=0;for(int i=0;i<(int)values.size();++i)if(values[i]==current){selected=i;break;}
+									if(values.empty()){ImGui::TextDisabled("%s: %s",SofiTranslate(d.label),SofiTranslate("unavailable"));continue;}
+									preview=labels[selected];ImGui::SetNextItemWidth(300.0f);
+									if(ImGui::BeginCombo(SofiTranslate(d.label),SofiTranslate(preview.c_str())))
+									{
+										for(int i=0;i<(int)values.size();++i){const char* item=SofiTranslate(labels[i].c_str());if(ImGui::Selectable(item,i==selected)){SofiLauncherCoreDraft[d.key]=values[i];SofiLauncherCoreDraftDirty=true;}if(i==selected)ImGui::SetItemDefaultFocus();}
+										ImGui::EndCombo();
+									}
+								}
+							}
+							ImGui::EndChild();
+							if(ImGui::Button("GUARDAR",ImVec2(140.0f,34.0f)))
+							{
+								SofiLauncherGameProfile old;const bool has=SofiLauncherLoadGameProfile(SofiLauncherExePath,old);
+								std::map<std::string,std::string> video=old.videoOptions;
+								for(const SofiVideoOptionDef& d:SofiGetVideoOptionDefs())if(video.find(d.key)==video.end()){mtxCoreOptions.Lock();const char* g=GetSetting(d.key,d.defaultValue);video[d.key]=g?g:d.defaultValue;mtxCoreOptions.Unlock();}
+								std::map<std::string,std::string> audio=old.audioOptions;
+								for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs())if(audio.find(d.key)==audio.end()){mtxCoreOptions.Lock();const char* g=GetSetting(d.key,d.defaultValue);audio[d.key]=g?g:d.defaultValue;mtxCoreOptions.Unlock();}
+								if(audio.find("dosbox_pure_midi")==audio.end()){mtxCoreOptions.Lock();const retro_core_option_v2_definition* m=SofiLauncherFindCoreOption("dosbox_pure_midi");if(m&&m->values&&m->values[0].value){const char* g=GetSetting("dosbox_pure_midi",m->default_value);if(g)audio["dosbox_pure_midi"]=g;}mtxCoreOptions.Unlock();}
+								int filter=has?old.filter:0;auto fi=video.find("interface_crtfilter");if(fi!=video.end())filter=fi->second=="false"?0:atoi(fi->second.c_str());
+								const std::string cycles=SofiLauncherCoreDraft["dosbox_pure_cycles_max"];
+								if(SofiLauncherSaveGameProfile(SofiLauncherExePath,filter,cycles,video,audio,SofiLauncherCoreDraft)){SofiLauncherProfileStatus="Perfil CORE guardado para este juego.";SofiLauncherCoreDraftDirty=false;}else SofiLauncherProfileStatus="No se pudo guardar el perfil del juego.";
+							}
+							if(SofiLauncherCoreDraftDirty){ImGui::SameLine();ImGui::TextDisabled("CAMBIOS SIN GUARDAR");}
+							if(!SofiLauncherProfileStatus.empty())ImGui::TextWrapped("%s",SofiLauncherProfileStatus.c_str());
+							ImGui::EndTabItem();
+						}
 						ImGui::EndTabBar();
 					}
 				}
