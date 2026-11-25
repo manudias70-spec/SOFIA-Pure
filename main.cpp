@@ -3679,6 +3679,16 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
 					ImGuiWindowFlags_NoBackground))
 				{
+					// Temporary visible hub frame; the active skin will replace this treatment later.
+					const ImVec2 hubMin = ImGui::GetWindowPos();
+					const ImVec2 hubMax(hubMin.x + hubSize.x, hubMin.y + hubSize.y);
+					ImDrawList* hubDraw = ImGui::GetWindowDrawList();
+					hubDraw->AddRectFilled(hubMin, hubMax, IM_COL32(7, 17, 31, 220), 12.0f);
+					hubDraw->AddRect(hubMin, hubMax, IM_COL32(65, 145, 205, 230), 12.0f, 0, 2.0f);
+					hubDraw->AddText(ImVec2(hubMin.x + 22.0f, hubMin.y + 16.0f), IM_COL32(205, 230, 250, 255), "GAME LIBRARY");
+					hubDraw->AddLine(ImVec2(hubMin.x + 18.0f, hubMin.y + 42.0f), ImVec2(hubMax.x - 18.0f, hubMin.y + 42.0f), IM_COL32(65, 145, 205, 150), 1.0f);
+					ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMin.y + 58.0f));
+
 					// The hub is a permanent card container, not a floating game window.
 					// Its contents are intentionally skin-neutral at this stage.
 					// Minimal card: click the artwork to launch; the top-right dots open its actions.
