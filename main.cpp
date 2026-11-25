@@ -2394,7 +2394,7 @@ static bool SofiLauncherSelectExe()
 }
 
 
-// Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
+// Per-game launcher artwork: private 153x198 stretched copy, size-limited.
 static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImageStatus;
 static std::string SofiLauncherProfileStatus;
 static std::map<std::string, std::string> SofiLauncherVideoDraft, SofiLauncherAudioDraft, SofiLauncherCoreDraft;
@@ -2810,22 +2810,18 @@ static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wst
 	int sw=0,sh=0,ch=0; unsigned char* src=stbi_load_from_memory(fileBytes.data(),(int)fileBytes.size(),&sw,&sh,&ch,3);
 	if(!src||sw<=0||sh<=0){if(src)stbi_image_free(src);SofiLauncherImageStatus="El archivo no es una imagen válida o no se pudo decodificar.";return false;}
 	const int targetW=153,targetH=198;
-	const double scale=(std::min)(targetW/(double)sw,targetH/(double)sh);
-	const int drawW=(std::max)(1,(int)std::floor(sw*scale+0.5));
-	const int drawH=(std::max)(1,(int)std::floor(sh*scale+0.5));
-	const int offsetX=(targetW-drawW)/2,offsetY=(targetH-drawH)/2;
 	std::vector<unsigned char> pixels(targetW*targetH*3);
-	for(int i=0;i<targetW*targetH;i++){pixels[i*3+0]=7;pixels[i*3+1]=17;pixels[i*3+2]=29;}
-	for(int y=0;y<drawH;y++) for(int x=0;x<drawW;x++)
+	// Stretch every source image to fill the complete 153x198 portrait area.
+	for(int y=0;y<targetH;y++) for(int x=0;x<targetW;x++)
 	{
-		double fx=((x+0.5)*sw/drawW)-0.5, fy=((y+0.5)*sh/drawH)-0.5;
+		double fx=((x+0.5)*sw/targetW)-0.5, fy=((y+0.5)*sh/targetH)-0.5;
 		int x0=(int)(std::max)(0.0,(std::min)((double)sw-1.0,std::floor(fx))), y0=(int)(std::max)(0.0,(std::min)((double)sh-1.0,std::floor(fy)));
 		int x1=(std::min)(x0+1,sw-1),y1=(std::min)(y0+1,sh-1);
 		double dx=(std::max)(0.0,(std::min)(1.0,fx-std::floor(fx))),dy=(std::max)(0.0,(std::min)(1.0,fy-std::floor(fy)));
 		for(int c=0;c<3;c++){
 			double a=src[(y0*sw+x0)*3+c],b=src[(y0*sw+x1)*3+c],d=src[(y1*sw+x0)*3+c],e=src[(y1*sw+x1)*3+c];
 			double top=a+(b-a)*dx,bot=d+(e-d)*dx;
-			pixels[((y+offsetY)*targetW+(x+offsetX))*3+c]=(unsigned char)(top+(bot-top)*dy+0.5);
+			pixels[(y*targetW+x)*3+c]=(unsigned char)(top+(bot-top)*dy+0.5);
 		}
 	}
 	stbi_image_free(src);
