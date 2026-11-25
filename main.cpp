@@ -44,6 +44,7 @@
 #include "backends/imgui_impl_opengl3.h"
 #include <algorithm>
 #include <string>
+#include <map>
 #include <cmath>
 #define STBI_NO_STDIO
 #define STB_IMAGE_IMPLEMENTATION
@@ -1057,6 +1058,88 @@ static void SofiVideoCombo(const char* label, const char* key,
 		SofiVideoSetSetting(key, values[selected]);
 }
 
+
+
+struct SofiVideoOptionDef
+{
+	int group;
+	const char* label;
+	const char* key;
+	const char* const* items;
+	const char* const* values;
+	int count;
+	const char* defaultValue;
+};
+
+static const std::vector<SofiVideoOptionDef>& SofiGetVideoOptionDefs()
+{
+	static const char* machineItems[] = { "SVGA (Super Video Graphics Array)", "VGA (Video Graphics Array)", "EGA (Enhanced Graphics Adapter)", "CGA (Color Graphics Adapter)", "Tandy (Tandy Graphics Adapter)", "Hercules (Hercules Graphics Card)", "PCjr" };
+	static const char* machineValues[] = { "svga", "vga", "ega", "cga", "tandy", "hercules", "pcjr" };
+	static const char* svgaItems[] = { "S3 Trio64", "S3 Trio64 no-line buffer hack", "S3 Trio64 VESA 1.3", "Tseng Labs ET3000", "Tseng Labs ET4000", "Paradise PVGA1A" };
+	static const char* svgaValues[] = { "svga_s3", "vesa_nolfb", "vesa_oldvbe", "svga_et3000", "svga_et4000", "svga_paradise" };
+	static const char* svgaMemItems[] = { "512KB", "1MB", "2MB", "3MB", "4MB", "8MB" };
+	static const char* svgaMemValues[] = { "0", "1", "2", "3", "4", "8" };
+	static const char* cgaItems[] = { "Early model, composite mode auto", "Early model, composite mode on", "Early model, composite mode off", "Late model, composite mode auto", "Late model, composite mode on", "Late model, composite mode off" };
+	static const char* cgaValues[] = { "early_auto", "early_on", "early_off", "late_auto", "late_on", "late_off" };
+	static const char* herculesItems[] = { "Black & white", "Black & amber", "Black & green" };
+	static const char* herculesValues[] = { "white", "amber", "green" };
+	static const char* voodooItems[] = { "Enabled - 8MB memory", "Enabled - 12MB memory, Dual Texture", "Enabled - 4MB memory, Low Resolution Only", "Disabled" };
+	static const char* voodooValues[] = { "8mb", "12mb", "4mb", "off" };
+	static const char* voodooPerfItems[] = { "Auto", "Hardware OpenGL", "Software Multi Threaded", "Software Multi Threaded, low quality", "Software Single Threaded, low quality", "Software Single Threaded" };
+	static const char* voodooPerfValues[] = { "auto", "4", "1", "3", "2", "0" };
+	static const char* voodooScaleItems[] = { "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x" };
+	static const char* voodooScaleValues[] = { "1", "2", "3", "4", "5", "6", "7", "8" };
+	static const char* gammaItems[] = { "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "None", "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "Disable Gamma Correction" };
+	static const char* gammaValues[] = { "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "999" };
+	static const char* scalingItems[] = { "Sharp Scaling (default)", "Simple Scaling (nearest neighbor)", "Bilinear Scaling", "Integer Scaling", "xBRZ 4x" };
+	static const char* scalingValues[] = { "default", "nearest", "bilinear", "integer", "xbrz" };
+	static const char* crtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
+	static const char* crtValues[] = { "false", "1", "2", "3", "4", "5" };
+	static const char* scanlineItems[] = { "No scanline gaps", "Weaker gaps", "Weak gaps", "Normal gaps", "Strong gaps", "Stronger gaps", "Strongest gaps" };
+	static const char* scanlineValues[] = { "0", "1", "2", "3", "4", "5", "8" };
+	static const char* blurItems[] = { "Blurry", "Smooth", "Default", "Pixely", "Sharper", "Sharpest" };
+	static const char* blurValues[] = { "0", "1", "2", "3", "4", "7" };
+	static const char* maskItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
+	static const char* maskValues[] = { "0", "1", "2", "3", "4" };
+	static const char* curveItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
+	static const char* curveValues[] = { "0", "1", "2", "3", "4" };
+	static const char* cornerItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
+	static const char* cornerValues[] = { "0", "1", "2", "3", "4" };
+	static const char* aspectItems[] = { "Off", "On (single-scan)", "On (double-scan when applicable)", "Padded to 4:3 (single-scan)", "Padded to 4:3 (double-scan when applicable)", "Stretch the display to fill the window" };
+	static const char* aspectValues[] = { "false", "true", "doublescan", "padded", "padded-doublescan", "fill" };
+	static const char* overscanItems[] = { "Off", "Small", "Medium", "Large" };
+	static const char* overscanValues[] = { "0", "1", "2", "3" };
+	static const std::vector<SofiVideoOptionDef> defs = {
+		{0,"Emulated Graphics Chip (restart required)","dosbox_pure_machine",machineItems,machineValues,IM_ARRAYSIZE(machineItems),"svga"},
+		{0,"SVGA Mode (restart required)","dosbox_pure_svga",svgaItems,svgaValues,IM_ARRAYSIZE(svgaItems),"svga_s3"},
+		{0,"SVGA Memory (restart required)","dosbox_pure_svgamem",svgaMemItems,svgaMemValues,IM_ARRAYSIZE(svgaMemItems),"2"},
+		{0,"CGA Mode","dosbox_pure_cga",cgaItems,cgaValues,IM_ARRAYSIZE(cgaItems),"early_auto"},
+		{0,"Hercules Color Mode","dosbox_pure_hercules",herculesItems,herculesValues,IM_ARRAYSIZE(herculesItems),"white"},
+		{1,"3dfx Voodoo Emulation","dosbox_pure_voodoo",voodooItems,voodooValues,IM_ARRAYSIZE(voodooItems),"8mb"},
+		{1,"3dfx Voodoo Performance","dosbox_pure_voodoo_perf",voodooPerfItems,voodooPerfValues,IM_ARRAYSIZE(voodooPerfItems),"auto"},
+		{1,"3dfx Voodoo OpenGL Scaling","dosbox_pure_voodoo_scale",voodooScaleItems,voodooScaleValues,IM_ARRAYSIZE(voodooScaleItems),"1"},
+		{1,"3dfx Voodoo Gamma Correction","dosbox_pure_voodoo_gamma",gammaItems,gammaValues,IM_ARRAYSIZE(gammaItems),"-2"},
+		{2,"Scaling","interface_scaling",scalingItems,scalingValues,IM_ARRAYSIZE(scalingItems),"default"},
+		{2,"CRT Filter","interface_crtfilter",crtItems,crtValues,IM_ARRAYSIZE(crtItems),"false"},
+		{2,"CRT Filter Scanline Intensity","interface_crtscanline",scanlineItems,scanlineValues,IM_ARRAYSIZE(scanlineItems),"2"},
+		{2,"CRT Filter Blur/Sharpness","interface_crtblur",blurItems,blurValues,IM_ARRAYSIZE(blurItems),"2"},
+		{2,"CRT Filter Phosphor Mask Strength","interface_crtmask",maskItems,maskValues,IM_ARRAYSIZE(maskItems),"2"},
+		{2,"CRT Filter Curvature","interface_crtcurvature",curveItems,curveValues,IM_ARRAYSIZE(curveItems),"2"},
+		{2,"CRT Filter Rounded Corner","interface_crtcorner",cornerItems,cornerValues,IM_ARRAYSIZE(cornerItems),"2"},
+		{2,"Aspect Ratio Correction","dosbox_pure_aspect_correction",aspectItems,aspectValues,IM_ARRAYSIZE(aspectItems),"false"},
+		{2,"Overscan Border Size","dosbox_pure_overscan",overscanItems,overscanValues,IM_ARRAYSIZE(overscanItems),"0"}
+	};
+	return defs;
+}
+
+static void SofiDrawGlobalVideoGroup(int group)
+{
+	const char* headings[] = { "ADAPTADORES DE VIDEO", "3DFX VOODOO", "PRESENTACIÓN DE IMAGEN" };
+	ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate(headings[group]));
+	for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+		if (def.group == group)
+			SofiVideoCombo(def.label, def.key, def.items, def.values, def.count, def.defaultValue);
+}
 
 static void SofiCoreOptionCombo(const char* label, const char* key)
 {
@@ -2173,6 +2256,9 @@ static bool SofiLauncherSelectExe()
 // Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
 static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImageStatus;
 static std::string SofiLauncherProfileStatus;
+static std::map<std::string, std::string> SofiLauncherVideoDraft;
+static std::string SofiLauncherVideoDraftExe, SofiLauncherVideoDraftCyclesMax;
+static bool SofiLauncherVideoDraftDirty = false, SofiLauncherPropertiesWasOpen = false;
 
 static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 {
@@ -2189,7 +2275,7 @@ static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 }
 
 // Each profile belongs to the full executable path. Store the path too, so a hash collision cannot apply another game's settings.
-struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; };
+struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; std::map<std::string, std::string> videoOptions; };
 
 static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const char* key)
 {
@@ -2228,7 +2314,7 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	const size_t first = contents.find('\n');
 	if (first == std::string::npos) return false;
 	const std::string header = contents.substr(0, first);
-	if (header != "SOFIA_GAME_PROFILE_V1" && header != "SOFIA_GAME_PROFILE_V2") return false;
+	if (header != "SOFIA_GAME_PROFILE_V1" && header != "SOFIA_GAME_PROFILE_V2" && header != "SOFIA_GAME_PROFILE_V3") return false;
 	const size_t second = contents.find('\n', first + 1);
 	if (second == std::string::npos || contents.substr(first + 1, second - first - 1) != exePath) return false;
 	const size_t third = contents.find('\n', second + 1);
@@ -2239,11 +2325,33 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	profile.filter = (int)filter;
 	profile.hasCyclesMax = false;
 	profile.cyclesMax.clear();
-	if (header == "SOFIA_GAME_PROFILE_V2" && third != std::string::npos)
+	profile.videoOptions.clear();
+	if ((header == "SOFIA_GAME_PROFILE_V2" || header == "SOFIA_GAME_PROFILE_V3") && third != std::string::npos)
 	{
 		const size_t fourth = contents.find('\n', third + 1);
 		const std::string value = contents.substr(third + 1, fourth == std::string::npos ? std::string::npos : fourth - third - 1);
 		if (SofiLauncherIsValidCyclesMax(value.c_str())) { profile.cyclesMax = value; profile.hasCyclesMax = true; }
+		if (header == "SOFIA_GAME_PROFILE_V3" && fourth != std::string::npos)
+		{
+			std::string::size_type pos = fourth + 1;
+			while (pos < contents.size())
+			{
+				const std::string::size_type lineEnd = contents.find('\n', pos);
+				const std::string line = contents.substr(pos, lineEnd == std::string::npos ? std::string::npos : lineEnd - pos);
+				const std::string::size_type equals = line.find('=');
+				if (equals != std::string::npos)
+				{
+					const std::string key = line.substr(0, equals);
+					const std::string optionValue = line.substr(equals + 1);
+					for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+						if (key == def.key)
+							for (int i = 0; i < def.count; ++i)
+								if (optionValue == def.values[i]) profile.videoOptions[key] = optionValue;
+				}
+				if (lineEnd == std::string::npos) break;
+				pos = lineEnd + 1;
+			}
+		}
 	}
 	return true;
 }
@@ -2258,17 +2366,31 @@ static std::string SofiLauncherGlobalCyclesMax()
 	return result;
 }
 
-static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax)
+static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
 	if (path.empty() || filter < 0 || filter > 5 || !SofiLauncherIsValidCyclesMax(cyclesMax.c_str())) return false;
+	for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+	{
+		std::map<std::string, std::string>::const_iterator it = videoOptions.find(def.key);
+		if (it == videoOptions.end()) return false;
+		bool valid = false;
+		for (int i = 0; i < def.count; ++i) if (it->second == def.values[i]) { valid = true; break; }
+		if (!valid) return false;
+	}
 	std::string folder = SofiLauncherDataPath;
 	folder.append(1, CROSS_FILESPLIT);
 	folder += "GLProfiles";
 	if (retro_vfs_mkdir_impl(folder.c_str()) == -1) return false;
 	FILE* f = fopen_wrap(path.c_str(), "wb");
 	if (!f) return false;
-	bool ok = fprintf(f, "SOFIA_GAME_PROFILE_V2\n%s\n%d\n%s\n", exePath.c_str(), filter, cyclesMax.c_str()) > 0 && !ferror(f);
+	bool ok = fprintf(f, "SOFIA_GAME_PROFILE_V3\n%s\n%d\n%s\n", exePath.c_str(), filter, cyclesMax.c_str()) > 0 && !ferror(f);
+	for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+	{
+		std::map<std::string, std::string>::const_iterator it = videoOptions.find(def.key);
+		if (ok && fprintf(f, "%s=%s\n", def.key, it->second.c_str()) < 0) ok = false;
+	}
+	if (ferror(f)) ok = false;
 	if (fclose(f) != 0) ok = false;
 	return ok;
 }
@@ -2299,6 +2421,49 @@ static void SofiLauncherRestoreProfileCyclesMax()
 	SofiLauncherCyclesMaxPreviousOverrideCaptured = false;
 	SofiLauncherCyclesMaxHadPreviousOverride = false;
 	SofiLauncherCyclesMaxPreviousOverride.clear();
+}
+
+struct SofiLauncherPreviousVideoOverride { std::string key; bool hadOverride; std::string value; };
+static std::vector<SofiLauncherPreviousVideoOverride> SofiLauncherPreviousVideoOverrides;
+static void SofiLauncherRestoreProfileVideoOverrides();
+
+static void SofiLauncherApplyVideoOverrides(const std::map<std::string, std::string>& values)
+{
+	SofiLauncherRestoreProfileVideoOverrides();
+	mtxCoreOptions.Lock();
+	SofiLauncherPreviousVideoOverrides.clear();
+	for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+	{
+		std::map<std::string, std::string>::const_iterator it = values.find(def.key);
+		if (it == values.end()) continue;
+		SofiLauncherPreviousVideoOverride previous;
+		previous.key = def.key;
+		previous.hadOverride = ConfigOverrides.HasKey(def.key);
+		ZL_Json oldValue = ConfigOverrides.GetByKey(def.key);
+		previous.value = (previous.hadOverride && oldValue.GetType() == ZL_Json::TYPE_STRING) ? oldValue.GetString() : "";
+		SofiLauncherPreviousVideoOverrides.push_back(previous);
+		ConfigOverrides[def.key].SetString(it->second.c_str());
+		ConfigCache.Erase(def.key);
+		if (!strcmp(def.key, "dosbox_pure_aspect_correction")) DoApplyGeometry = true;
+	}
+	if (!SofiLauncherPreviousVideoOverrides.empty()) VariablesUpdated = true;
+	mtxCoreOptions.Unlock();
+}
+
+static void SofiLauncherRestoreProfileVideoOverrides()
+{
+	if (SofiLauncherPreviousVideoOverrides.empty()) return;
+	mtxCoreOptions.Lock();
+	for (const SofiLauncherPreviousVideoOverride& previous : SofiLauncherPreviousVideoOverrides)
+	{
+		if (previous.hadOverride) ConfigOverrides[previous.key.c_str()].SetString(previous.value.c_str());
+		else ConfigOverrides.Erase(previous.key.c_str());
+		ConfigCache.Erase(previous.key.c_str());
+		if (previous.key == "dosbox_pure_aspect_correction") DoApplyGeometry = true;
+	}
+	VariablesUpdated = true;
+	mtxCoreOptions.Unlock();
+	SofiLauncherPreviousVideoOverrides.clear();
 }
 
 static unsigned int SofiLauncherImageTexture = 0;
@@ -2937,6 +3102,7 @@ static void OnDraw()
 			SofiLauncherProfileCyclesMaxActive = false;
 			SofiLauncherProfileCyclesMax.clear();
 			SofiLauncherRestoreProfileCyclesMax();
+			SofiLauncherRestoreProfileVideoOverrides();
 			DoApplyInterfaceOptions = true;
 			SofiUIVisible = true;
 		}
@@ -3429,11 +3595,13 @@ static struct sDOSBoxPure : public ZL_Application
 								if (!SofiLauncherSetupPath.empty())
 								{
 									SofiLauncherGameProfile setupProfile;
+									SofiLauncherRestoreProfileVideoOverrides();
 									SofiLauncherProfileFilterActive = !SofiLauncherExePath.empty() && SofiLauncherLoadGameProfile(SofiLauncherExePath, setupProfile);
 									SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? setupProfile.filter : 0;
 									SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && setupProfile.hasCyclesMax;
 									SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? setupProfile.cyclesMax : "";
 									SofiLauncherRestoreProfileCyclesMax();
+									if (SofiLauncherProfileFilterActive) SofiLauncherApplyVideoOverrides(setupProfile.videoOptions);
 									if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 									DoApplyInterfaceOptions = true;
 									SofiLauncherWaitingForGameExit = true;
@@ -3447,11 +3615,13 @@ static struct sDOSBoxPure : public ZL_Application
 						if (launchDoubleClicked && !menuClicked && !SofiLauncherExePath.empty())
 						{
 							SofiLauncherGameProfile launchProfile;
+							SofiLauncherRestoreProfileVideoOverrides();
 							SofiLauncherProfileFilterActive = SofiLauncherLoadGameProfile(SofiLauncherExePath, launchProfile);
 							SofiLauncherProfileFilter = SofiLauncherProfileFilterActive ? launchProfile.filter : 0;
 							SofiLauncherProfileCyclesMaxActive = SofiLauncherProfileFilterActive && launchProfile.hasCyclesMax;
 							SofiLauncherProfileCyclesMax = SofiLauncherProfileCyclesMaxActive ? launchProfile.cyclesMax : "";
 							SofiLauncherRestoreProfileCyclesMax();
+							if (SofiLauncherProfileFilterActive) SofiLauncherApplyVideoOverrides(launchProfile.videoOptions);
 							if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 							DoApplyInterfaceOptions = true;
 							SofiLauncherWaitingForGameExit = true;
@@ -3475,7 +3645,7 @@ static struct sDOSBoxPure : public ZL_Application
 			if (SofiLauncherPropertiesOpen)
 			{
 				ImGui::SetNextWindowPos(ImVec2(180.0f, 150.0f), ImGuiCond_FirstUseEver);
-				ImGui::SetNextWindowSize(ImVec2(460.0f, 340.0f), ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f), ImGuiCond_FirstUseEver);
 				if (ImGui::Begin("PROPIEDADES DEL JUEGO", &SofiLauncherPropertiesOpen, ImGuiWindowFlags_NoCollapse))
 				{
 					if (ImGui::BeginTabBar("##SofiGamePropertiesTabs"))
@@ -3495,76 +3665,87 @@ static struct sDOSBoxPure : public ZL_Application
 							if(!SofiLauncherImageStatus.empty())ImGui::TextWrapped("%s",SofiLauncherImageStatus.c_str());
 							ImGui::EndTabItem();
 						}
-						if (ImGui::BeginTabItem("CONFIG"))
-						{
-							// Both options belong to this game's profile; global settings remain untouched.
-							SofiLauncherGameProfile currentProfile;
-							const bool hasProfile = SofiLauncherLoadGameProfile(SofiLauncherExePath, currentProfile);
-							static const char* gameCrtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
-							int selectedFilter = hasProfile ? currentProfile.filter : 0;
-							if (!hasProfile)
-							{
-								mtxCoreOptions.Lock();
-								const char* globalFilter = GetSetting("interface_crtfilter", "false");
-								selectedFilter = atoi(globalFilter ? globalFilter : "false");
-								mtxCoreOptions.Unlock();
-							}
-							selectedFilter = ZL_Math::Clamp(selectedFilter, 0, IM_ARRAYSIZE(gameCrtItems) - 1);
-							std::vector<const char*> translatedGameCrtItems;
-							translatedGameCrtItems.reserve(IM_ARRAYSIZE(gameCrtItems));
-							for (int i = 0; i < IM_ARRAYSIZE(gameCrtItems); ++i) translatedGameCrtItems.push_back(SofiTranslate(gameCrtItems[i]));
-							ImGui::SetNextItemWidth(300.0f);
-							if (ImGui::Combo(SofiTranslate("CRT Filter"), &selectedFilter, translatedGameCrtItems.data(), IM_ARRAYSIZE(gameCrtItems)))
-							{
-								const std::string cyclesValue = (hasProfile && currentProfile.hasCyclesMax) ? currentProfile.cyclesMax : SofiLauncherGlobalCyclesMax();
-								if (SofiLauncherSaveGameProfile(SofiLauncherExePath, selectedFilter, cyclesValue)) SofiLauncherProfileStatus = "Perfil del juego guardado.";
-								else SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
-							}
 
-							const retro_core_option_v2_definition* cyclesOption = NULL;
-							int selectedCycles = 0;
-							mtxCoreOptions.Lock();
-							cyclesOption = SofiLauncherFindCoreOption("dosbox_pure_cycles_max");
-							if (cyclesOption && cyclesOption->values && cyclesOption->values[0].value)
+						if (ImGui::BeginTabItem("VIDEO"))
+						{
+							if (!SofiLauncherPropertiesWasOpen || SofiLauncherVideoDraftExe != SofiLauncherExePath)
 							{
-								const char* activeCycles = (hasProfile && currentProfile.hasCyclesMax) ? currentProfile.cyclesMax.c_str() : GetSetting("dosbox_pure_cycles_max", cyclesOption->default_value);
-								for (int i = 0; cyclesOption->values[i].value; ++i)
-									if (!strcmp(activeCycles ? activeCycles : cyclesOption->default_value, cyclesOption->values[i].value)) { selectedCycles = i; break; }
-							}
-							mtxCoreOptions.Unlock();
-							ImGui::SetNextItemWidth(300.0f);
-							if (!cyclesOption || !cyclesOption->values || !cyclesOption->values[0].value)
-								ImGui::TextDisabled("%s: %s", SofiTranslate("Maximum Emulated Performance"), SofiTranslate("unavailable"));
-							else
-							{
-								const char* cyclesPreview = SofiTranslate(cyclesOption->values[selectedCycles].label ? cyclesOption->values[selectedCycles].label : cyclesOption->values[selectedCycles].value);
-								if (ImGui::BeginCombo(SofiTranslate("Maximum Emulated Performance"), cyclesPreview))
+								SofiLauncherVideoDraft.clear();
+								SofiLauncherGameProfile loadedProfile;
+								const bool hasProfile = SofiLauncherLoadGameProfile(SofiLauncherExePath, loadedProfile);
+								for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
 								{
-									for (int i = 0; cyclesOption->values[i].value; ++i)
+									std::string value;
+									if (hasProfile)
 									{
-										const char* itemLabel = SofiTranslate(cyclesOption->values[i].label ? cyclesOption->values[i].label : cyclesOption->values[i].value);
-										const bool isSelected = (i == selectedCycles);
-										if (ImGui::Selectable(itemLabel, isSelected))
-										{
-											const int filterValue = hasProfile ? currentProfile.filter : selectedFilter;
-											if (SofiLauncherSaveGameProfile(SofiLauncherExePath, filterValue, cyclesOption->values[i].value)) SofiLauncherProfileStatus = "Perfil del juego guardado.";
-											else SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
-										}
-										if (isSelected) ImGui::SetItemDefaultFocus();
+										std::map<std::string, std::string>::const_iterator saved = loadedProfile.videoOptions.find(def.key);
+										if (saved != loadedProfile.videoOptions.end()) value = saved->second;
 									}
-									ImGui::EndCombo();
+									if (value.empty() && hasProfile && loadedProfile.videoOptions.find(def.key) == loadedProfile.videoOptions.end() && !strcmp(def.key, "interface_crtfilter"))
+										value = loadedProfile.filter == 0 ? "false" : std::to_string(loadedProfile.filter);
+									if (value.empty())
+									{
+										mtxCoreOptions.Lock();
+										const char* globalValue = GetSetting(def.key, def.defaultValue);
+										value = globalValue ? globalValue : def.defaultValue;
+										mtxCoreOptions.Unlock();
+									}
+									bool valid = false;
+									for (int i = 0; i < def.count; ++i) if (value == def.values[i]) { valid = true; break; }
+									SofiLauncherVideoDraft[def.key] = valid ? value : def.defaultValue;
+								}
+								SofiLauncherVideoDraftCyclesMax = hasProfile && loadedProfile.hasCyclesMax ? loadedProfile.cyclesMax : SofiLauncherGlobalCyclesMax();
+								SofiLauncherVideoDraftExe = SofiLauncherExePath;
+								SofiLauncherVideoDraftDirty = false;
+							}
+							SofiLauncherPropertiesWasOpen = true;
+							ImGui::TextDisabled("PERFIL INDIVIDUAL  //  LOS CAMBIOS GLOBALES NO SE MODIFICAN");
+							ImGui::BeginChild("##SofiGameVideoOptions", ImVec2(0.0f, -48.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+							const char* headings[] = { "ADAPTADORES DE VIDEO", "3DFX VOODOO", "PRESENTACIÓN DE IMAGEN" };
+							for (int group = 0; group < 3; ++group)
+							{
+								if (group) ImGui::Spacing();
+								ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate(headings[group]));
+								for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+								{
+									if (def.group != group) continue;
+									std::string& activeValue = SofiLauncherVideoDraft[def.key];
+									int selected = 0;
+									for (int i = 0; i < def.count; ++i) if (activeValue == def.values[i]) { selected = i; break; }
+									std::vector<const char*> translatedItems;
+									translatedItems.reserve(def.count);
+									for (int i = 0; i < def.count; ++i) translatedItems.push_back(SofiTranslate(def.items[i]));
+									ImGui::SetNextItemWidth(300.0f);
+									if (ImGui::Combo(SofiTranslate(def.label), &selected, translatedItems.data(), def.count))
+									{
+										activeValue = def.values[selected];
+										SofiLauncherVideoDraftDirty = true;
+									}
 								}
 							}
-							if (!SofiLauncherExePath.empty()) ImGui::TextDisabled("Estas opciones se guardan por separado para este juego.");
-							if (!SofiLauncherProfileStatus.empty())
-								ImGui::TextWrapped("%s", SofiLauncherProfileStatus.c_str());
-							ImGui::EndTabItem();
+							ImGui::EndChild();
+						if (ImGui::Button("GUARDAR", ImVec2(140.0f, 34.0f)))
+						{
+							const std::string& filterValue = SofiLauncherVideoDraft["interface_crtfilter"];
+							const int filter = filterValue == "false" ? 0 : atoi(filterValue.c_str());
+							if (SofiLauncherSaveGameProfile(SofiLauncherExePath, filter, SofiLauncherVideoDraftCyclesMax, SofiLauncherVideoDraft))
+							{
+								SofiLauncherProfileStatus = "Perfil VIDEO guardado para este juego.";
+								SofiLauncherVideoDraftDirty = false;
+							}
+							else SofiLauncherProfileStatus = "No se pudo guardar el perfil del juego.";
 						}
+						if (SofiLauncherVideoDraftDirty) { ImGui::SameLine(); ImGui::TextDisabled("CAMBIOS SIN GUARDAR"); }
+						if (!SofiLauncherProfileStatus.empty()) ImGui::TextWrapped("%s", SofiLauncherProfileStatus.c_str());
+						ImGui::EndTabItem();
+						}
+
 						ImGui::EndTabBar();
 					}
 				}
 				ImGui::End();
 			}
+			if (!SofiLauncherPropertiesOpen) SofiLauncherPropertiesWasOpen = false;
 
 			// AUDIO uses the same live settings path as VIDEO; MIDI uses the core's dynamic list.
 			if (SofiAudioPanelOpen)
@@ -3663,82 +3844,13 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::BeginChild("##SofiVideoOptions", ImVec2(0.0f, 0.0f), false,
 						ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("ADAPTADORES DE VIDEO"));
-					static const char* machineItems[] = { "SVGA (Super Video Graphics Array)", "VGA (Video Graphics Array)", "EGA (Enhanced Graphics Adapter)", "CGA (Color Graphics Adapter)", "Tandy (Tandy Graphics Adapter)", "Hercules (Hercules Graphics Card)", "PCjr" };
-					static const char* machineValues[] = { "svga", "vga", "ega", "cga", "tandy", "hercules", "pcjr" };
-					SofiVideoCombo("Emulated Graphics Chip (restart required)", "dosbox_pure_machine", machineItems, machineValues, IM_ARRAYSIZE(machineItems), "svga");
-
-					static const char* svgaItems[] = { "S3 Trio64", "S3 Trio64 no-line buffer hack", "S3 Trio64 VESA 1.3", "Tseng Labs ET3000", "Tseng Labs ET4000", "Paradise PVGA1A" };
-					static const char* svgaValues[] = { "svga_s3", "vesa_nolfb", "vesa_oldvbe", "svga_et3000", "svga_et4000", "svga_paradise" };
-					SofiVideoCombo("SVGA Mode (restart required)", "dosbox_pure_svga", svgaItems, svgaValues, IM_ARRAYSIZE(svgaItems), "svga_s3");
-
-					static const char* svgaMemItems[] = { "512KB", "1MB", "2MB", "3MB", "4MB", "8MB" };
-					static const char* svgaMemValues[] = { "0", "1", "2", "3", "4", "8" };
-					SofiVideoCombo("SVGA Memory (restart required)", "dosbox_pure_svgamem", svgaMemItems, svgaMemValues, IM_ARRAYSIZE(svgaMemItems), "2");
-
-					static const char* cgaItems[] = { "Early model, composite mode auto", "Early model, composite mode on", "Early model, composite mode off", "Late model, composite mode auto", "Late model, composite mode on", "Late model, composite mode off" };
-					static const char* cgaValues[] = { "early_auto", "early_on", "early_off", "late_auto", "late_on", "late_off" };
-					SofiVideoCombo("CGA Mode", "dosbox_pure_cga", cgaItems, cgaValues, IM_ARRAYSIZE(cgaItems), "early_auto");
-
-					static const char* herculesItems[] = { "Black & white", "Black & amber", "Black & green" };
-					static const char* herculesValues[] = { "white", "amber", "green" };
-					SofiVideoCombo("Hercules Color Mode", "dosbox_pure_hercules", herculesItems, herculesValues, IM_ARRAYSIZE(herculesItems), "white");
+					SofiDrawGlobalVideoGroup(0);
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("3DFX VOODOO"));
-					static const char* voodooItems[] = { "Enabled - 8MB memory", "Enabled - 12MB memory, Dual Texture", "Enabled - 4MB memory, Low Resolution Only", "Disabled" };
-					static const char* voodooValues[] = { "8mb", "12mb", "4mb", "off" };
-					SofiVideoCombo("3dfx Voodoo Emulation", "dosbox_pure_voodoo", voodooItems, voodooValues, IM_ARRAYSIZE(voodooItems), "8mb");
-
-					static const char* voodooPerfItems[] = { "Auto", "Hardware OpenGL", "Software Multi Threaded", "Software Multi Threaded, low quality", "Software Single Threaded, low quality", "Software Single Threaded" };
-					static const char* voodooPerfValues[] = { "auto", "4", "1", "3", "2", "0" };
-					SofiVideoCombo("3dfx Voodoo Performance", "dosbox_pure_voodoo_perf", voodooPerfItems, voodooPerfValues, IM_ARRAYSIZE(voodooPerfItems), "auto");
-
-					static const char* voodooScaleItems[] = { "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x" };
-					static const char* voodooScaleValues[] = { "1", "2", "3", "4", "5", "6", "7", "8" };
-					SofiVideoCombo("3dfx Voodoo OpenGL Scaling", "dosbox_pure_voodoo_scale", voodooScaleItems, voodooScaleValues, IM_ARRAYSIZE(voodooScaleItems), "1");
-
-					static const char* gammaItems[] = { "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "None", "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "Disable Gamma Correction" };
-					static const char* gammaValues[] = { "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "999" };
-					SofiVideoCombo("3dfx Voodoo Gamma Correction", "dosbox_pure_voodoo_gamma", gammaItems, gammaValues, IM_ARRAYSIZE(gammaItems), "-2");
+					SofiDrawGlobalVideoGroup(1);
 
 					ImGui::Spacing();
-					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("PRESENTACIÓN DE IMAGEN"));
-					static const char* scalingItems[] = { "Sharp Scaling (default)", "Simple Scaling (nearest neighbor)", "Bilinear Scaling", "Integer Scaling", "xBRZ 4x" };
-					static const char* scalingValues[] = { "default", "nearest", "bilinear", "integer", "xbrz" };
-					SofiVideoCombo("Scaling", "interface_scaling", scalingItems, scalingValues, IM_ARRAYSIZE(scalingItems), "default");
-
-					static const char* crtItems[] = { "Off", "Only Scanlines", "TV style phosphors", "Aperture-grille phosphors", "Stretched VGA style phosphors", "VGA style phosphors" };
-					static const char* crtValues[] = { "false", "1", "2", "3", "4", "5" };
-					SofiVideoCombo("CRT Filter", "interface_crtfilter", crtItems, crtValues, IM_ARRAYSIZE(crtItems), "false");
-
-					static const char* scanlineItems[] = { "No scanline gaps", "Weaker gaps", "Weak gaps", "Normal gaps", "Strong gaps", "Stronger gaps", "Strongest gaps" };
-					static const char* scanlineValues[] = { "0", "1", "2", "3", "4", "5", "8" };
-					SofiVideoCombo("CRT Filter Scanline Intensity", "interface_crtscanline", scanlineItems, scanlineValues, IM_ARRAYSIZE(scanlineItems), "2");
-
-					static const char* blurItems[] = { "Blurry", "Smooth", "Default", "Pixely", "Sharper", "Sharpest" };
-					static const char* blurValues[] = { "0", "1", "2", "3", "4", "7" };
-					SofiVideoCombo("CRT Filter Blur/Sharpness", "interface_crtblur", blurItems, blurValues, IM_ARRAYSIZE(blurItems), "2");
-
-					static const char* maskItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
-					static const char* maskValues[] = { "0", "1", "2", "3", "4" };
-					SofiVideoCombo("CRT Filter Phosphor Mask Strength", "interface_crtmask", maskItems, maskValues, IM_ARRAYSIZE(maskItems), "2");
-
-					static const char* curveItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
-					static const char* curveValues[] = { "0", "1", "2", "3", "4" };
-					SofiVideoCombo("CRT Filter Curvature", "interface_crtcurvature", curveItems, curveValues, IM_ARRAYSIZE(curveItems), "2");
-
-					static const char* cornerItems[] = { "Disabled", "Weak", "Default", "Strong", "Very Strong" };
-					static const char* cornerValues[] = { "0", "1", "2", "3", "4" };
-					SofiVideoCombo("CRT Filter Rounded Corner", "interface_crtcorner", cornerItems, cornerValues, IM_ARRAYSIZE(cornerItems), "2");
-
-					static const char* aspectItems[] = { "Off", "On (single-scan)", "On (double-scan when applicable)", "Padded to 4:3 (single-scan)", "Padded to 4:3 (double-scan when applicable)", "Stretch the display to fill the window" };
-					static const char* aspectValues[] = { "false", "true", "doublescan", "padded", "padded-doublescan", "fill" };
-					SofiVideoCombo("Aspect Ratio Correction", "dosbox_pure_aspect_correction", aspectItems, aspectValues, IM_ARRAYSIZE(aspectItems), "false");
-
-					static const char* overscanItems[] = { "Off", "Small", "Medium", "Large" };
-					static const char* overscanValues[] = { "0", "1", "2", "3" };
-					SofiVideoCombo("Overscan Border Size", "dosbox_pure_overscan", overscanItems, overscanValues, IM_ARRAYSIZE(overscanItems), "0");
+					SofiDrawGlobalVideoGroup(2);
 
 					ImGui::EndChild();
 				}
