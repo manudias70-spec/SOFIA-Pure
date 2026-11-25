@@ -2619,7 +2619,7 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 
 static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 {
-	if (e.which != 0 || !ImGuiReady || !SofiUIVisible || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
+	if (e.which != 0 || !ImGuiReady || e.button < ZL_BUTTON_LEFT || e.button > ZL_BUTTON_RIGHT) return;
 	if (e.button == ZL_BUTTON_MIDDLE && SofiSuppressMiddleRelease)
 	{
 		SofiSuppressMiddleRelease = false;
@@ -3094,6 +3094,14 @@ static void OnDraw()
 			SofiLauncherRestoreProfileCyclesMax();
 			SofiLauncherRestoreProfileVideoOverrides();
 			DoApplyInterfaceOptions = true;
+			// A mouse release may have occurred while SOFI was hidden behind the DOS game.
+			// Clear ImGui's button state before showing the launcher again to prevent stuck window drags.
+			ImGuiIO& io = ImGui::GetIO();
+			io.AddMouseButtonEvent(0, false);
+			io.AddMouseButtonEvent(1, false);
+			io.AddMouseButtonEvent(2, false);
+			SofiCommanderCaptured = false;
+			ZL_Display::SetPointerLock(false);
 			SofiUIVisible = true;
 		}
 	}
