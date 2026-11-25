@@ -1133,6 +1133,40 @@ static const std::vector<SofiVideoOptionDef>& SofiGetVideoOptionDefs()
 	return defs;
 }
 
+struct SofiAudioOptionDef { int group; const char* label; const char* key; const char* const* items; const char* const* values; int count; const char* defaultValue; };
+static const std::vector<SofiAudioOptionDef>& SofiGetAudioOptionDefs()
+{
+ static const char* latencyI[]={"10 ms","15 ms","20 ms","25 ms","30 ms","35 ms","40 ms","45 ms","50 ms","55 ms","60 ms","65 ms","70 ms","75 ms","80 ms","85 ms","90 ms","95 ms","100 ms"};
+ static const char* latencyV[]={"10","15","20","25","30","35","40","45","50","55","60","65","70","75","80","85","90","95","100"};
+ static const char* sbI[]={"Port 0x220, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5","Port 0x220, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5","Port 0x240, IRQ 7, 8-Bit DMA 1, 16-bit DMA 5","Port 0x240, IRQ 7, 8-Bit DMA 3, 16-bit DMA 7","Port 0x240, IRQ 2, 8-Bit DMA 3, 16-bit DMA 7","Port 0x240, IRQ 5, 8-Bit DMA 3, 16-bit DMA 5","Port 0x240, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5","Port 0x240, IRQ 10, 8-Bit DMA 3, 16-bit DMA 7","Port 0x280, IRQ 10, 8-Bit DMA 0, 16-bit DMA 6","Port 0x280, IRQ 5, 8-Bit DMA 1, 16-bit DMA 5"};
+ static const char* sbV[]={"A220 I7 D1 H5","A220 I5 D1 H5","A240 I7 D1 H5","A240 I7 D3 H7","A240 I2 D3 H7","A240 I5 D3 H5","A240 I5 D1 H5","A240 I10 D3 H7","A280 I10 D0 H6","A280 I5 D1 H5"};
+ static const char* volI[]={"5%","10%","15%","20%","25%","30%","35%","40%","45%","50%","55%","60%","65%","70%","75%","80%","85%","90%","95%","100%","110%","120%","130%","140%","150%","160%","170%","180%","190%","200%","225%","250%","275%","300%","325%","350%","375%","400%","425%","450%","475%","500%"};
+ static const char* volV[]={"0.05","0.1","0.15","0.2","0.25","0.3","0.35","0.4","0.45","0.5","0.55","0.6","0.65","0.7","0.75","0.8","0.85","0.9","0.95","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9","2.0","2.25","2.5","2.75","3.0","3.25","3.5","3.75","4.0","4.25","4.5","4.75","5.0"};
+ static const char* typeI[]={"SoundBlaster 16 (default)","SoundBlaster AWE32 / EMU8000","SoundBlaster Pro 2","SoundBlaster Pro","SoundBlaster 2.0","SoundBlaster 1.0","GameBlaster","none"};
+ static const char* typeV[]={"sb16","awe32","sbpro2","sbpro1","sb2","sb1","gb","none"};
+ static const char* fmI[]={"Auto (based on SoundBlaster type)","CMS (Creative Music System / GameBlaster)","OPL-2","Dual OPL-2","OPL-3","OPL-3 Gold","Disabled"};
+ static const char* fmV[]={"auto","cms","opl2","dualopl2","opl3","opl3gold","none"};
+ static const char* providerI[]={"Default","High quality Nuked OPL3"}; static const char* providerV[]={"default","nuked"};
+ static const char* offOnI[]={"Off (default)","On"}; static const char* boolV[]={"false","true"};
+ static const char* tandyV[]={"auto","on"};
+ static const std::vector<SofiAudioOptionDef> defs={
+ {0,"Audio Latency","interface_audiolatency",latencyI,latencyV,IM_ARRAYSIZE(latencyI),"25"},
+ {1,"SoundBlaster Settings","dosbox_pure_sblaster_conf",sbI,sbV,IM_ARRAYSIZE(sbI),"A220 I7 D1 H5"},
+ {2,"Sound Blaster","dosbox_pure_volume_sb",volI,volV,IM_ARRAYSIZE(volI),"1.0"},
+ {2,"MIDI Synthesizer","dosbox_pure_volume_midi",volI,volV,IM_ARRAYSIZE(volI),"1.0"},
+ {2,"Adlib","dosbox_pure_volume_adlib",volI,volV,IM_ARRAYSIZE(volI),"1.0"},
+ {2,"PC-Speaker","dosbox_pure_volume_speaker",volI,volV,IM_ARRAYSIZE(volI),"1.0"},
+ {2,"CD-ROM Audio","dosbox_pure_volume_cdrom",volI,volV,IM_ARRAYSIZE(volI),"1.0"},
+ {2,"Other Devices","dosbox_pure_volume_other",volI,volV,IM_ARRAYSIZE(volI),"1.0"},
+ {3,"SoundBlaster Type (restart required)","dosbox_pure_sblaster_type",typeI,typeV,IM_ARRAYSIZE(typeI),"sb16"},
+ {3,"SoundBlaster Adlib/FM Mode","dosbox_pure_sblaster_adlib_mode",fmI,fmV,IM_ARRAYSIZE(fmI),"auto"},
+ {3,"SoundBlaster Adlib Provider","dosbox_pure_sblaster_adlib_emu",providerI,providerV,IM_ARRAYSIZE(providerI),"default"},
+ {3,"Enable Gravis Ultrasound (restart required)","dosbox_pure_gus",offOnI,boolV,IM_ARRAYSIZE(offOnI),"false"},
+ {3,"Enable Tandy Sound Device (restart required)","dosbox_pure_tandysound",offOnI,tandyV,IM_ARRAYSIZE(offOnI),"auto"},
+ {3,"Swap Stereo Channels","dosbox_pure_swapstereo",offOnI,boolV,IM_ARRAYSIZE(offOnI),"false"}};
+ return defs;
+}
+
 static void SofiDrawGlobalVideoGroup(int group)
 {
 	const char* headings[] = { "ADAPTADORES DE VIDEO", "3DFX VOODOO", "PRESENTACIÓN DE IMAGEN" };
@@ -2257,9 +2291,9 @@ static bool SofiLauncherSelectExe()
 // Per-game launcher artwork: private 320x180 copy, center-cropped and size-limited.
 static std::string SofiLauncherDataPath, SofiLauncherImagePath, SofiLauncherImageStatus;
 static std::string SofiLauncherProfileStatus;
-static std::map<std::string, std::string> SofiLauncherVideoDraft;
+static std::map<std::string, std::string> SofiLauncherVideoDraft, SofiLauncherAudioDraft;
 static std::string SofiLauncherVideoDraftExe, SofiLauncherVideoDraftCyclesMax;
-static bool SofiLauncherVideoDraftDirty = false, SofiLauncherPropertiesWasOpen = false;
+static bool SofiLauncherVideoDraftDirty = false, SofiLauncherAudioDraftDirty = false, SofiLauncherPropertiesWasOpen = false;
 
 static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 {
@@ -2276,7 +2310,7 @@ static std::string SofiLauncherGameProfilePath(const std::string& exePath)
 }
 
 // Each profile belongs to the full executable path. Store the path too, so a hash collision cannot apply another game's settings.
-struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; std::map<std::string, std::string> videoOptions; };
+struct SofiLauncherGameProfile { int filter; std::string cyclesMax; bool hasCyclesMax; std::map<std::string, std::string> videoOptions, audioOptions; };
 
 static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const char* key)
 {
@@ -2285,6 +2319,12 @@ static const retro_core_option_v2_definition* SofiLauncherFindCoreOption(const c
 	return NULL;
 }
 
+static bool SofiLauncherIsValidAudioValue(const std::string& key,const std::string& value)
+{
+ for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs()) if(key==d.key) for(int i=0;i<d.count;++i) if(value==d.values[i]) return true;
+ if(key=="dosbox_pure_midi"){bool valid=false;mtxCoreOptions.Lock();const retro_core_option_v2_definition* o=SofiLauncherFindCoreOption(key.c_str());if(o&&o->values)for(int i=0;o->values[i].value;++i)if(value==o->values[i].value){valid=true;break;}mtxCoreOptions.Unlock();return valid;}
+ return false;
+}
 static bool SofiLauncherIsValidCyclesMax(const char* value)
 {
 	if (!value || !*value) return false;
@@ -2327,6 +2367,7 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	profile.hasCyclesMax = false;
 	profile.cyclesMax.clear();
 	profile.videoOptions.clear();
+	profile.audioOptions.clear();
 	if ((header == "SOFIA_GAME_PROFILE_V2" || header == "SOFIA_GAME_PROFILE_V3") && third != std::string::npos)
 	{
 		const size_t fourth = contents.find('\n', third + 1);
@@ -2342,12 +2383,11 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 				const std::string::size_type equals = line.find('=');
 				if (equals != std::string::npos)
 				{
-					const std::string key = line.substr(0, equals);
+					std::string key = line.substr(0, equals);
 					const std::string optionValue = line.substr(equals + 1);
-					for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
-						if (key == def.key)
-							for (int i = 0; i < def.count; ++i)
-								if (optionValue == def.values[i]) profile.videoOptions[key] = optionValue;
+					if (key.compare(0,6,"AUDIO:")==0) { key.erase(0,6); if(SofiLauncherIsValidAudioValue(key,optionValue)) profile.audioOptions[key]=optionValue; }
+					else for (const SofiVideoOptionDef& def : SofiGetVideoOptionDefs())
+						if (key == def.key) for (int i = 0; i < def.count; ++i) if (optionValue == def.values[i]) profile.videoOptions[key] = optionValue;
 				}
 				if (lineEnd == std::string::npos) break;
 				pos = lineEnd + 1;
@@ -2357,7 +2397,7 @@ static bool SofiLauncherLoadGameProfile(const std::string& exePath, SofiLauncher
 	return true;
 }
 
-static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions)
+static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, const std::string& cyclesMax, const std::map<std::string, std::string>& videoOptions, const std::map<std::string, std::string>& audioOptions)
 {
 	const std::string path = SofiLauncherGameProfilePath(exePath);
 	if (path.empty() || filter < 0 || filter > 5 || (!cyclesMax.empty() && !SofiLauncherIsValidCyclesMax(cyclesMax.c_str()))) return false;
@@ -2369,6 +2409,9 @@ static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, 
 		for (int i = 0; i < def.count; ++i) if (it->second == def.values[i]) { valid = true; break; }
 		if (!valid) return false;
 	}
+	for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs()){auto it=audioOptions.find(d.key);if(it==audioOptions.end()||!SofiLauncherIsValidAudioValue(it->first,it->second))return false;}
+	std::map<std::string,std::string>::const_iterator midi=audioOptions.find("dosbox_pure_midi");
+	if(midi!=audioOptions.end()&&!SofiLauncherIsValidAudioValue(midi->first,midi->second))return false;
 	std::string folder = SofiLauncherDataPath;
 	folder.append(1, CROSS_FILESPLIT);
 	folder += "GLProfiles";
@@ -2381,6 +2424,8 @@ static bool SofiLauncherSaveGameProfile(const std::string& exePath, int filter, 
 		std::map<std::string, std::string>::const_iterator it = videoOptions.find(def.key);
 		if (ok && fprintf(f, "%s=%s\n", def.key, it->second.c_str()) < 0) ok = false;
 	}
+	for(const SofiAudioOptionDef& d:SofiGetAudioOptionDefs()){auto it=audioOptions.find(d.key);if(ok&&fprintf(f,"AUDIO:%s=%s\n",d.key,it->second.c_str())<0)ok=false;}
+	if(midi!=audioOptions.end()&&ok&&fprintf(f,"AUDIO:dosbox_pure_midi=%s\n",midi->second.c_str())<0)ok=false;
 	if (ferror(f)) ok = false;
 	if (fclose(f) != 0) ok = false;
 	return ok;
