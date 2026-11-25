@@ -2779,8 +2779,8 @@ static void SofiLauncherApplyCoreOverrides(const std::map<std::string,std::strin
  if(!SofiLauncherPreviousCoreOverrides.empty())VariablesUpdated=true;
  mtxCoreOptions.Unlock();
 }
-static unsigned int SofiLauncherImageTexture = 0;
-static bool SofiLauncherTextureAttempted = false;
+static std::map<std::string, unsigned int> SofiLauncherImageTextures;
+static std::map<std::string, bool> SofiLauncherImageTextureAttempts;
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 static bool SofiUtf8ToWide(const std::string& in, std::wstring& out)
 {
@@ -2829,57 +2829,82 @@ static bool SofiLauncherCreateCardImage(const std::wstring& input,const std::wst
 	HANDLE f=CreateFileW(output.c_str(),GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(f==INVALID_HANDLE_VALUE){SofiLauncherImageStatus="No se pudo crear el archivo de imagen en GLImage (error "+std::to_string(GetLastError())+").";return false;} DWORD put=0; bool saved=WriteFile(f,jpg.data(),(DWORD)jpg.size(),&put,NULL)&&put==jpg.size(); DWORD writeError=saved?0:GetLastError(); CloseHandle(f); if(!saved){SofiLauncherImageStatus="No se pudo escribir la imagen optimizada (error "+std::to_string(writeError)+").";return false;} return true;
 }
-static void SofiLauncherLoadImageTexture()
+static unsigned int SofiLauncherLoadImageTexture(const std::string& imagePath)
 {
-	if(SofiLauncherImagePath.empty())return; std::wstring path; if(!SofiUtf8ToWide(SofiLauncherImagePath,path)){SofiLauncherImageStatus="No se pudo convertir la ruta de la imagen.";return;}
-	std::vector<unsigned char> bytes;if(!SofiReadImageBytes(path,bytes)){SofiLauncherImageStatus="No se pudo abrir la copia guardada de la imagen.";return;}
-	int w=0,h=0,c=0;unsigned char* px=stbi_load_from_memory(bytes.data(),(int)bytes.size(),&w,&h,&c,3);if(!px){SofiLauncherImageStatus="No se pudo decodificar la copia optimizada.";return;}
+	if (imagePath.empty()) return 0;
+	auto cached = SofiLauncherImageTextures.find(imagePath);
+	if (cached != SofiLauncherImageTextures.end()) return cached->second;
+	if (SofiLauncherImageTextureAttempts[imagePath]) return 0;
+	SofiLauncherImageTextureAttempts[imagePath] = true;
+	std::wstring path;
+	if (!SofiUtf8ToWide(imagePath, path)) { SofiLauncherImageStatus = "No se pudo convertir la ruta de la imagen."; return 0; }
+	std::vector<unsigned char> bytes;
+	if (!SofiReadImageBytes(path, bytes)) { SofiLauncherImageStatus = "No se pudo abrir la copia guardada de la imagen."; return 0; }
+	int w=0,h=0,c=0;
+	unsigned char* px=stbi_load_from_memory(bytes.data(),(int)bytes.size(),&w,&h,&c,3);
+	if(!px){SofiLauncherImageStatus="No se pudo decodificar la copia optimizada.";return 0;}
 	typedef void (APIENTRY *GenFn)(int,unsigned int*); typedef void (APIENTRY *BindFn)(unsigned int,unsigned int);
 	typedef void (APIENTRY *ParamFn)(unsigned int,unsigned int,int); typedef void (APIENTRY *ImageFn)(unsigned int,int,int,int,int,int,unsigned int,unsigned int,const void*);
-	typedef void (APIENTRY *DeleteFn)(int,const unsigned int*);
-	GenFn gen=(GenFn)SDL_GL_GetProcAddress("glGenTextures");BindFn bind=(BindFn)SDL_GL_GetProcAddress("glBindTexture");
-	ParamFn param=(ParamFn)SDL_GL_GetProcAddress("glTexParameteri");ImageFn image=(ImageFn)SDL_GL_GetProcAddress("glTexImage2D");
-	DeleteFn del=(DeleteFn)SDL_GL_GetProcAddress("glDeleteTextures");
-	if(!gen||!bind||!param||!image||!del){stbi_image_free(px);SofiLauncherImageStatus="No se pudieron inicializar las funciones gráficas para mostrar la imagen.";return;}
-	if(SofiLauncherImageTexture)del(1,&SofiLauncherImageTexture);gen(1,&SofiLauncherImageTexture);bind(0x0DE1,SofiLauncherImageTexture);
+	GenFn gen=(GenFn)SDL_GL_GetProcAddress("glGenTextures");
+	BindFn bind=(BindFn)SDL_GL_GetProcAddress("glBindTexture");
+	ParamFn param=(ParamFn)SDL_GL_GetProcAddress("glTexParameteri");
+	ImageFn image=(ImageFn)SDL_GL_GetProcAddress("glTexImage2D");
+	if(!gen||!bind||!param||!image){stbi_image_free(px);SofiLauncherImageStatus="No se pudieron inicializar las funciones gráficas para mostrar la imagen.";return 0;}
+	unsigned int texture=0;
+	gen(1,&texture);
+	if(!texture){stbi_image_free(px);SofiLauncherImageStatus="No se pudo crear la textura de la imagen.";return 0;}
+	bind(0x0DE1,texture);
 	param(0x0DE1,0x2801,0x2601);param(0x0DE1,0x2800,0x2601);param(0x0DE1,0x2802,0x812F);param(0x0DE1,0x2803,0x812F);
-	image(0x0DE1,0,0x1907,w,h,0,0x1907,0x1401,px);bind(0x0DE1,0);stbi_image_free(px);SofiLauncherTextureAttempted=true;SofiLauncherImageStatus="Imagen cargada correctamente.";
+	image(0x0DE1,0,0x1907,w,h,0,0x1907,0x1401,px);
+	bind(0x0DE1,0);stbi_image_free(px);
+	SofiLauncherImageTextures[imagePath]=texture;
+	SofiLauncherImageStatus="Imagen cargada correctamente.";
+	return texture;
 }
 static bool SofiLauncherSelectImage()
 {
 	SofiLauncherImageStatus.clear();
+	SofiGameProfileTemplate* profile = SofiLauncherFindProfile(SofiLauncherSelectedProfileId);
+	if (!profile) { SofiLauncherImageStatus = "Primero seleccioná una tarjeta."; return false; }
 	wchar_t selected[32768]={};static const wchar_t filter[]=L"Imágenes (*.png;*.jpg;*.jpeg)\0*.png;*.jpg;*.jpeg\0Todos los archivos (*.*)\0*.*\0\0";
 	HWND owner=GetActiveWindow();if(!owner)owner=GetForegroundWindow();
 	OPENFILENAMEW d={};d.lStructSize=sizeof(d);d.hwndOwner=owner;d.lpstrFilter=filter;d.lpstrFile=selected;d.nMaxFile=32768;d.lpstrTitle=L"Seleccionar imagen para la tarjeta";
 	d.Flags=OFN_EXPLORER|OFN_FILEMUSTEXIST|OFN_PATHMUSTEXIST|OFN_NOCHANGEDIR;
 	HMODULE lib=LoadLibraryW(L"comdlg32.dll");if(!lib){SofiLauncherImageStatus="No se pudo abrir el selector de archivos de Windows.";return false;}
 	typedef BOOL(WINAPI*OpenFn)(LPOPENFILENAMEW);OpenFn open=(OpenFn)GetProcAddress(lib,"GetOpenFileNameW");bool accepted=open&&open(&d);DWORD dialogError=accepted?0:CommDlgExtendedError();FreeLibrary(lib);
-	// Let the file-dialog click sequence finish before restoring the SOFI UI.
 	Sleep(500);
-	// The common dialog can leave the SDL host window minimized or behind other windows.
 	if(owner){ShowWindow(owner,SW_RESTORE);BringWindowToTop(owner);SetForegroundWindow(owner);}
 	if(!accepted){if(dialogError)SofiLauncherImageStatus="El selector de Windows informó un error ("+std::to_string(dialogError)+").";else SofiLauncherImageStatus="No se seleccionó ningún archivo.";return false;}
 	std::wstring folder;if(!SofiUtf8ToWide(SofiLauncherDataPath,folder)){SofiLauncherImageStatus="No se pudo convertir la carpeta de datos del programa.";return false;}
-	// SettingsInit may use a data directory that does not exist yet (for example beside the EXE).
 	if(!CreateDirectoryW(folder.c_str(),NULL)){DWORD e=GetLastError();if(e!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta de datos DOSBoxPure (error "+std::to_string(e)+").";return false;}}
 	folder.append(L"\\GLImage");
 	if(!CreateDirectoryW(folder.c_str(),NULL)){DWORD e=GetLastError();if(e!=ERROR_ALREADY_EXISTS){SofiLauncherImageStatus="No se pudo crear la carpeta GLImage (error "+std::to_string(e)+").";return false;}}
-	std::wstring dest=folder+L"\\game_01.jpg";if(!SofiLauncherCreateCardImage(selected,dest))return false;
+	const std::string profileId=profile->Id();
+	const std::wstring wideId(profileId.begin(),profileId.end());
+	std::wstring dest=folder+L"\\"+wideId+L".jpg";
+	if(!SofiLauncherCreateCardImage(selected,dest))return false;
 	int n=WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,NULL,0,NULL,NULL);if(n<=1)return false;
 	std::vector<char> utf8((size_t)n);if(!WideCharToMultiByte(CP_UTF8,0,dest.c_str(),-1,utf8.data(),n,NULL,NULL))return false;
-	SofiLauncherImagePath.assign(utf8.data());ZL_Application::SettingsSet("interface_launcher_image",SofiLauncherImagePath.c_str());DirtySettings();
-	SofiLauncherTextureAttempted=false;SofiLauncherLoadImageTexture();if(!SofiLauncherImageTexture&&SofiLauncherImageStatus=="Imagen cargada correctamente.")SofiLauncherImageStatus="La copia se guardó, pero no se pudo crear la textura para mostrarla.";return SofiLauncherImageTexture!=0;
+	const std::string previousPath=profile->imagePath;
+	profile->imagePath.assign(utf8.data());
+	if(!SofiLauncherSaveProfileLibraryEntry(*profile)){profile->imagePath=previousPath;return false;}
+	SofiLauncherImagePath=profile->imagePath;
+	SofiLauncherImageTextureAttempts.erase(SofiLauncherImagePath);
+	SofiLauncherImageTextures.erase(SofiLauncherImagePath);
+	const unsigned int texture=SofiLauncherLoadImageTexture(SofiLauncherImagePath);
+	if(!texture&&SofiLauncherImageStatus=="Imagen cargada correctamente.")SofiLauncherImageStatus="La copia se guardó, pero no se pudo crear la textura para mostrarla.";
+	return texture!=0;
 }
 #else
 static bool SofiLauncherSelectImage(){return false;}
 #endif
-static void SofiLauncherEnsureImageTexture()
+static unsigned int SofiLauncherEnsureImageTexture()
 {
-	if(!SofiLauncherImageTexture&&!SofiLauncherTextureAttempted){
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
-		SofiLauncherLoadImageTexture();
+	return SofiLauncherLoadImageTexture(SofiLauncherImagePath);
+#else
+	return 0;
 #endif
-	}
 }
 
 
@@ -3951,7 +3976,17 @@ static struct sDOSBoxPure : public ZL_Application
 							const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
 							draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 82.0f), IM_COL32(125, 155, 180, 255), placeholder);
 						}
-						else draw->AddText(ImVec2(cardPos.x + 12.0f, cardPos.y + 82.0f), IM_COL32(160, 190, 215, 255), "IMAGEN CONFIGURADA");
+						else
+						{
+							const unsigned int texture = SofiLauncherLoadImageTexture(profile.imagePath);
+							if (texture) draw->AddImage((ImTextureID)(intptr_t)texture, cardPos, imageMax);
+							else
+							{
+								const char* placeholder = "IMAGEN NO DISPONIBLE";
+								const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
+								draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 82.0f), IM_COL32(220, 150, 130, 255), placeholder);
+							}
+						}
 						if (SofiLauncherSelectedProfileId == profile.Id())
 							draw->AddRect(cardPos, cardMax, IM_COL32(180, 205, 255, 230), 5.0f, 0, 2.0f);
 
@@ -4095,11 +4130,11 @@ static struct sDOSBoxPure : public ZL_Application
 						{
 							ImGui::TextDisabled("IMAGEN DE LA TARJETA  //  320 x 180");
 							if (ImGui::Button("SELECCIONAR IMAGEN", ImVec2(220.0f, 36.0f))) SofiLauncherSelectImage();
-							SofiLauncherEnsureImageTexture();
-							if (SofiLauncherImageTexture)
+							const unsigned int previewTexture = SofiLauncherEnsureImageTexture();
+							if (previewTexture)
 							{
 								ImGui::Spacing();
-								ImGui::Image((ImTextureID)SofiLauncherImageTexture, ImVec2(320.0f, 180.0f));
+								ImGui::Image((ImTextureID)(intptr_t)previewTexture, ImVec2(320.0f, 180.0f));
 								ImGui::TextDisabled("Copia optimizada guardada en GLImage. El original no se modifica.");
 							}
 							else ImGui::TextDisabled("Todavía no hay una imagen seleccionada.");
