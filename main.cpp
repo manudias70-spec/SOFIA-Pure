@@ -4103,8 +4103,32 @@ static struct sDOSBoxPure : public ZL_Application
 					const float cardWidth = 153.0f;
 					const float cardHeight = 240.0f;
 					const float availableWidth = ImGui::GetContentRegionAvail().x;
-					const int columns = availableWidth >= cardWidth * 2.0f + ImGui::GetStyle().ItemSpacing.x ? 2 : 1;
+					const float cardSpacingX = ImGui::GetStyle().ItemSpacing.x;
+					int columns = (int)((availableWidth + cardSpacingX) / (cardWidth + cardSpacingX));
+					if (columns < 1) columns = 1;
 					bool deletePopupRequested = false;
+					int pendingCardDragSource = -1;
+					int pendingCardDropTarget = -1;
+					auto handleCardDragDrop = [&](const std::string& profileId, const char* profileName, size_t targetIndex)
+					{
+						if (ImGui::BeginDragDropSource())
+						{
+							ImGui::SetDragDropPayload("SOFI_GAME_LIBRARY_CARD", profileId.c_str(), profileId.size() + 1);
+							ImGui::TextUnformatted(profileName);
+							ImGui::EndDragDropSource();
+						}
+						if (ImGui::BeginDragDropTarget())
+						{
+							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SOFI_GAME_LIBRARY_CARD"))
+							{
+								const std::string draggedId((const char*)payload->Data);
+								for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
+									if (SofiLauncherProfiles[i].Id() == draggedId) { pendingCardDragSource = (int)i; break; }
+								pendingCardDropTarget = (int)targetIndex;
+							}
+							ImGui::EndDragDropTarget();
+						}
+					};
 					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
 					{
 						SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
@@ -4142,9 +4166,11 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::SetCursorScreenPos(cardPos);
 						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth - 40.0f, 198.0f));
 						cardClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						handleCardDragDrop(profile.Id(), profile.Name().c_str(), profileIndex);
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 40.0f, cardPos.y + 40.0f));
 						if (ImGui::InvisibleButton(("##SofiCardBodyRight_" + profile.Id()).c_str(), ImVec2(40.0f, 158.0f)))
 							cardClicked = true;
+						handleCardDragDrop(profile.Id(), profile.Name().c_str(), profileIndex);
 						const bool cardDoubleClicked = cardClicked && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 						if (cardClicked)
 						{
@@ -4213,10 +4239,25 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 198.0f));
 						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 198.0f));
 						ImGui::EndGroup();
-						if (columns == 2 && (profileIndex % 2) == 0 && profileIndex + 1 < SofiLauncherProfiles.size())
+						if (((profileIndex + 1) % (size_t)columns) != 0 && profileIndex + 1 < SofiLauncherProfiles.size())
 							ImGui::SameLine();
 					}
 					ImGui::EndChild();
+					if (pendingCardDragSource >= 0 && pendingCardDropTarget >= 0 &&
+						pendingCardDragSource != pendingCardDropTarget &&
+						pendingCardDragSource < (int)SofiLauncherProfiles.size() &&
+						pendingCardDropTarget < (int)SofiLauncherProfiles.size())
+					{
+						std::vector<SofiGameProfileTemplate> previousOrder = SofiLauncherProfiles;
+						SofiGameProfileTemplate draggedProfile = SofiLauncherProfiles[(size_t)pendingCardDragSource];
+						SofiLauncherProfiles.erase(SofiLauncherProfiles.begin() + pendingCardDragSource);
+						SofiLauncherProfiles.insert(SofiLauncherProfiles.begin() + pendingCardDropTarget, draggedProfile);
+						if (!SofiLauncherSaveLibrary())
+						{
+							SofiLauncherProfiles.swap(previousOrder);
+							SofiLauncherProfileStatus = "No se pudo guardar el nuevo orden de las tarjetas.";
+						}
+					}
 					if (deletePopupRequested) ImGui::OpenPopup("##SofiDeleteGameProfile");
 					if (SofiLauncherDeleteProfileOpen)
 					{
