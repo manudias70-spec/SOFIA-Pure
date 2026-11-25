@@ -3037,7 +3037,7 @@ static void OnDraw()
 	if (ImGuiReady)
 	{
 		// DOSBOX diagnostic mode hands the visible system cursor back to Pure's OSD.
-		SDL_ShowCursor(SofiUIVisible ? 0 : 1);
+		SDL_ShowCursor(0);
 		lastHiddenCursor = false;
 		doHideCursor = false;
 	}
