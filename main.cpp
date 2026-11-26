@@ -101,6 +101,7 @@ static unsigned int SofiLauncherNextProfileId = 1;
 static std::vector<SofiGameProfileTemplate> SofiLauncherProfiles;
 static std::string SofiLauncherSelectedProfileId;
 static bool SofiLauncherWaitingForGameExit = false, SofiLauncherGameWasRunning = false;
+static bool SofiLauncherWaitingForExitKey = false, SofiLauncherExitKeyReleased = false;
 static std::string SofiLauncherExePath, SofiLauncherSetupPath;
 static bool SofiLauncherProfileFilterActive = false;
 static int SofiLauncherProfileFilter = 0;
@@ -2324,6 +2325,8 @@ static void OnKeyUp(ZL_KeyboardEvent& e)
 	if (rk == RETROK_UNKNOWN || !RETROKDown[rk]) return;
 	RETROKDown[rk] = false;
 	retro_keyboard_event_cb(false, (unsigned)ZLKtoRETROKEY[e.key], 0, 0);
+	// The final DOS screen's AnyKeyWaiter consumes this real key release.
+	if (SofiLauncherWaitingForExitKey) SofiLauncherExitKeyReleased = true;
 }
 
 static bool SofiLauncherSelectSetup()
@@ -3078,6 +3081,8 @@ static void SofiLauncherActivateProfile(SofiGameProfileTemplate& profile, bool r
 	DoApplyInterfaceOptions = true;
 	SofiLauncherWaitingForGameExit = true;
 	SofiLauncherGameWasRunning = false;
+	SofiLauncherWaitingForExitKey = false;
+	SofiLauncherExitKeyReleased = false;
 	SofiUIVisible = false;
 	DBPS_OpenContent(target.c_str());
 }
@@ -3608,6 +3613,13 @@ static void OnDraw()
 			SofiLauncherGameWasRunning = true;
 		else if (SofiLauncherGameWasRunning && !gameRunning && osdShowing)
 		{
+			// Pure is showing its post-game AnyKeyWaiter; keep the DOS final screen visible.
+			SofiLauncherWaitingForExitKey = true;
+		}
+		if (SofiLauncherWaitingForExitKey && SofiLauncherExitKeyReleased)
+		{
+			SofiLauncherWaitingForExitKey = false;
+			SofiLauncherExitKeyReleased = false;
 			SofiLauncherWaitingForGameExit = false;
 			SofiLauncherGameWasRunning = false;
 			SofiLauncherProfileFilterActive = false;
