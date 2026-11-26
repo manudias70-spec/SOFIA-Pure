@@ -55,6 +55,7 @@
 #include "stb_image_write.h"
 
 #include <dosbox_pure_sta.h>
+extern void retro_reset(void);
 int DBPS_SaveSlotIndex;
 std::string DBPS_BrowsePath;
 
@@ -125,6 +126,7 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	panelOpen = shouldOpen;
 }
 static bool SofiUIVisible = true;
+static bool SofiRetroResetRequested = false;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
 static bool SofiCommanderHovered = false;
@@ -3549,6 +3551,11 @@ static bool DrawIntro()
 static void OnDraw()
 {
 	SynchronizeSettings(false);
+	if (SofiRetroResetRequested)
+	{
+		SofiRetroResetRequested = false;
+		retro_reset();
+	}
 
 	if (SofiSuppressMiddleMenu) SofiSuppressMiddleMenu = false;
 	else if (!SofiCommanderCaptured && UseMiddleMouseMenu && ZL_Input::Down(ZL_BUTTON_MIDDLE)) DBPS_ToggleOSD();
@@ -4828,6 +4835,14 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), SofiTranslate("ESTADÍSTICAS"));
 					SofiCoreOptionCombo("Show Performance Statistics", "dosbox_pure_perfstats");
+
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.25f, 0.75f, 1.0f, 1.0f), "EXPERIMENTAL");
+					ImGui::TextDisabled("DOSBox Pure machine reset test");
+					if (ImGui::Button("RETRO RESET TEST", ImVec2(-1.0f, 0.0f)))
+						SofiRetroResetRequested = true;
+					ImGui::TextWrapped("Hold Shift while pressing the button to force the Pure menu.");
 
 					ImGui::EndChild();
 				}
