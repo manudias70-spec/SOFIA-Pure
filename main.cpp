@@ -3614,7 +3614,7 @@ static void OnDraw()
 			SofiLauncherSawExitInterceptor = true;
 		}
 		// EndIntercept() closes the waiter; Pure then returns to its main OSD in the same core run.
-		if (SofiLauncherSawExitInterceptor && !gameRunning && !osdShowing)
+		if (SofiLauncherSawExitInterceptor && !osdShowing)
 		{
 			SofiLauncherSawExitInterceptor = false;
 			SofiLauncherWaitingForGameExit = false;
