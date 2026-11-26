@@ -3,7 +3,7 @@ name: Build
 # Commander without maximize state
 on:
   push:
-    branches: [ "main", "experiment/sofi-osd-button", "experiment/l3-controller-mapper-direct", "experiment/osd-keyboard-tab-lock", "experiment/osd-mouse-joy-tab-lock", "experiment/hotkey-f11-controller-mapper", "experiment/sofi-shortcuts-bullets", "experiment/osk-half-right-anchor", "experiment/ui-language-switch", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/game-screen-takeover", "experiment/game-takeover-plus-alt178", "experiment/commander-window-persistence", "experiment/commander-explorer-autominimize", "experiment/commander-window-controls", "experiment/explorer-three-state-toggle", "experiment/commander-titlebar-controls", "experiment/commander-window-state-controls", "experiment/commander-maximize-735x980", "experiment/sofi-ui-clear-navigation", "experiment/commander-focus-independent-ui", "experiment/video-panel-visual", "diagnostic/midi-logging", "diagnostic/midi-no-splash", "experiment/game-launcher", "branding/sofia-space-windows" ]
+    branches: [ "main", "experiment/sofi-osd-button", "experiment/l3-controller-mapper-direct", "experiment/osd-keyboard-tab-lock", "experiment/osd-mouse-joy-tab-lock", "experiment/hotkey-f11-controller-mapper", "experiment/sofi-shortcuts-bullets", "experiment/osk-half-right-anchor", "experiment/ui-language-switch", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/game-screen-takeover", "experiment/game-takeover-plus-alt178", "experiment/commander-window-persistence", "experiment/commander-explorer-autominimize", "experiment/commander-window-controls", "experiment/explorer-three-state-toggle", "experiment/commander-titlebar-controls", "experiment/commander-window-state-controls", "experiment/commander-maximize-735x980", "experiment/sofi-ui-clear-navigation", "experiment/commander-focus-independent-ui", "experiment/video-panel-visual", "diagnostic/midi-logging", "diagnostic/midi-no-splash", "experiment/game-launcher", "branding/sofia-space-windows", "experiment/post-game-key-signal" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -27,6 +27,8 @@ jobs:
       run: |
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
+        python main/tools/patch_post_game_wait_signal.py
+        if ($LASTEXITCODE -ne 0) { throw "Failed to install the post-game wait-key notification" }
         python main/tools/patch_osd_keyboard_size.py
         if ($LASTEXITCODE -ne 0) { throw "Failed to patch native DOSBox Pure OSD keyboard size/position" }
         perl -0pi -e 's/DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480/DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540/' dosbox-pure/dosbox_pure_sta.h
@@ -81,6 +83,8 @@ jobs:
       run: |
         git clone https://github.com/anydream/dosbox-pure.git dosbox-pure
         git -C dosbox-pure checkout 9cccfa21cb117edf94fbcd1a26b2dee8b12db598
+        python main/tools/patch_post_game_wait_signal.py
+        if ($LASTEXITCODE -ne 0) { throw "Failed to install the post-game wait-key notification" }
         python main/tools/patch_osd_keyboard_size.py
         if ($LASTEXITCODE -ne 0) { throw "Failed to patch native DOSBox Pure OSD keyboard size/position" }
         perl -0pi -e 's/DBPS_OSD_WIDTH = 640, DBPS_OSD_HEIGHT = 480/DBPS_OSD_WIDTH = 960, DBPS_OSD_HEIGHT = 540/' dosbox-pure/dosbox_pure_sta.h
