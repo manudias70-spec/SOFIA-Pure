@@ -4107,10 +4107,10 @@ static struct sDOSBoxPure : public ZL_Application
 			if (SofiUIVisible)
 			{
 				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
-				const ImVec2 hubPos(112.0f, 114.0f);
+				const ImVec2 hubPos(112.0f, 152.0f);
 				const ImVec2 hubDefaultSize(
 					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
-					(hubDisplaySize.y > 142.0f) ? hubDisplaySize.y - 142.0f : 16.0f);
+					(hubDisplaySize.y > 180.0f) ? hubDisplaySize.y - 142.0f : 16.0f);
 				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_FirstUseEver);
 				const ImGuiWindowFlags hubFlags =

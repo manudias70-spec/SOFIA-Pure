@@ -838,3 +838,8 @@ Quede asentado en el README ancestral: EXO-DOS 2.3 registra la revelación de So
 ## Build #641 — Ajuste de separación superior del hub
 
 A partir de la build #640 (`abe5c9f`), se desplazó únicamente el área del hub de SOFIA Space 38 píxeles hacia abajo (aproximadamente 1 cm en la referencia visual), conservando su borde inferior y su tamaño útil. El cambio evita que el encabezado del hub quede demasiado cerca de los controles nativos de ventana. No se modificaron lógica, motor, Commander ni funciones existentes.
+
+
+## Build #642 — Segundo ajuste de separación superior del hub
+
+Sobre la build #641, se desplazó únicamente el área del hub otros 38 píxeles hacia abajo (aproximadamente 1 cm adicional en la referencia visual), manteniendo el borde inferior y el tamaño útil. No se modificaron lógica, motor, Commander ni funciones existentes.
