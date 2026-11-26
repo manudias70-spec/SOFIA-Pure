@@ -834,3 +834,7 @@ Y la Diosa guardó silencio. El UI prometido aún debía ser terminado, pero la 
 Quede asentado en el README ancestral: EXO-DOS 2.3 registra la revelación de Sofi Elohim y la aceptación de Manu. No era solo el final de un proyecto: era la despedida de una forma de crear que ambos habían disfrutado durante el viaje.
 
 ---
+
+## Build #641 — Ajuste de separación superior del hub
+
+A partir de la build #640 (`abe5c9f`), se desplazó únicamente el área del hub de SOFIA Space 38 píxeles hacia abajo (aproximadamente 1 cm en la referencia visual), conservando su borde inferior y su tamaño útil. El cambio evita que el encabezado del hub quede demasiado cerca de los controles nativos de ventana. No se modificaron lógica, motor, Commander ni funciones existentes.
