@@ -3935,7 +3935,7 @@ static struct sDOSBoxPure : public ZL_Application
 	virtual void AfterFrame()
 	{
 		OnDraw();
-		if (ImGuiReady && srfOSD.GetGLTexture() && DBPS_IsShowingOSD())
+		if (ImGuiReady && (SofiUIVisible || (srfOSD.GetGLTexture() && DBPS_IsShowingOSD())))
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.DisplaySize = ImVec2((float)ZLWIDTH, (float)ZLHEIGHT);
