@@ -2103,7 +2103,7 @@ bool DBPS_HaveSaveSlot()
 void DBPS_OnContentLoad(const char* name, const char* dir, size_t dirlen)
 {
 	extern void ZL_SdlSetTitle(const char* newtitle);
-	ZL_SdlSetTitle(ZL_String("DOSBox Pure - ").append(name).c_str());
+	ZL_SdlSetTitle(ZL_String("SOFIA Space - ").append(name).c_str());
 	if (dirlen)
 	{
 		ZL_String contentPath(dir, dirlen + (size_t)(dirlen == 2 && dir[1] == ':' && dir[2] == '\\'));
@@ -2372,7 +2372,7 @@ static bool SofiLauncherSelectExe()
 {
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 	wchar_t selectedPath[32768] = {};
-	static const wchar_t fileFilter[] = L"Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0\0";
+	static const wchar_t fileFilter[] = L"Ejecutables MS-DOS (*.exe;*.com;*.bat)\0*.exe;*.com;*.bat\0Todos los archivos (*.*)\0*.*\0\0";
 	HWND owner = GetActiveWindow();
 	if (!owner) owner = GetForegroundWindow();
 	OPENFILENAMEW dialog = {};
@@ -3862,7 +3862,7 @@ static struct sDOSBoxPure : public ZL_Application
 		int screen_width = atoi(ZL_Application::SettingsGet("screen_width").c_str());
 		int screen_height = atoi(ZL_Application::SettingsGet("screen_height").c_str());
 
-		if (!ZL_Display::Init("DOSBox Pure", (screen_width < 80 ? 1280 : screen_width), (screen_height < 60 ? 720 : screen_height), ZL_DISPLAY_RESIZABLE | ZL_DISPLAY_MINIMIZEDAUDIO | ZL_DISPLAY_PREVENTALTENTER | ZL_DISPLAY_PREVENTALTF4 | (screen_fullscreen ? ZL_DISPLAY_FULLSCREEN : 0) | (screen_maximized ? ZL_DISPLAY_MAXIMIZED : 0))) return;
+		if (!ZL_Display::Init("SOFIA Space", (screen_width < 80 ? 1280 : screen_width), (screen_height < 60 ? 720 : screen_height), ZL_DISPLAY_RESIZABLE | ZL_DISPLAY_MINIMIZEDAUDIO | ZL_DISPLAY_PREVENTALTENTER | ZL_DISPLAY_PREVENTALTF4 | (screen_fullscreen ? ZL_DISPLAY_FULLSCREEN : 0) | (screen_maximized ? ZL_DISPLAY_MAXIMIZED : 0))) return;
 		ZL_Display::ClearFill(ZL_Color::White);
 		ZL_Display::SetAA(true);
 		ZL_Input::Init();
