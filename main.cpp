@@ -136,7 +136,6 @@ static ImVec2 SofiCommanderRestorePos(0.0f, 0.0f);
 // Commander keeps its normal geometry separately so maximizing never overwrites it in ImGui's ini.
 static std::string SofiCommanderIniPath, SofiCommanderGeometryPath, SofiSkinSelectionPath;
 static int SofiActiveSkin = 0; // 0 = Neon Blue, 1 = None
-static bool SofiSkinSelectorOpen = false;
 
 static void SofiSkinLoadSelection()
 {
