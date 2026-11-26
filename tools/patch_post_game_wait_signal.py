@@ -62,8 +62,7 @@ replace_once(
     "bool DBPS_IsShowingOSD();\n",
     "bool DBPS_IsShowingOSD();\n"
     "void DBPS_SetReturnToFrontendAfterWait(bool enabled);\n"
-    "bool DBPS_ConsumePostGameWaitKey();
-",
+    "bool DBPS_ConsumePostGameWaitKey();\n",
 )
 
 print("Installed the targeted post-game wait-key handoff.")
