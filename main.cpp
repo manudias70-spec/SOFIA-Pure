@@ -3080,6 +3080,7 @@ static void SofiLauncherActivateProfile(SofiGameProfileTemplate& profile, bool r
 	if (SofiLauncherProfileCyclesMaxActive) SofiLauncherApplyProfileCyclesMax(SofiLauncherProfileCyclesMax);
 	DoApplyInterfaceOptions = true;
 	SofiLauncherWaitingForGameExit = true;
+	DBPS_SetReturnToFrontendAfterWait(true);
 	SofiLauncherGameWasRunning = false;
 	SofiLauncherWaitingForExitKey = false;
 	SofiLauncherExitKeyReleased = false;
@@ -3604,6 +3605,9 @@ static void OnDraw()
 				retro_run();
 	}
 
+	// Pure reports the exact acceptance of the real key from its post-game AnyKeyWaiter.
+	const bool postGameWaitKeyAccepted = DBPS_ConsumePostGameWaitKey();
+
 	// Restore SOFI Space only after the launched DOS program has actually run and then exited.
 	if (SofiLauncherWaitingForGameExit)
 	{
@@ -3616,8 +3620,9 @@ static void OnDraw()
 			// Pure is showing its post-game AnyKeyWaiter; keep the DOS final screen visible.
 			SofiLauncherWaitingForExitKey = true;
 		}
-		if (SofiLauncherWaitingForExitKey && SofiLauncherExitKeyReleased)
+		if (postGameWaitKeyAccepted || (SofiLauncherWaitingForExitKey && SofiLauncherExitKeyReleased))
 		{
+			DBPS_SetReturnToFrontendAfterWait(false);
 			SofiLauncherWaitingForExitKey = false;
 			SofiLauncherExitKeyReleased = false;
 			SofiLauncherWaitingForGameExit = false;
@@ -3930,7 +3935,7 @@ static struct sDOSBoxPure : public ZL_Application
 	virtual void AfterFrame()
 	{
 		OnDraw();
-		if (ImGuiReady && srfOSD.GetGLTexture() && DBPS_IsShowingOSD())
+		if (ImGuiReady && (SofiUIVisible || (srfOSD.GetGLTexture() && DBPS_IsShowingOSD())))
 		{
 			ImGuiIO& io = ImGui::GetIO();
 			io.DisplaySize = ImVec2((float)ZLWIDTH, (float)ZLHEIGHT);
