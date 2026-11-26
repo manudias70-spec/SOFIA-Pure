@@ -134,7 +134,29 @@ static bool SofiCommanderMaximized = false, SofiCommanderApplyGeometry = false;
 static ImVec2 SofiCommanderRestoreSize(0.0f, 0.0f);
 static ImVec2 SofiCommanderRestorePos(0.0f, 0.0f);
 // Commander keeps its normal geometry separately so maximizing never overwrites it in ImGui's ini.
-static std::string SofiCommanderIniPath, SofiCommanderGeometryPath;
+static std::string SofiCommanderIniPath, SofiCommanderGeometryPath, SofiSkinSelectionPath;
+static int SofiActiveSkin = 0; // 0 = Neon Blue, 1 = None
+static bool SofiSkinSelectorOpen = false;
+
+static void SofiSkinLoadSelection()
+{
+	if (SofiSkinSelectionPath.empty()) return;
+	FILE* f = fopen_wrap(SofiSkinSelectionPath.c_str(), "rb");
+	if (!f) return;
+	int selected = 0;
+	if (fscanf(f, "%d", &selected) == 1 && (selected == 0 || selected == 1))
+		SofiActiveSkin = selected;
+	fclose(f);
+}
+
+static void SofiSkinSaveSelection()
+{
+	if (SofiSkinSelectionPath.empty()) return;
+	FILE* f = fopen_wrap(SofiSkinSelectionPath.c_str(), "wb");
+	if (!f) return;
+	fprintf(f, "%d\n", SofiActiveSkin);
+	fclose(f);
+}
 
 static void SofiCommanderLoadGeometry()
 {
@@ -3850,7 +3872,9 @@ static struct sDOSBoxPure : public ZL_Application
 		// Keep the Commander layout beside DOSBox Pure's own configuration file.
 		SofiCommanderIniPath.assign(basePath.c_str()).append(".imgui.ini");
 		SofiCommanderGeometryPath.assign(SofiCommanderIniPath).append(".geometry");
+		SofiSkinSelectionPath.assign(SofiCommanderIniPath).append(".skin");
 		SofiCommanderLoadGeometry();
+		SofiSkinLoadSelection();
 		ZL_String customPathSaves = ZL_Application::SettingsGet("path_saves"), customPathSystem = ZL_Application::SettingsGet("path_system");
 		for (bool useCustomPathSaves = !customPathSaves.empty(), useCustomPathSystem = !customPathSystem.empty();;)
 		{
@@ -4989,7 +5013,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// Native application controls are drawn last so Commander cannot cover their hit targets.
 			ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 132.0f, 18.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(120.0f, 40.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(120.0f, 72.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Window Controls", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
@@ -5038,6 +5062,22 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 			ImGui::PopStyleColor(3);
 			ImGui::PopStyleVar(2);
+			ImGui::SetCursorPosY(40.0f);
+			ImGui::SetNextItemWidth(112.0f);
+			if (ImGui::BeginCombo("##SofiSkinSelector", SofiActiveSkin == 0 ? "NEON BLUE" : "NONE", ImGuiComboFlags_HeightSmall))
+			{
+				if (ImGui::Selectable("Neon Blue", SofiActiveSkin == 0))
+				{
+					SofiActiveSkin = 0;
+					SofiSkinSaveSelection();
+				}
+				if (ImGui::Selectable("None", SofiActiveSkin == 1))
+				{
+					SofiActiveSkin = 1;
+					SofiSkinSaveSelection();
+				}
+				ImGui::EndCombo();
+			}
 			ImGui::End();
 
 			}
