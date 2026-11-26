@@ -3601,9 +3601,15 @@ static void OnDraw()
 				retro_run();
 	}
 
+	// Consume Pure's one-shot notification when the post-game "press any key" waiter accepts input.
+	const bool postGameWaitKeyAccepted = DBPS_ConsumePostGameWaitKey();
+
 	// Restore SOFI Space only after the launched DOS program has actually run and then exited.
 	if (SofiLauncherWaitingForGameExit)
 	{
+		if (postGameWaitKeyAccepted)
+			SofiLauncherSawExitInterceptor = true;
+
 		const bool gameRunning = DBPS_IsGameRunning();
 		const bool osdShowing = DBPS_IsShowingOSD();
 		if (gameRunning && !osdShowing)
