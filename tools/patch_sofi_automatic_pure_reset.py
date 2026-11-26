@@ -10,18 +10,27 @@ def replace_once(path, old, new):
         raise SystemExit(f"{path}: expected one patch point, found {count}")
     p.write_text(data.replace(old, new, 1), encoding="utf-8")
 
-# Pure: signal the common post-game M_FINISH path, before its optional key wait.
+# Pure: M_FINISH is the common post-game path. Skip the obsolete key wait.
 replace_once(
     "dosbox-pure/dosbox_pure_osd.h",
-    "\\t\\t\\tbool runsoloexe = (ms->exe_count == 1 && ms->fs_rows <= (int)(dbp_images.size() + 1) && !DBP_Run::patch.show_variants);\\n",
-    "\\t\\t\\tbool runsoloexe = (ms->exe_count == 1 && ms->fs_rows <= (int)(dbp_images.size() + 1) && !DBP_Run::patch.show_variants);\\n\\t\\t\\tif (m == M_FINISH) DBPS_RequestPostGameReset();\\n",
+    """\t\t\tif (m == M_FINISH)
+\t\t\t{
+\t\t\t\t// ran without auto start or only for a very short time (maybe crash), wait for user confirmation
+\t\t\t\tif (!interceptor.WaitAnyKeyPress(2)) return;
+\t\t\t\tm = M_NORMAL;
+\t\t\t}""",
+    """\t\t\tif (m == M_FINISH)
+\t\t\t{
+\t\t\t\tDBPS_RequestPostGameReset();
+\t\t\t\tm = M_NORMAL;
+\t\t\t}""",
 )
 
-# Pure: transfer the signal safely from its emulation thread to the frontend thread.
+# Pure: transfer the request from the emulation thread to the frontend thread.
 replace_once(
     "dosbox-pure/dosbox_pure_libretro.cpp",
-    '#include <sstream>\n',
-    '#include <sstream>\n#include <atomic>\n',
+    "#include <sstream>\n",
+    "#include <sstream>\n#include <atomic>\n",
 )
 replace_once(
     "dosbox-pure/dosbox_pure_libretro.cpp",
@@ -30,23 +39,50 @@ replace_once(
 )
 replace_once(
     "dosbox-pure/dosbox_pure_libretro.cpp",
-    "void DBP_ForceReset(bool forcemenu)\\n{\\n\\t#ifdef DBP_STANDALONE\\n\\tif (dbp_wasloaded) DBPS_OnReset();\\n\\t#endif\\n\\tinit_dosbox(forcemenu);\\n}\\n",
-    "void DBP_ForceReset(bool forcemenu)\\n{\\n\\t#ifdef DBP_STANDALONE\\n\\tif (dbp_wasloaded) DBPS_OnReset();\\n\\t#endif\\n\\tinit_dosbox(forcemenu);\\n}\\n\\nvoid DBPS_RequestPostGameReset()\\n{\\n\\tdbps_post_game_reset_requested.store(true, std::memory_order_release);\\n}\\n\\nbool DBPS_ConsumePostGameReset()\\n{\\n\\treturn dbps_post_game_reset_requested.exchange(false, std::memory_order_acq_rel);\\n}\\n\\nvoid DBPS_ForceResetToMenu()\\n{\\n\\tDBP_ForceReset(true);\\n}\\n",
+    """void DBP_ForceReset(bool forcemenu)
+{
+\t#ifdef DBP_STANDALONE
+\tif (dbp_wasloaded) DBPS_OnReset();
+\t#endif
+\tinit_dosbox(forcemenu);
+}""",
+    """void DBP_ForceReset(bool forcemenu)
+{
+\t#ifdef DBP_STANDALONE
+\tif (dbp_wasloaded) DBPS_OnReset();
+\t#endif
+\tinit_dosbox(forcemenu);
+}
+
+void DBPS_RequestPostGameReset()
+{
+\tdbps_post_game_reset_requested.store(true, std::memory_order_release);
+}
+
+bool DBPS_ConsumePostGameReset()
+{
+\treturn dbps_post_game_reset_requested.exchange(false, std::memory_order_acq_rel);
+}
+
+void DBPS_ForceResetToMenu()
+{
+\tDBP_ForceReset(true);
+}""",
 )
 
-# Pure public standalone bridge.
+# Public standalone bridge declarations.
 replace_once(
     "dosbox-pure/dosbox_pure_sta.h",
-    "bool DBPS_IsGameRunning();\\n",
-    "bool DBPS_IsGameRunning();\\nvoid DBPS_RequestPostGameReset();\\nbool DBPS_ConsumePostGameReset();\\nvoid DBPS_ForceResetToMenu();\\n",
+    "bool DBPS_IsGameRunning();\n",
+    "bool DBPS_IsGameRunning();\nvoid DBPS_RequestPostGameReset();\nbool DBPS_ConsumePostGameReset();\nvoid DBPS_ForceResetToMenu();\n",
 )
 
-# SOFIA Space: consume the one-shot request after retro_run, on the frontend thread.
+# SOFIA Space: consume after retro_run, on the frontend thread.
 replace_once(
     "main/main.cpp",
     "\n\t// Restore SOFI Space only after the launched DOS program has actually run and then exited.\n",
     """
-\n\t// Reset DOSBox Pure after its shared post-game finish path, without waiting for a key.
+\t// Reset DOSBox Pure after its common post-game finish path, without waiting for a key.
 \tif (DBPS_ConsumePostGameReset())
 \t{
 \t\tDBPS_ForceResetToMenu();
