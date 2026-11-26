@@ -3081,6 +3081,7 @@ static void SofiLauncherActivateProfile(SofiGameProfileTemplate& profile, bool r
 	SofiLauncherGameWasRunning = false;
 	SofiLauncherSawExitInterceptor = false;
 	SofiUIVisible = false;
+	DBPS_SetReturnToFrontendAfterWait(true);
 	DBPS_OpenContent(target.c_str());
 }
 
@@ -3624,6 +3625,7 @@ static void OnDraw()
 		{
 			SofiLauncherSawExitInterceptor = false;
 			SofiLauncherWaitingForGameExit = false;
+			DBPS_SetReturnToFrontendAfterWait(false);
 			SofiLauncherGameWasRunning = false;
 			SofiLauncherProfileFilterActive = false;
 			SofiLauncherProfileCyclesMaxActive = false;
