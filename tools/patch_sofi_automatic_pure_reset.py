@@ -30,8 +30,8 @@ replace_once(
 )
 replace_once(
     "dosbox-pure/dosbox_pure_libretro.cpp",
-    "void DBP_ForceReset(bool forcemenu)\n{\n\t#ifdef DBP_STANDALONE\n\tif (dbp_wasloaded) DBPS_OnReset();\n\t#endif\n\tinit_dosbox(forcemenu);\n}\n",
-    "void DBP_ForceReset(bool forcemenu)\n{\n\t#ifdef DBP_STANDALONE\n\tif (dbp_wasloaded) DBPS_OnReset();\n\t#endif\n\tinit_dosbox(forcemenu);\n}\n\nvoid DBPS_RequestPostGameReset()\n{\n\tdbps_post_game_reset_requested.store(true, std::memory_order_release);\n}\n\nbool DBPS_ConsumePostGameReset()\n{\n\treturn dbps_post_game_reset_requested.exchange(false, std::memory_order_acq_rel);\n}\n",
+    "void DBP_ForceReset(bool forcemenu)\\n{\\n\\t#ifdef DBP_STANDALONE\\n\\tif (dbp_wasloaded) DBPS_OnReset();\\n\\t#endif\\n\\tinit_dosbox(forcemenu);\\n}\\n",
+    "void DBP_ForceReset(bool forcemenu)\\n{\\n\\t#ifdef DBP_STANDALONE\\n\\tif (dbp_wasloaded) DBPS_OnReset();\\n\\t#endif\\n\\tinit_dosbox(forcemenu);\\n}\\n\\nvoid DBPS_RequestPostGameReset()\\n{\\n\\tdbps_post_game_reset_requested.store(true, std::memory_order_release);\\n}\\n\\nbool DBPS_ConsumePostGameReset()\\n{\\n\\treturn dbps_post_game_reset_requested.exchange(false, std::memory_order_acq_rel);\\n}\\n\\nvoid DBPS_ForceResetToMenu()\\n{\\n\\tDBP_ForceReset(true);\\n}\\n",
 )
 
 # Pure public standalone bridge.
