@@ -42,6 +42,7 @@ replace_once(
     "\t\t\t\tif (!interceptor.WaitAnyKeyPress(2)) return;\n"
     "\t\t\t\tif (dbps_return_to_frontend_after_wait && dbps_post_game_wait_key_accepted)\n"
     "\t\t\t\t{\n"
+    "\t\t\t\t\tfirst_shell->exit = true;\n"
     "\t\t\t\t\tdbps_return_to_frontend_after_wait = false;\n"
     "\t\t\t\t\tdelete ms;\n"
     "\t\t\t\t\treturn;\n"
