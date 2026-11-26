@@ -13,8 +13,8 @@ def replace_once(path, old, new):
 # Pure: signal the common post-game M_FINISH path, before its optional key wait.
 replace_once(
     "dosbox-pure/dosbox_pure_osd.h",
-    "\t\t\tif (m == M_FINISH)\n\t\t\t{\n",
-    "\t\t\tif (m == M_FINISH)\n\t\t\t{\n\t\t\t\tDBPS_RequestPostGameReset();\n",
+    "\\t\\t\\tbool runsoloexe = (ms->exe_count == 1 && ms->fs_rows <= (int)(dbp_images.size() + 1) && !DBP_Run::patch.show_variants);\\n",
+    "\\t\\t\\tbool runsoloexe = (ms->exe_count == 1 && ms->fs_rows <= (int)(dbp_images.size() + 1) && !DBP_Run::patch.show_variants);\\n\\t\\t\\tif (m == M_FINISH) DBPS_RequestPostGameReset();\\n",
 )
 
 # Pure: transfer the signal safely from its emulation thread to the frontend thread.
