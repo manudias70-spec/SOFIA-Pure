@@ -52,20 +52,16 @@ replace_once(
 replace_once(
     osd,
     "bool DBPS_IsShowingOSD() { return (dbp_intercept && dbp_intercept->usegfx()); }\n",
-    "bool DBPS_IsShowingOSD() { return (dbp_intercept && dbp_intercept->usegfx()); }
-"
-    "void DBPS_SetReturnToFrontendAfterWait(bool enabled) { dbps_return_to_frontend_after_wait = enabled; }
-"
+    "bool DBPS_IsShowingOSD() { return (dbp_intercept && dbp_intercept->usegfx()); }\n"
+    "void DBPS_SetReturnToFrontendAfterWait(bool enabled) { dbps_return_to_frontend_after_wait = enabled; }\n"
     "bool DBPS_ConsumePostGameWaitKey() { bool accepted = dbps_post_game_wait_key_accepted; dbps_post_game_wait_key_accepted = false; return accepted; }\n",
 )
 
 replace_once(
     sta,
     "bool DBPS_IsShowingOSD();\n",
-    "bool DBPS_IsShowingOSD();
-"
-    "void DBPS_SetReturnToFrontendAfterWait(bool enabled);
-"
+    "bool DBPS_IsShowingOSD();\n"
+    "void DBPS_SetReturnToFrontendAfterWait(bool enabled);\n"
     "bool DBPS_ConsumePostGameWaitKey();
 ",
 )
