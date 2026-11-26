@@ -3613,8 +3613,15 @@ static void OnDraw()
 			SofiLauncherGameWasRunning = true;
 		else if (SofiLauncherGameWasRunning && !gameRunning && osdShowing)
 		{
-			// Pure is showing its post-game AnyKeyWaiter; keep the DOS final screen visible.
+			// Pure is showing its post-game AnyKeyWaiter.
 			SofiLauncherWaitingForExitKey = true;
+		}
+		if (SofiLauncherWaitingForExitKey && !SofiLauncherExitKeyReleased && retro_keyboard_event_cb)
+		{
+			// Automatically send a complete key press/release to Pure's final-screen waiter.
+			retro_keyboard_event_cb(true, RETROK_SPACE, 0, 0);
+			retro_keyboard_event_cb(false, RETROK_SPACE, 0, 0);
+			SofiLauncherExitKeyReleased = true;
 		}
 		if (SofiLauncherWaitingForExitKey && SofiLauncherExitKeyReleased)
 		{
