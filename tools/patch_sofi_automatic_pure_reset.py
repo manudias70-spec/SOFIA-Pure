@@ -37,8 +37,8 @@ replace_once(
 # Pure public standalone bridge.
 replace_once(
     "dosbox-pure/dosbox_pure_sta.h",
-    "bool DBPS_IsGameRunning();\n",
-    "bool DBPS_IsGameRunning();\nvoid DBPS_RequestPostGameReset();\nbool DBPS_ConsumePostGameReset();\nvoid DBP_ForceReset(bool forcemenu);\n",
+    "bool DBPS_IsGameRunning();\\n",
+    "bool DBPS_IsGameRunning();\\nvoid DBPS_RequestPostGameReset();\\nbool DBPS_ConsumePostGameReset();\\nvoid DBPS_ForceResetToMenu();\\n",
 )
 
 # SOFIA Space: consume the one-shot request after retro_run, on the frontend thread.
