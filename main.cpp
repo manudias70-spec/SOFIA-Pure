@@ -4107,10 +4107,10 @@ static struct sDOSBoxPure : public ZL_Application
 			if (SofiUIVisible)
 			{
 				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
-				const ImVec2 hubPos(112.0f, 152.0f);
+				const ImVec2 hubPos(112.0f, 114.0f);
 				const ImVec2 hubDefaultSize(
 					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
-					(hubDisplaySize.y > 180.0f) ? hubDisplaySize.y - 142.0f : 16.0f);
+					(hubDisplaySize.y > 142.0f) ? hubDisplaySize.y - 142.0f : 16.0f);
 				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_FirstUseEver);
 				const ImGuiWindowFlags hubFlags =
@@ -5012,7 +5012,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// Native application controls are drawn last so Commander cannot cover their hit targets.
 			ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 132.0f, 18.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(120.0f, 72.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(120.0f, 110.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Window Controls", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
@@ -5061,7 +5061,7 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 			ImGui::PopStyleColor(3);
 			ImGui::PopStyleVar(2);
-			ImGui::SetCursorPosY(40.0f);
+			ImGui::SetCursorPosY(78.0f);
 			ImGui::SetNextItemWidth(112.0f);
 			if (ImGui::BeginCombo("##SofiSkinSelector", SofiActiveSkin == 0 ? "NEON BLUE" : "NONE", ImGuiComboFlags_HeightSmall))
 			{
