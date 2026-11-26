@@ -49,7 +49,7 @@ replace_once(
 \n\t// Reset DOSBox Pure after its shared post-game finish path, without waiting for a key.
 \tif (DBPS_ConsumePostGameReset())
 \t{
-\t\tDBP_ForceReset(true);
+\t\tDBPS_ForceResetToMenu();
 \t\tif (SofiLauncherWaitingForGameExit)
 \t\t{
 \t\t\tSofiLauncherWaitingForGameExit = false;
