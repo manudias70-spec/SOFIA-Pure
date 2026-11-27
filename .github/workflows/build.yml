@@ -3,7 +3,7 @@ name: Build
 # Commander without maximize state
 on:
   push:
-    branches: [ "main", "experiment/sofi-osd-button", "experiment/l3-controller-mapper-direct", "experiment/osd-keyboard-tab-lock", "experiment/osd-mouse-joy-tab-lock", "experiment/hotkey-f11-controller-mapper", "experiment/sofi-shortcuts-bullets", "experiment/osk-half-right-anchor", "experiment/ui-language-switch", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/game-screen-takeover", "experiment/game-takeover-plus-alt178", "experiment/commander-window-persistence", "experiment/commander-explorer-autominimize", "experiment/commander-window-controls", "experiment/explorer-three-state-toggle", "experiment/commander-titlebar-controls", "experiment/commander-window-state-controls", "experiment/commander-maximize-735x980", "experiment/sofi-ui-clear-navigation", "experiment/commander-focus-independent-ui", "experiment/video-panel-visual", "diagnostic/midi-logging", "diagnostic/midi-no-splash", "experiment/game-launcher", "branding/sofia-space-windows", "experiment/automatic-pure-reset", "experiment/neon-blue-background-656" ]
+    branches: [ "main", "experiment/sofi-osd-button", "experiment/l3-controller-mapper-direct", "experiment/osd-keyboard-tab-lock", "experiment/osd-mouse-joy-tab-lock", "experiment/hotkey-f11-controller-mapper", "experiment/sofi-shortcuts-bullets", "experiment/osk-half-right-anchor", "experiment/ui-language-switch", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/game-screen-takeover", "experiment/game-takeover-plus-alt178", "experiment/commander-window-persistence", "experiment/commander-explorer-autominimize", "experiment/commander-window-controls", "experiment/explorer-three-state-toggle", "experiment/commander-titlebar-controls", "experiment/commander-window-state-controls", "experiment/commander-maximize-735x980", "experiment/sofi-ui-clear-navigation", "experiment/commander-focus-independent-ui", "experiment/video-panel-visual", "diagnostic/midi-logging", "diagnostic/midi-no-splash", "experiment/game-launcher", "branding/sofia-space-windows", "experiment/automatic-pure-reset", "experiment/neon-blue-background-656", "feature/sofi-info-panel-root-zip" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -81,12 +81,14 @@ jobs:
       run: |
         cd main
         MSBuild.exe DOSBoxPure-vs.vcxproj /p:Configuration=ReleaseGLCORE /p:Platform=x64
+    - run: |
+        New-Item -ItemType Directory -Force -Path "main/dist" | Out-Null
+        Copy-Item -LiteralPath "main/Release-vs2026x64/SOFIA Space.exe" -Destination "main/dist/SOFIA Space.exe"
+        Copy-Item -LiteralPath "main/README.md" -Destination "main/dist/README.md"
     - uses: actions/upload-artifact@main
       with:
         name: sofia-space_win64
-        path: |
-          main/Release-vs2026x64/SOFIA Space.exe
-          main/README.md
+        path: main/dist/*
 
   build-win32-msvc:
     runs-on: windows-latest
@@ -152,12 +154,14 @@ jobs:
       run: |
         cd main
         MSBuild.exe DOSBoxPure-vs.vcxproj /p:Configuration=ReleaseGLCORE /p:Platform=Win32
+    - run: |
+        New-Item -ItemType Directory -Force -Path "main/dist" | Out-Null
+        Copy-Item -LiteralPath "main/Release-vs2026/SOFIA Space.exe" -Destination "main/dist/SOFIA Space.exe"
+        Copy-Item -LiteralPath "main/README.md" -Destination "main/dist/README.md"
     - uses: actions/upload-artifact@main
       with:
         name: sofia-space_win32
-        path: |
-          main/Release-vs2026/SOFIA Space.exe
-          main/README.md
+        path: main/dist/*
 
 # Rebuild Commander maximize/restore toggle.
 
