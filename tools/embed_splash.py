@@ -19,7 +19,9 @@ with target.open("w", encoding="ascii", newline="\n") as out:
         out.write("    " + ", ".join("0x%02X" % byte for byte in chunk) + ",\n")
     out.write("};\n#endif // SOFIA_SPLASH_H\n")
 
-print(f"Embedded {len(data)} bytes from {source.name} into {target.name}")skin_source = root / "neon_blue.png"
+print(f"Embedded {len(data)} bytes from {source.name} into {target.name}")
+
+skin_source = root / "neon_blue.png"
 skin_target = root / "neon_blue.h"
 skin_data = skin_source.read_bytes()
 if not skin_data.startswith(b"\x89PNG\r\n\x1a\n"):
