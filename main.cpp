@@ -30,6 +30,9 @@
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 #include <windows.h>
 #include <commdlg.h>
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
 #endif
 
 #include <cfloat>
@@ -126,6 +129,65 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	panelOpen = shouldOpen;
 }
 static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
+
+#ifndef SOFIA_SPACE_BUILD
+#define SOFIA_SPACE_BUILD "DEV"
+#endif
+
+#if defined(_WIN32)
+static void SofiGetCpuBrand(char* output, size_t outputSize)
+{
+	if (!output || outputSize == 0) return;
+	lstrcpynA(output, "Unknown CPU", (int)outputSize);
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+	int registers[4] = {};
+	__cpuid(registers, (int)0x80000000);
+	const unsigned int maxExtendedLeaf = (unsigned int)registers[0];
+	if (maxExtendedLeaf >= 0x80000004)
+	{
+		char brand[49] = {};
+		for (int leaf = 0; leaf < 3; ++leaf)
+		{
+			__cpuid(registers, (int)(0x80000002 + leaf));
+			memcpy(brand + leaf * 16, registers, 16);
+		}
+		brand[48] = '\\0';
+		if (brand[0]) lstrcpynA(output, brand, (int)outputSize);
+	}
+#endif
+}
+
+static unsigned int SofiGetPhysicalCoreCount()
+{
+	DWORD requiredBytes = 0;
+	GetLogicalProcessorInformation(NULL, &requiredBytes);
+	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || requiredBytes == 0) return 0;
+	std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> processorInfo(
+		requiredBytes / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION));
+	if (!GetLogicalProcessorInformation(processorInfo.data(), &requiredBytes)) return 0;
+	unsigned int cores = 0;
+	for (size_t i = 0; i < processorInfo.size(); ++i)
+		if (processorInfo[i].Relationship == RelationProcessorCore) ++cores;
+	return cores;
+}
+
+static void SofiGetGpuName(char* output, size_t outputSize)
+{
+	if (!output || outputSize == 0) return;
+	lstrcpynA(output, "N/D", (int)outputSize);
+	for (DWORD index = 0; ; ++index)
+	{
+		DISPLAY_DEVICEA device = {};
+		device.cb = sizeof(device);
+		if (!EnumDisplayDevicesA(NULL, index, &device, 0)) break;
+		if (device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)
+		{
+			lstrcpynA(output, device.DeviceString, (int)outputSize);
+			return;
+		}
+	}
+}
+#endif
 static unsigned int SofiNeonBlueTexture = 0;
 static bool SofiNeonBlueTextureAttempted = false;
 extern "C" { void* SDL_GL_GetProcAddress(const char *proc); }
@@ -4079,7 +4141,7 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 
-			// Neon Blue INFO panel: fixed to the lower-right, safely above the taskbar.
+			// Neon Blue INFO panel: expanded hardware and build details, fixed above the taskbar.
 			if (SofiSkinSelection == 0)
 			{
 				SYSTEM_INFO systemInfo = {};
@@ -4099,8 +4161,16 @@ static struct sDOSBoxPure : public ZL_Application
 					case PROCESSOR_ARCHITECTURE_ARM64: architecture = "ARM64"; break;
 #endif
 				}
-				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 316.0f, io.DisplaySize.y - 224.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(300.0f, 168.0f), ImGuiCond_Always);
+				char cpuName[64] = {};
+				char gpuName[64] = {};
+				SofiGetCpuBrand(cpuName, sizeof(cpuName));
+				SofiGetGpuName(gpuName, sizeof(gpuName));
+				const unsigned int physicalCores = SofiGetPhysicalCoreCount();
+				const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+				const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 376.0f, io.DisplaySize.y - 302.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(360.0f, 246.0f), ImGuiCond_Always);
 				ImGui::SetNextWindowBgAlpha(0.94f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 9.0f));
@@ -4112,27 +4182,40 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
 				{
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SOFIA SPACE");
-					ImGui::SameLine(118.0f);
+					ImGui::SameLine(158.0f);
 					ImGui::TextDisabled("SYSTEM INFO");
 					ImGui::Separator();
 					ImGui::TextDisabled("EMULADOR");
 					ImGui::SameLine(112.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "DOSBox Pure");
-					ImGui::TextDisabled("SISTEMA");
+					ImGui::TextDisabled("CPU");
 					ImGui::SameLine(112.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows");
-					ImGui::TextDisabled("ARQUITECTURA");
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.32s", cpuName);
+					ImGui::TextDisabled("NÚCLEOS / HILOS");
+					ImGui::SameLine(142.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%u / %u",
+						physicalCores, (unsigned int)systemInfo.dwNumberOfProcessors);
+					ImGui::TextDisabled("GPU");
 					ImGui::SameLine(112.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%s", architecture);
-					ImGui::TextDisabled("CPU LÓGICOS");
-					ImGui::SameLine(112.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%u", (unsigned int)systemInfo.dwNumberOfProcessors);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.30s", gpuName);
 					ImGui::TextDisabled("MEMORIA RAM");
 					ImGui::SameLine(112.0f);
 					if (memoryAvailable)
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%llu GB", memoryGB);
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
+					ImGui::TextDisabled("PANTALLA");
+					ImGui::SameLine(112.0f);
+					if (screenWidth > 0 && screenHeight > 0)
+						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%d x %d", screenWidth, screenHeight);
+					else
+						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
+					ImGui::TextDisabled("SISTEMA");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows %s", architecture);
+					ImGui::TextDisabled("SOFIA SPACE");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #%s", SOFIA_SPACE_BUILD);
 				}
 				ImGui::End();
 				ImGui::PopStyleColor();
