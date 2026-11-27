@@ -33,6 +33,7 @@
 #endif
 
 #include <cfloat>
+#include <ctime>
 #include <vector>
 
 #include <libretro-common/include/libretro.h>
@@ -4048,6 +4049,36 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 
+			// Neon Blue skin taskbar: full-width bottom strip with a right-aligned clock and date.
+			// This visual element belongs to the skin and is hidden when the skin is set to None.
+			if (SofiSkinSelection == 0)
+			{
+				ImDrawList* taskbar = ImGui::GetForegroundDrawList();
+				const float taskbarHeight = 44.0f;
+				const float taskbarTop = io.DisplaySize.y - taskbarHeight;
+				const ImU32 taskbarFill = IM_COL32(5, 15, 31, 238);
+				const ImU32 taskbarEdge = IM_COL32(40, 190, 255, 190);
+				taskbar->AddRectFilled(ImVec2(0.0f, taskbarTop), io.DisplaySize, taskbarFill);
+				taskbar->AddLine(ImVec2(0.0f, taskbarTop), ImVec2(io.DisplaySize.x, taskbarTop), taskbarEdge, 1.0f);
+
+				const std::time_t now = std::time(NULL);
+				const std::tm* localTime = std::localtime(&now);
+				if (localTime)
+				{
+					char clockText[16] = {};
+					char dateText[32] = {};
+					std::strftime(clockText, sizeof(clockText), "%H:%M", localTime);
+					std::strftime(dateText, sizeof(dateText), "%d/%m/%Y", localTime);
+					const ImVec2 clockSize = ImGui::CalcTextSize(clockText);
+					const ImVec2 dateSize = ImGui::CalcTextSize(dateText);
+					const float rightPadding = 18.0f;
+					taskbar->AddText(ImVec2(io.DisplaySize.x - rightPadding - clockSize.x, taskbarTop + 4.0f),
+						IM_COL32(225, 245, 255, 255), clockText);
+					taskbar->AddText(ImVec2(io.DisplaySize.x - rightPadding - dateSize.x, taskbarTop + 23.0f),
+						IM_COL32(130, 175, 205, 255), dateText);
+				}
+			}
+
 			// Skin selector: anchored at the upper-right, below the application title bar.
 			ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 190.0f, 114.0f), ImGuiCond_Always);
 			ImGui::SetNextWindowSize(ImVec2(180.0f, 42.0f), ImGuiCond_Always);
@@ -4192,7 +4223,7 @@ static struct sDOSBoxPure : public ZL_Application
 				const ImVec2 hubPos(112.0f, 76.0f);
 				const ImVec2 hubDefaultSize(
 					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
-					(hubDisplaySize.y > 104.0f) ? hubDisplaySize.y - 104.0f : 16.0f);
+					(hubDisplaySize.y > 120.0f) ? hubDisplaySize.y - 120.0f : 16.0f);
 				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_FirstUseEver);
 				const ImGuiWindowFlags hubFlags =
