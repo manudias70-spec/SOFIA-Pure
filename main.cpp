@@ -152,7 +152,7 @@ static void SofiGetCpuBrand(char* output, size_t outputSize)
 			__cpuid(registers, (int)(0x80000002 + leaf));
 			memcpy(brand + leaf * 16, registers, 16);
 		}
-		brand[48] = '\\0';
+		brand[48] = '\0';
 		if (brand[0]) lstrcpynA(output, brand, (int)outputSize);
 	}
 #endif
