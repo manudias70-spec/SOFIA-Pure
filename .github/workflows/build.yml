@@ -3,7 +3,7 @@ name: Build
 # Commander without maximize state
 on:
   push:
-    branches: [ "main", "experiment/sofi-osd-button", "experiment/l3-controller-mapper-direct", "experiment/osd-keyboard-tab-lock", "experiment/osd-mouse-joy-tab-lock", "experiment/hotkey-f11-controller-mapper", "experiment/sofi-shortcuts-bullets", "experiment/osk-half-right-anchor", "experiment/ui-language-switch", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/game-screen-takeover", "experiment/game-takeover-plus-alt178", "experiment/commander-window-persistence", "experiment/commander-explorer-autominimize", "experiment/commander-window-controls", "experiment/explorer-three-state-toggle", "experiment/commander-titlebar-controls", "experiment/commander-window-state-controls", "experiment/commander-maximize-735x980", "experiment/sofi-ui-clear-navigation", "experiment/commander-focus-independent-ui", "experiment/video-panel-visual", "diagnostic/midi-logging", "diagnostic/midi-no-splash", "experiment/game-launcher", "branding/sofia-space-windows", "experiment/automatic-pure-reset" ]
+    branches: [ "main", "experiment/sofi-osd-button", "experiment/l3-controller-mapper-direct", "experiment/osd-keyboard-tab-lock", "experiment/osd-mouse-joy-tab-lock", "experiment/hotkey-f11-controller-mapper", "experiment/sofi-shortcuts-bullets", "experiment/osk-half-right-anchor", "experiment/ui-language-switch", "feature/sofia-awe32-build9-test", "optimize/windows-tested-2026-11-14", "experiment/osd-left-rail-layout", "experiment/sofia-16x9-canvas", "experiment/video-options-layout", "experiment/commander-outer-frame", "experiment/commander-font-clean-234", "experiment/commander-move-up", "experiment/imgui-commander-view", "experiment/imgui-commander-resizable", "experiment/sofi-space-ui", "experiment/game-screen-takeover", "experiment/game-takeover-plus-alt178", "experiment/commander-window-persistence", "experiment/commander-explorer-autominimize", "experiment/commander-window-controls", "experiment/explorer-three-state-toggle", "experiment/commander-titlebar-controls", "experiment/commander-window-state-controls", "experiment/commander-maximize-735x980", "experiment/sofi-ui-clear-navigation", "experiment/commander-focus-independent-ui", "experiment/video-panel-visual", "diagnostic/midi-logging", "diagnostic/midi-no-splash", "experiment/game-launcher", "branding/sofia-space-windows", "experiment/automatic-pure-reset", "experiment/neon-blue-background-656" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -47,6 +47,21 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
+        Add-Type -AssemblyName System.Drawing
+        $skinPng = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.png"
+        $skinJpg = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.jpg"
+        $jpegEncoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq "image/jpeg" } | Select-Object -First 1
+        if (-not $jpegEncoder) { throw "JPEG encoder is unavailable" }
+        $skinImage = [System.Drawing.Image]::FromFile($skinPng)
+        $jpegParams = [System.Drawing.Imaging.EncoderParameters]::new(1)
+        try {
+          $jpegParams.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, [long]90)
+          $skinImage.Save($skinJpg, $jpegEncoder, $jpegParams)
+        } finally {
+          $jpegParams.Dispose()
+          $skinImage.Dispose()
+        }
+        if (-not (Test-Path $skinJpg)) { throw "Neon Blue JPEG conversion failed" }
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
         python main/tools/patch_osd_cursor.py
@@ -103,6 +118,21 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
+        Add-Type -AssemblyName System.Drawing
+        $skinPng = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.png"
+        $skinJpg = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.jpg"
+        $jpegEncoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq "image/jpeg" } | Select-Object -First 1
+        if (-not $jpegEncoder) { throw "JPEG encoder is unavailable" }
+        $skinImage = [System.Drawing.Image]::FromFile($skinPng)
+        $jpegParams = [System.Drawing.Imaging.EncoderParameters]::new(1)
+        try {
+          $jpegParams.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, [long]90)
+          $skinImage.Save($skinJpg, $jpegEncoder, $jpegParams)
+        } finally {
+          $jpegParams.Dispose()
+          $skinImage.Dispose()
+        }
+        if (-not (Test-Path $skinJpg)) { throw "Neon Blue JPEG conversion failed" }
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
         python main/tools/patch_osd_cursor.py

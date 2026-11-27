@@ -40,6 +40,7 @@
 #include "vfs_implementation.h"
 #include "xbrz_shader.h"
 #include "sofia_splash.h"
+#include "neon_blue.h"
 #include "sofia_game_profile.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -124,6 +125,69 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	panelOpen = shouldOpen;
 }
 static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
+static unsigned int SofiNeonBlueTexture = 0;
+static bool SofiNeonBlueTextureAttempted = false;
+extern "C" { void* SDL_GL_GetProcAddress(const char *proc); }
+
+static unsigned int SofiLoadNeonBlueTexture()
+{
+	if (SofiNeonBlueTexture) return SofiNeonBlueTexture;
+	if (SofiNeonBlueTextureAttempted) return 0;
+	int width = 0, height = 0, channels = 0;
+	// Use the same RGB JPEG path already proven by the Game Launcher.
+	unsigned char* pixels = stbi_load_from_memory(neon_blue_jpg, (int)sizeof(neon_blue_jpg), &width, &height, &channels, 3);
+	if (!pixels || width <= 0 || height <= 0)
+	{
+		if (pixels) stbi_image_free(pixels);
+		SofiNeonBlueTextureAttempted = true;
+		return 0;
+	}
+	typedef void (APIENTRY *GenFn)(int, unsigned int*);
+	typedef void (APIENTRY *BindFn)(unsigned int, unsigned int);
+	typedef void (APIENTRY *ParamFn)(unsigned int, unsigned int, int);
+	typedef void (APIENTRY *ImageFn)(unsigned int, int, int, int, int, int, unsigned int, unsigned int, const void*);
+	typedef void (APIENTRY *PixelStoreFn)(unsigned int, int);
+	GenFn gen = (GenFn)SDL_GL_GetProcAddress("glGenTextures");
+	BindFn bind = (BindFn)SDL_GL_GetProcAddress("glBindTexture");
+	ParamFn param = (ParamFn)SDL_GL_GetProcAddress("glTexParameteri");
+	ImageFn image = (ImageFn)SDL_GL_GetProcAddress("glTexImage2D");
+	PixelStoreFn pixelStore = (PixelStoreFn)SDL_GL_GetProcAddress("glPixelStorei");
+	if (!gen || !bind || !param || !image || !pixelStore)
+	{
+		stbi_image_free(pixels);
+		return 0; // Retry on the next frame in case the GL context is not ready yet.
+	}
+	unsigned int texture = 0;
+	gen(1, &texture);
+	if (!texture)
+	{
+		stbi_image_free(pixels);
+		return 0;
+	}
+	bind(0x0DE1, texture);
+	param(0x0DE1, 0x2801, 0x2601);
+	param(0x0DE1, 0x2800, 0x2601);
+	param(0x0DE1, 0x2802, 0x812F);
+	param(0x0DE1, 0x2803, 0x812F);
+	pixelStore(0x0CF5, 1);
+	image(0x0DE1, 0, 0x1907, width, height, 0, 0x1907, 0x1401, pixels);
+	pixelStore(0x0CF5, 4);
+	bind(0x0DE1, 0);
+	stbi_image_free(pixels);
+	SofiNeonBlueTexture = texture;
+	SofiNeonBlueTextureAttempted = true;
+	return SofiNeonBlueTexture;
+}
+
+static void SofiReleaseNeonBlueTexture()
+{
+	if (!SofiNeonBlueTexture) return;
+	typedef void (APIENTRY *DeleteFn)(int, const unsigned int*);
+	DeleteFn remove = (DeleteFn)SDL_GL_GetProcAddress("glDeleteTextures");
+	if (remove) remove(1, &SofiNeonBlueTexture);
+	SofiNeonBlueTexture = 0;
+}
+
 static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
@@ -3937,41 +4001,50 @@ static struct sDOSBoxPure : public ZL_Application
 
 			if (SofiUIVisible)
 			{
-			// SOFI Space background: Neon Blue skin or a neutral unskinned workspace.
+			// SOFI Space background: Neon Blue artwork is embedded as JPEG; None keeps the neutral workspace.
 			{
 				ImDrawList* bg = ImGui::GetBackgroundDrawList();
 				const float w = io.DisplaySize.x;
 				const float h = io.DisplaySize.y;
+				bool drewSkinBackground = false;
 				if (SofiSkinSelection == 0)
 				{
-					const ImU32 space = IM_COL32(5, 10, 24, 245);
-					const ImU32 panel = IM_COL32(8, 18, 38, 250);
-					const ImU32 cyan = IM_COL32(40, 190, 255, 220);
-					const ImU32 muted = IM_COL32(105, 150, 185, 210);
-
-					bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), space);
-					bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, 76), panel);
-					bg->AddRectFilled(ImVec2(0, 76), ImVec2(112, h - 28), panel);
-					bg->AddRectFilled(ImVec2(112, h - 28), ImVec2(w, h), panel);
-					bg->AddLine(ImVec2(0, 76), ImVec2(w, 76), cyan, 1.5f);
-					bg->AddLine(ImVec2(112, 76), ImVec2(112, h - 28), cyan, 1.5f);
-					bg->AddLine(ImVec2(112, h - 28), ImVec2(w, h - 28), muted, 1.0f);
-
-					// Subtle retro-futuristic grid in the workspace.
-					for (float x = 132; x < w; x += 32)
-						bg->AddLine(ImVec2(x, 77), ImVec2(x, h - 29), IM_COL32(30, 95, 145, 32), 1.0f);
-					for (float y = 92; y < h - 28; y += 32)
-						bg->AddLine(ImVec2(113, y), ImVec2(w, y), IM_COL32(30, 95, 145, 32), 1.0f);
-
-					bg->AddCircleFilled(ImVec2(34, 38), 12, IM_COL32(20, 120, 190, 255), 24);
-					bg->AddCircle(ImVec2(34, 38), 17, cyan, 2.0f);
-					bg->AddText(ImVec2(60, 19), IM_COL32(225, 245, 255, 255), "SOFI-PURE");
-					bg->AddText(ImVec2(61, 43), muted, "SPACE INTERFACE");
-					bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
+					const unsigned int texture = SofiLoadNeonBlueTexture();
+					if (texture)
+					{
+						bg->AddImage((ImTextureID)(intptr_t)texture, ImVec2(0.0f, 0.0f), ImVec2(w, h));
+						drewSkinBackground = true;
+					}
 				}
-				else
+				if (!drewSkinBackground)
 				{
-					bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), IM_COL32(30, 30, 34, 255));
+					if (SofiSkinSelection == 0)
+					{
+						const ImU32 space = IM_COL32(5, 10, 24, 245);
+						const ImU32 panel = IM_COL32(8, 18, 38, 250);
+						const ImU32 cyan = IM_COL32(40, 190, 255, 220);
+						const ImU32 muted = IM_COL32(105, 150, 185, 210);
+						bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), space);
+						bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, 76), panel);
+						bg->AddRectFilled(ImVec2(0, 76), ImVec2(112, h - 28), panel);
+						bg->AddRectFilled(ImVec2(112, h - 28), ImVec2(w, h), panel);
+						bg->AddLine(ImVec2(0, 76), ImVec2(w, 76), cyan, 1.5f);
+						bg->AddLine(ImVec2(112, 76), ImVec2(112, h - 28), cyan, 1.5f);
+						bg->AddLine(ImVec2(112, h - 28), ImVec2(w, h - 28), muted, 1.0f);
+						for (float x = 132; x < w; x += 32)
+							bg->AddLine(ImVec2(x, 77), ImVec2(x, h - 29), IM_COL32(30, 95, 145, 32), 1.0f);
+						for (float y = 92; y < h - 28; y += 32)
+							bg->AddLine(ImVec2(113, y), ImVec2(w, y), IM_COL32(30, 95, 145, 32), 1.0f);
+						bg->AddCircleFilled(ImVec2(34, 38), 12, IM_COL32(20, 120, 190, 255), 24);
+						bg->AddCircle(ImVec2(34, 38), 17, cyan, 2.0f);
+						bg->AddText(ImVec2(60, 19), IM_COL32(225, 245, 255, 255), "SOFI-PURE");
+						bg->AddText(ImVec2(61, 43), muted, "SPACE INTERFACE");
+						bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
+					}
+					else
+					{
+						bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), IM_COL32(30, 30, 34, 255));
+					}
 				}
 			}
 
@@ -5101,6 +5174,7 @@ static struct sDOSBoxPure : public ZL_Application
 		{
 			// Persist normal geometry and maximize state separately from ImGui's current window rectangle.
 			SofiCommanderSaveGeometry();
+			SofiReleaseNeonBlueTexture();
 			if (ImGui::GetIO().IniFilename) ImGui::SaveIniSettingsToDisk(ImGui::GetIO().IniFilename);
 			ImGui_ImplOpenGL3_Shutdown();
 			ImGui::DestroyContext();
