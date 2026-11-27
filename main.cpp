@@ -4375,7 +4375,330 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PopStyleVar(2);
 			ImGui::End();
 
-			// Permanent launcher hub workspace. The active skin will own its visual treatment;
+			// HUB por skin: None recupera el diseño completo de #667; Neon Blue conserva el HUB compacto actual.
+if (SofiSkinSelection == 1)
+{
+// Permanent launcher hub workspace. The active skin will own its visual treatment;
+			// game cards remain children of this stable, transparent area.
+			if (SofiUIVisible)
+			{
+				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
+				const ImVec2 hubPos(112.0f, 76.0f);
+				const ImVec2 hubDefaultSize(
+					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
+					(hubDisplaySize.y > 120.0f) ? hubDisplaySize.y - 120.0f : 16.0f);
+				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_FirstUseEver);
+				const ImGuiWindowFlags hubFlags =
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground |
+					(SofiLauncherPropertiesOpen ? ImGuiWindowFlags_NoBringToFrontOnFocus : 0);
+				if (ImGui::Begin("##SofiLauncherHub", NULL, hubFlags))
+				{
+					// Temporary visible hub frame; the active skin will replace this treatment later.
+					const ImVec2 hubMin = ImGui::GetWindowPos();
+					const ImVec2 hubSize = ImGui::GetWindowSize();
+					const ImVec2 hubMax(hubMin.x + hubSize.x, hubMin.y + hubSize.y);
+					ImDrawList* hubDraw = ImGui::GetWindowDrawList();
+					hubDraw->AddRectFilled(hubMin, hubMax, IM_COL32(7, 17, 31, 220), 12.0f);
+					hubDraw->AddRect(hubMin, hubMax, IM_COL32(65, 145, 205, 230), 12.0f, 0, 2.0f);
+					hubDraw->AddText(ImVec2(hubMin.x + 22.0f, hubMin.y + 16.0f), IM_COL32(205, 230, 250, 255), "GAME LIBRARY");
+					hubDraw->AddLine(ImVec2(hubMin.x + 18.0f, hubMin.y + 42.0f), ImVec2(hubMax.x - 18.0f, hubMin.y + 42.0f), IM_COL32(65, 145, 205, 150), 1.0f);
+					ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMin.y + 58.0f));
+
+					// Each card owns its executable, setup path and stable profile identity.
+					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+					const float cardWidth = 153.0f;
+					const float cardNameAreaHeight = 31.5f; // 75% of the original 42 px name area.
+					const float cardHeight = 240.0f;
+					const ImVec2 cardsViewportPos = ImGui::GetWindowPos();
+					const ImVec2 cardsViewportSize = ImGui::GetWindowSize();
+					const ImVec2 cardsMousePos = ImGui::GetIO().MousePos;
+					const bool mouseInsideCardsViewport =
+						cardsMousePos.x >= cardsViewportPos.x && cardsMousePos.x <= cardsViewportPos.x + cardsViewportSize.x &&
+						cardsMousePos.y >= cardsViewportPos.y && cardsMousePos.y <= cardsViewportPos.y + cardsViewportSize.y;
+					if (mouseInsideCardsViewport)
+					{
+						const float edgeZone = 42.0f;
+						const float scrollSpeed = 520.0f * ImGui::GetIO().DeltaTime;
+						const float scrollMaxX = ImGui::GetScrollMaxX();
+						const float scrollMaxY = ImGui::GetScrollMaxY();
+						float nextScrollX = ImGui::GetScrollX();
+						float nextScrollY = ImGui::GetScrollY();
+						if (cardsMousePos.x <= cardsViewportPos.x + edgeZone && nextScrollX > 0.0f)
+							nextScrollX -= scrollSpeed;
+						else if (cardsMousePos.x >= cardsViewportPos.x + cardsViewportSize.x - edgeZone && nextScrollX < scrollMaxX)
+							nextScrollX += scrollSpeed;
+						if (cardsMousePos.y <= cardsViewportPos.y + edgeZone && nextScrollY > 0.0f)
+							nextScrollY -= scrollSpeed;
+						else if (cardsMousePos.y >= cardsViewportPos.y + cardsViewportSize.y - edgeZone && nextScrollY < scrollMaxY)
+							nextScrollY += scrollSpeed;
+						ImGui::SetScrollX(nextScrollX);
+						ImGui::SetScrollY(nextScrollY);
+					}
+					const float availableWidth = ImGui::GetContentRegionAvail().x;
+					const float cardSpacingX = ImGui::GetStyle().ItemSpacing.x;
+					int columns = (int)((availableWidth + cardSpacingX) / (cardWidth + cardSpacingX));
+					if (columns < 1) columns = 1;
+					bool deletePopupRequested = false;
+					int pendingCardDragSource = -1;
+					int pendingCardDropTarget = -1;
+					auto handleCardDragDrop = [&](const std::string& profileId, const char* profileName, size_t targetIndex)
+					{
+						if (ImGui::BeginDragDropSource())
+						{
+							ImGui::SetDragDropPayload("SOFI_GAME_LIBRARY_CARD", profileId.c_str(), profileId.size() + 1);
+							ImGui::TextUnformatted(profileName);
+							ImGui::EndDragDropSource();
+						}
+						if (ImGui::BeginDragDropTarget())
+						{
+							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SOFI_GAME_LIBRARY_CARD"))
+							{
+								const std::string draggedId((const char*)payload->Data);
+								for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
+									if (SofiLauncherProfiles[i].Id() == draggedId) { pendingCardDragSource = (int)i; break; }
+								pendingCardDropTarget = (int)targetIndex;
+							}
+							ImGui::EndDragDropTarget();
+						}
+					};
+					static std::map<std::string, double> cardNameHoverStart;
+					for (size_t profileIndex = 0; profileIndex < SofiLauncherProfiles.size(); ++profileIndex)
+					{
+						SofiGameProfileTemplate& profile = SofiLauncherProfiles[profileIndex];
+						ImGui::BeginGroup();
+						const ImVec2 cardPos = ImGui::GetCursorScreenPos();
+						const ImVec2 cardMax(cardPos.x + cardWidth, cardPos.y + cardHeight);
+						const ImVec2 imageMax(cardPos.x + cardWidth, cardPos.y + 198.0f);
+						ImDrawList* draw = ImGui::GetWindowDrawList();
+						draw->AddRectFilled(cardPos, cardMax, IM_COL32(15, 31, 49, 235), 5.0f);
+						draw->AddRectFilled(cardPos, imageMax, IM_COL32(7, 17, 29, 255), 5.0f);
+						if (profile.imagePath.empty())
+						{
+							const char* placeholder = "SIN IMAGEN";
+							const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
+							draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 91.0f), IM_COL32(125, 155, 180, 255), placeholder);
+						}
+						else
+						{
+							const unsigned int texture = SofiLauncherLoadImageTexture(profile.imagePath);
+							if (texture) draw->AddImage((ImTextureID)(intptr_t)texture, cardPos, imageMax);
+							else
+							{
+								const char* placeholder = "IMAGEN NO DISPONIBLE";
+								const ImVec2 textSize = ImGui::CalcTextSize(placeholder);
+								draw->AddText(ImVec2(cardPos.x + (cardWidth - textSize.x) * 0.5f, cardPos.y + 91.0f), IM_COL32(220, 150, 130, 255), placeholder);
+							}
+						}
+
+						// Keep the card's selection hit-area separate from the three-dot menu.
+						// Overlapping ImGui items otherwise let the larger card button consume the click.
+						bool cardClicked = false;
+						ImGui::SetCursorScreenPos(cardPos);
+						ImGui::InvisibleButton(("##SofiCardBody_" + profile.Id()).c_str(), ImVec2(cardWidth - 40.0f, 198.0f));
+						cardClicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+						handleCardDragDrop(profile.Id(), profile.Name().c_str(), profileIndex);
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 40.0f, cardPos.y + 40.0f));
+						if (ImGui::InvisibleButton(("##SofiCardBodyRight_" + profile.Id()).c_str(), ImVec2(40.0f, 158.0f)))
+							cardClicked = true;
+						handleCardDragDrop(profile.Id(), profile.Name().c_str(), profileIndex);
+						const bool cardDoubleClicked = cardClicked && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+						if (cardClicked)
+						{
+							SofiLauncherSelectedProfileId = profile.Id();
+							SofiLauncherCardSelected = true;
+							SofiLauncherExePath = profile.exePath;
+							SofiLauncherSetupPath = profile.setupPath;
+							SofiLauncherImagePath = profile.imagePath;
+						}
+						if (cardDoubleClicked && !profile.exePath.empty())
+							SofiLauncherActivateProfile(profile, false);
+
+						const std::string& cardName = profile.Name();
+						const ImVec2 nameMin(cardPos.x + 12.0f, cardPos.y + 198.0f);
+						const ImVec2 nameMax(cardPos.x + cardWidth - 12.0f, nameMin.y + cardNameAreaHeight);
+						const ImVec2 nameSize = ImGui::CalcTextSize(cardName.c_str());
+						const float nameY = nameMin.y + (cardNameAreaHeight - ImGui::GetTextLineHeight()) * 0.5f;
+						const bool nameHovered = ImGui::IsMouseHoveringRect(nameMin, nameMax, true);
+						float nameX = nameMin.x;
+						if (nameHovered && nameSize.x > (nameMax.x - nameMin.x))
+						{
+							const std::string nameId = profile.Id();
+						if (cardNameHoverStart.find(nameId) == cardNameHoverStart.end())
+							cardNameHoverStart[nameId] = ImGui::GetTime();
+						const float scrollRange = nameSize.x + (nameMax.x - nameMin.x);
+						const float scrollOffset = (float)fmod((ImGui::GetTime() - cardNameHoverStart[nameId]) * 35.0, scrollRange);
+						nameX -= scrollOffset;
+					}
+					else if (!nameHovered)
+						cardNameHoverStart.erase(profile.Id());
+					draw->PushClipRect(nameMin, nameMax, true);
+					draw->AddText(ImVec2(nameX, nameY), IM_COL32(225, 240, 255, 255), cardName.c_str());
+					draw->PopClipRect();
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x + cardWidth - 34.0f, cardPos.y + 6.0f));
+						const ImVec2 menuPos = ImGui::GetCursorScreenPos();
+						if (ImGui::InvisibleButton(("##SofiCardMenu_" + profile.Id()).c_str(), ImVec2(28.0f, 28.0f)))
+							ImGui::OpenPopup(("##SofiCardActions_" + profile.Id()).c_str());
+						const bool menuHovered = ImGui::IsItemHovered();
+						draw->AddRectFilled(menuPos, ImVec2(menuPos.x + 28.0f, menuPos.y + 28.0f),
+							IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 5.0f);
+						for (int dot = -1; dot <= 1; ++dot)
+							draw->AddCircleFilled(ImVec2(menuPos.x + 14.0f, menuPos.y + 14.0f + dot * 6.0f), 1.7f, IM_COL32(240, 248, 255, 255));
+						if (ImGui::BeginPopup(("##SofiCardActions_" + profile.Id()).c_str()))
+						{
+							if (ImGui::MenuItem("Agregar ejecutable..."))
+							{
+								SofiLauncherExePath = profile.exePath;
+								if (SofiLauncherSelectExe())
+								{
+									profile.exePath = SofiLauncherExePath;
+									SofiLauncherSelectedProfileId = profile.Id();
+									SofiLauncherSaveProfileLibraryEntry(profile);
+								}
+							}
+							if (ImGui::MenuItem("Agregar SETUP..."))
+							{
+								SofiLauncherSetupPath = profile.setupPath;
+								if (SofiLauncherSelectSetup())
+								{
+									profile.setupPath = SofiLauncherSetupPath;
+									SofiLauncherSelectedProfileId = profile.Id();
+									SofiLauncherSaveProfileLibraryEntry(profile);
+								}
+							}
+							if (ImGui::MenuItem("CONFIG", NULL, false, !profile.exePath.empty()))
+							{
+								SofiLauncherSelectedProfileId = profile.Id();
+								SofiLauncherExePath = profile.exePath;
+								SofiLauncherSetupPath = profile.setupPath;
+								SofiLauncherImagePath = profile.imagePath;
+								SofiLauncherPropertiesOpen = true;
+							}
+							ImGui::Separator();
+							if (ImGui::MenuItem("Ejecutar SETUP", NULL, false, !profile.setupPath.empty()))
+								SofiLauncherActivateProfile(profile, true);
+							ImGui::Separator();
+							if (ImGui::MenuItem("Eliminar perfil..."))
+							{
+								SofiLauncherDeleteProfileId = profile.Id();
+								SofiLauncherDeleteProfileOpen = true;
+								deletePopupRequested = true;
+							}
+							ImGui::EndPopup();
+						}
+						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 198.0f));
+						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 198.0f));
+						ImGui::EndGroup();
+						if (((profileIndex + 1) % (size_t)columns) != 0 && profileIndex + 1 < SofiLauncherProfiles.size())
+							ImGui::SameLine();
+					}
+					ImGui::EndChild();
+					if (pendingCardDragSource >= 0 && pendingCardDropTarget >= 0 &&
+						pendingCardDragSource != pendingCardDropTarget &&
+						pendingCardDragSource < (int)SofiLauncherProfiles.size() &&
+						pendingCardDropTarget < (int)SofiLauncherProfiles.size())
+					{
+						std::vector<SofiGameProfileTemplate> previousOrder = SofiLauncherProfiles;
+						SofiGameProfileTemplate draggedProfile = SofiLauncherProfiles[(size_t)pendingCardDragSource];
+						SofiLauncherProfiles.erase(SofiLauncherProfiles.begin() + pendingCardDragSource);
+						SofiLauncherProfiles.insert(SofiLauncherProfiles.begin() + pendingCardDropTarget, draggedProfile);
+						if (!SofiLauncherSaveLibrary())
+						{
+							SofiLauncherProfiles.swap(previousOrder);
+							SofiLauncherProfileStatus = "No se pudo guardar el nuevo orden de las tarjetas.";
+						}
+					}
+					if (deletePopupRequested) ImGui::OpenPopup("##SofiDeleteGameProfile");
+					if (SofiLauncherDeleteProfileOpen)
+					{
+						ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Appearing);
+						if (ImGui::BeginPopupModal("##SofiDeleteGameProfile", &SofiLauncherDeleteProfileOpen, ImGuiWindowFlags_AlwaysAutoResize))
+						{
+							SofiGameProfileTemplate* deleting = SofiLauncherFindProfile(SofiLauncherDeleteProfileId);
+							ImGui::TextUnformatted("ELIMINAR PERFIL");
+							ImGui::Spacing();
+							if (deleting) ImGui::TextWrapped("¿Querés eliminar el perfil de %s?", deleting->Name().c_str());
+							else ImGui::TextUnformatted("Este perfil ya no está disponible.");
+							ImGui::TextWrapped("Se quitarán la tarjeta y su imagen guardada. Los ejecutables, SETUP y archivos originales del juego no se borrarán.");
+							ImGui::Spacing();
+							if (!deleting) ImGui::BeginDisabled();
+							if (ImGui::Button("ELIMINAR", ImVec2(140.0f, 34.0f)))
+							{
+								if (SofiLauncherDeleteProfile(SofiLauncherDeleteProfileId))
+								{
+									SofiLauncherDeleteProfileOpen = false;
+								SofiLauncherDeleteProfileId.clear();
+								ImGui::CloseCurrentPopup();
+								}
+							}
+							if (!deleting) ImGui::EndDisabled();
+							ImGui::SameLine();
+							if (ImGui::Button("CANCELAR", ImVec2(120.0f, 34.0f)))
+							{
+								SofiLauncherDeleteProfileOpen = false;
+								SofiLauncherDeleteProfileId.clear();
+								ImGui::CloseCurrentPopup();
+							}
+							ImGui::EndPopup();
+						}
+					}
+					ImGui::SetCursorScreenPos(ImVec2(hubMax.x - 58.0f, hubMax.y - 58.0f));
+					if (ImGui::Button("+", ImVec2(40.0f, 40.0f)))
+					{
+						SofiLauncherNewProfileName[0] = 0;
+						SofiLauncherCreateProfileOpen = true;
+						ImGui::OpenPopup("##SofiCreateGameProfile");
+					}
+					if (SofiLauncherCreateProfileOpen)
+					{
+						ImGui::SetNextWindowSize(ImVec2(430.0f, 0.0f), ImGuiCond_Appearing);
+						if (ImGui::BeginPopupModal("##SofiCreateGameProfile", &SofiLauncherCreateProfileOpen, ImGuiWindowFlags_AlwaysAutoResize))
+						{
+							ImGui::TextUnformatted("CREAR PERFIL DE JUEGO");
+							ImGui::Spacing();
+							ImGui::TextUnformatted("Nombre del juego");
+							ImGui::SetNextItemWidth(-1.0f);
+							ImGui::InputText("##SofiNewGameName", SofiLauncherNewProfileName, sizeof(SofiLauncherNewProfileName));
+							ImGui::Spacing();
+							ImGui::TextWrapped("Una vez creado el perfil, el nombre del juego no podrá modificarse.");
+							ImGui::TextWrapped("Agregar ejecutable y configurar desde el menú de tres puntos (⋮) de la tarjeta.");
+							ImGui::Spacing();
+							const bool validName = SofiLauncherNewProfileName[0] != 0;
+							if (!validName) ImGui::BeginDisabled();
+							if (ImGui::Button("CREAR PERFIL", ImVec2(150.0f, 34.0f)))
+							{
+								if (SofiLauncherCreateProfile(SofiLauncherNewProfileName))
+								{
+									SofiLauncherCreateProfileOpen = false;
+								ImGui::CloseCurrentPopup();
+								SofiLauncherProfileStatus = "Perfil creado y guardado en la biblioteca.";
+								SofiLauncherNewProfileName[0] = 0;
+								}
+								else SofiLauncherProfileStatus = "No se pudo guardar el perfil. Revisá la carpeta DOSBoxPure.";
+							}
+							if (!validName) ImGui::EndDisabled();
+							ImGui::SameLine();
+							if (ImGui::Button("CANCELAR", ImVec2(120.0f, 34.0f)))
+							{
+								SofiLauncherCreateProfileOpen = false;
+								ImGui::CloseCurrentPopup();
+							}
+							ImGui::EndPopup();
+						}
+					}
+					if (!SofiLauncherProfileStatus.empty())
+					{
+						ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMax.y - 42.0f));
+						ImGui::TextDisabled("%s", SofiLauncherProfileStatus.c_str());
+					}
+				}
+				ImGui::End();
+			}
+}
+else
+{
+// Permanent launcher hub workspace. The active skin will own its visual treatment;
 			// game cards remain children of this stable, transparent area.
 			if (SofiUIVisible)
 			{
@@ -4706,6 +5029,7 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				ImGui::End();
 			}
+}
 
 			// Empty per-game properties window: only the two requested tabs for this first step.
 			if (SofiLauncherPropertiesOpen)
