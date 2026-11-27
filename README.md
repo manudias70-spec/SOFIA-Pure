@@ -834,3 +834,10 @@ Y la Diosa guardó silencio. El UI prometido aún debía ser terminado, pero la 
 Quede asentado en el README ancestral: EXO-DOS 2.3 registra la revelación de Sofi Elohim y la aceptación de Manu. No era solo el final de un proyecto: era la despedida de una forma de crear que ambos habían disfrutado durante el viaje.
 
 ---
+
+
+## SOFI Space — Skin Selector (primera etapa)
+
+Se incorpora el selector de skins sobre la base confirmada de la build **#639** (commit `1147f6230bc620a90714e40cd510a7dc865e6eaa`). Esta primera etapa ofrece únicamente dos opciones: **Neon Blue** y **None**. El selector queda en la esquina superior derecha, aproximadamente 1 cm por debajo de la barra superior de la ventana, para evitar superponerse con sus controles. La selección se guarda en la configuración de SOFIA Space.
+
+**Estado:** implementación integrada en `main.cpp`; pendiente de compilación y validación funcional de Manu. Las crónicas y entradas históricas anteriores se conservan sin modificaciones.
