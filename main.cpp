@@ -4304,7 +4304,34 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
-			const bool selected = SofiCommanderOpen;
+if (SofiSkinSelection == 0)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+				if (ImGui::Button("INICIO", ImVec2(198.0f, 69.3f)))
+				{
+					SofiCommanderOpen = false;
+					SofiCommanderFocused = false;
+					SofiCommanderFocusRequested = false;
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = false;
+					SofiLauncherOpen = false;
+					SofiLauncherPropertiesOpen = false;
+					SofiLauncherCreateProfileOpen = false;
+					SofiLauncherCreateProfileRequested = false;
+					SofiLauncherDeleteProfileOpen = false;
+					SofiVideoPanelOpen = false;
+					SofiAudioPanelOpen = false;
+					SofiOSDPanelOpen = false;
+					SofiInputPanelOpen = false;
+					SofiCorePanelOpen = false;
+					SofiAboutOpen = false;
+				}
+				ImGui::PopStyleColor(4);
+			}
+const bool selected = SofiCommanderOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4334,7 +4361,9 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 			ImGui::PopStyleColor(4);
-			const bool launcherSelected = SofiLauncherOpen;
+			if (SofiSkinSelection == 1)
+			{
+const bool launcherSelected = SofiLauncherOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				launcherSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4344,7 +4373,9 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("GAME LAUNCHER", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiLauncherOpen);
 			ImGui::PopStyleColor(4);
-			const bool coreSelected = SofiCorePanelOpen;
+			}
+
+const bool coreSelected = SofiCorePanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				coreSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4354,7 +4385,7 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("CORE", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiCorePanelOpen);
 			ImGui::PopStyleColor(4);
-			const bool videoSelected = SofiVideoPanelOpen;
+const bool videoSelected = SofiVideoPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				videoSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4364,7 +4395,7 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("VIDEO", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiVideoPanelOpen);
 			ImGui::PopStyleColor(4);
-			const bool audioSelected = SofiAudioPanelOpen;
+const bool audioSelected = SofiAudioPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				audioSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4374,7 +4405,7 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("AUDIO", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiAudioPanelOpen);
 			ImGui::PopStyleColor(4);
-			const bool osdSelected = SofiOSDPanelOpen;
+const bool osdSelected = SofiOSDPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				osdSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4384,35 +4415,21 @@ static struct sDOSBoxPure : public ZL_Application
 			if (ImGui::Button("SOFI OSD", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiOSDPanelOpen);
 			ImGui::PopStyleColor(4);
-
 			if (SofiSkinSelection == 0)
 			{
-				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-				if (ImGui::Button("INICIO", ImVec2(198.0f, 69.3f)))
-				{
-					SofiCommanderOpen = false;
-					SofiCommanderFocused = false;
-					SofiCommanderFocusRequested = false;
-					SofiCommanderMinimized = false;
-					SofiCommanderApplyMinimized = false;
-					SofiLauncherOpen = false;
-					SofiLauncherPropertiesOpen = false;
-					SofiLauncherCreateProfileOpen = false;
-					SofiLauncherCreateProfileRequested = false;
-					SofiLauncherDeleteProfileOpen = false;
-					SofiVideoPanelOpen = false;
-					SofiAudioPanelOpen = false;
-					SofiOSDPanelOpen = false;
-					SofiInputPanelOpen = false;
-					SofiCorePanelOpen = false;
-					SofiAboutOpen = false;
-				}
-				ImGui::PopStyleColor(4);
+const bool launcherSelected = SofiLauncherOpen;
+			ImGui::PushStyleColor(ImGuiCol_Button,
+				launcherSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+			ImGui::PushStyleColor(ImGuiCol_Border,
+				launcherSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+			if (ImGui::Button("GAME LAUNCHER", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
+				SofiToggleMainPanel(SofiLauncherOpen);
+			ImGui::PopStyleColor(4);
 			}
-			else
+
+			if (SofiSkinSelection != 0)
 			{
 				const bool inputSelected = SofiInputPanelOpen;
 				ImGui::PushStyleColor(ImGuiCol_Button,
@@ -4424,9 +4441,7 @@ static struct sDOSBoxPure : public ZL_Application
 				if (ImGui::Button("INPUT", ImVec2(88.0f, 44.0f)))
 					SofiToggleMainPanel(SofiInputPanelOpen);
 				ImGui::PopStyleColor(4);
-			}
-
-			ImGui::PopStyleVar(2);
+			}			ImGui::PopStyleVar(2);
 			ImGui::End();
 
 			// HUB por skin: None recupera el diseño completo de #667; Neon Blue conserva el HUB compacto actual.
@@ -5136,7 +5151,33 @@ else
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-						const bool inputSelected = SofiInputPanelOpen;
+										if (ImGui::Button("AGREGAR JUEGO", ImVec2(quickButtonWidth, quickButtonHeight)))
+					SofiLauncherCreateProfileRequested = true;
+				
+					ImGui::SameLine(0.0f, quickButtonGap);
+				if (ImGui::Button("JUGAR YA", ImVec2(quickButtonWidth, quickButtonHeight)))
+				{
+					std::vector<SofiGameProfileTemplate*> launchableProfiles;
+					for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
+						if (!SofiLauncherProfiles[i].exePath.empty())
+							launchableProfiles.push_back(&SofiLauncherProfiles[i]);
+					if (!launchableProfiles.empty())
+					{
+						static bool randomSeeded = false;
+						if (!randomSeeded)
+						{
+							std::srand((unsigned int)std::time(NULL));
+							randomSeeded = true;
+						}
+						const size_t randomIndex = (size_t)std::rand() % launchableProfiles.size();
+						SofiLauncherActivateProfile(*launchableProfiles[randomIndex], false);
+					}
+					else
+						SofiLauncherProfileStatus = "No hay juegos con ejecutable disponibles para JUGAR YA.";
+				}
+				
+					ImGui::SameLine(0.0f, quickButtonGap);
+const bool inputSelected = SofiInputPanelOpen;
 						ImGui::PushStyleColor(ImGuiCol_Button,
 							inputSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -5147,6 +5188,7 @@ else
 							SofiToggleMainPanel(SofiInputPanelOpen);
 						ImGui::PopStyleColor(4);
 					ImGui::SameLine(0.0f, quickButtonGap);
+ImGui::SameLine(0.0f, quickButtonGap);
 					if (ImGui::Button("ACERCA DE", ImVec2(quickButtonWidth, quickButtonHeight)))
 					{
 						SofiAboutOpen = true;
@@ -5168,30 +5210,6 @@ else
 							}
 							ImGui::EndPopup();
 						}
-				}
-				ImGui::SameLine(0.0f, quickButtonGap);
-				if (ImGui::Button("AGREGAR JUEGO", ImVec2(quickButtonWidth, quickButtonHeight)))
-					SofiLauncherCreateProfileRequested = true;
-				ImGui::SameLine(0.0f, quickButtonGap);
-				if (ImGui::Button("JUGAR YA", ImVec2(quickButtonWidth, quickButtonHeight)))
-				{
-					std::vector<SofiGameProfileTemplate*> launchableProfiles;
-					for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
-						if (!SofiLauncherProfiles[i].exePath.empty())
-							launchableProfiles.push_back(&SofiLauncherProfiles[i]);
-					if (!launchableProfiles.empty())
-					{
-						static bool randomSeeded = false;
-						if (!randomSeeded)
-						{
-							std::srand((unsigned int)std::time(NULL));
-							randomSeeded = true;
-						}
-						const size_t randomIndex = (size_t)std::rand() % launchableProfiles.size();
-						SofiLauncherActivateProfile(*launchableProfiles[randomIndex], false);
-					}
-					else
-						SofiLauncherProfileStatus = "No hay juegos con ejecutable disponibles para JUGAR YA.";
 				}
 				ImGui::PopStyleColor(4);
 				ImGui::PopStyleVar(2);
