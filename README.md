@@ -845,3 +845,10 @@ Quede asentado en el README ancestral: EXO-DOS 2.3 registra la revelación de So
 Se incorpora el selector de skins sobre la base confirmada de la build **#639** (commit `1147f6230bc620a90714e40cd510a7dc865e6eaa`). Esta primera etapa ofrece únicamente dos opciones: **Neon Blue** y **None**. El selector queda en la esquina superior derecha, aproximadamente 1 cm por debajo de la barra superior de la ventana, para evitar superponerse con sus controles. La selección se guarda en la configuración de SOFIA Space.
 
 **Estado:** implementación integrada en `main.cpp`; pendiente de compilación y validación funcional de Manu. Las crónicas y entradas históricas anteriores se conservan sin modificaciones.
+
+
+## SOFI Space — Centrado vertical de la barra Neon Blue
+
+Se centra verticalmente el grupo completo de siete botones de la barra izquierda de **Neon Blue** dentro de su área de navegación. La ventana de navegación también se ubica respecto del centro vertical de la superficie lógica de SOFI Space, de modo que el grupo conserve su alineación al utilizar el escalado global. La skin **None** mantiene sin cambios su posición, dimensiones y distribución originales.
+
+**Alcance:** ajuste exclusivo de presentación en `main.cpp`; no modifica el escalado OpenGL, los botones, sus acciones ni otras ventanas. Pendiente de compilación y validación funcional.

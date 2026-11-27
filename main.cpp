@@ -4337,8 +4337,12 @@ static struct sDOSBoxPure : public ZL_Application
 			}
 			ImGui::End();
 
-			// SOFI Space navigation: keep Explorer as the only visible navigation button.
-			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
+			// SOFI Space navigation: center the Neon Blue rail vertically; preserve None geometry.
+			const float navigationWindowHeight = (SofiSkinSelection == 0) ? 780.0f : 390.0f;
+			const float navigationWindowY = (SofiSkinSelection == 0)
+				? (io.DisplaySize.y - navigationWindowHeight) * 0.5f
+				: 104.0f;
+			ImGui::SetNextWindowPos(ImVec2(8.0f, navigationWindowY), ImGuiCond_Always);
 			ImGui::SetNextWindowSize((SofiSkinSelection == 0) ? ImVec2(214.0f, 780.0f) : ImVec2(96.0f, 390.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -4347,6 +4351,18 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
+			if (SofiSkinSelection == 0)
+			{
+				const float navigationButtonHeight = 69.3f;
+				const float navigationButtonCount = 7.0f;
+				const float navigationSpacingCount = navigationButtonCount - 1.0f;
+				const float navigationGroupHeight = navigationButtonCount * navigationButtonHeight
+					+ navigationSpacingCount * ImGui::GetStyle().ItemSpacing.y;
+				const float navigationAvailableHeight = ImGui::GetContentRegionAvail().y;
+				const float navigationTopPadding = (navigationAvailableHeight - navigationGroupHeight) * 0.5f;
+				if (navigationTopPadding > 0.0f)
+					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + navigationTopPadding);
+			}
 if (SofiSkinSelection == 0)
 			{
 				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
