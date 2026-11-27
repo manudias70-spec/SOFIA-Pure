@@ -123,6 +123,7 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	SofiLauncherOpen = false;
 	panelOpen = shouldOpen;
 }
+static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
 static bool SofiUIVisible = true;
 static bool sofiAudioPanelWasOpen = false;
 static bool SofiCommanderCaptured = false, SofiSuppressMiddleMenu = false, SofiSuppressMiddleRelease = false;
@@ -3833,6 +3834,8 @@ static struct sDOSBoxPure : public ZL_Application
 		}
 		#endif
 		ZL_Application::SettingsInit(basePath.c_str());
+		ZL_String savedSofiSkin = ZL_Application::SettingsGet("interface_skin");
+		SofiSkinSelection = (!strcmp(savedSofiSkin.c_str(), "none")) ? 1 : 0;
 		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
 					SofiLauncherSetupPath.assign(ZL_Application::SettingsGet("interface_launcher_setup"));
 		SofiLauncherDataPath.assign(basePath.c_str());
@@ -3934,37 +3937,75 @@ static struct sDOSBoxPure : public ZL_Application
 
 			if (SofiUIVisible)
 			{
-			// SOFI Space - first visual layer. Drawn behind all interactive windows.
+			// SOFI Space background: Neon Blue skin or a neutral unskinned workspace.
 			{
 				ImDrawList* bg = ImGui::GetBackgroundDrawList();
 				const float w = io.DisplaySize.x;
 				const float h = io.DisplaySize.y;
-				const ImU32 space = IM_COL32(5, 10, 24, 245);
-				const ImU32 panel = IM_COL32(8, 18, 38, 250);
-				const ImU32 cyan = IM_COL32(40, 190, 255, 220);
-				const ImU32 muted = IM_COL32(105, 150, 185, 210);
+				if (SofiSkinSelection == 0)
+				{
+					const ImU32 space = IM_COL32(5, 10, 24, 245);
+					const ImU32 panel = IM_COL32(8, 18, 38, 250);
+					const ImU32 cyan = IM_COL32(40, 190, 255, 220);
+					const ImU32 muted = IM_COL32(105, 150, 185, 210);
 
-				bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), space);
-				bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, 76), panel);
-				bg->AddRectFilled(ImVec2(0, 76), ImVec2(112, h - 28), panel);
-				bg->AddRectFilled(ImVec2(112, h - 28), ImVec2(w, h), panel);
-				bg->AddLine(ImVec2(0, 76), ImVec2(w, 76), cyan, 1.5f);
-				bg->AddLine(ImVec2(112, 76), ImVec2(112, h - 28), cyan, 1.5f);
-				bg->AddLine(ImVec2(112, h - 28), ImVec2(w, h - 28), muted, 1.0f);
+					bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), space);
+					bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, 76), panel);
+					bg->AddRectFilled(ImVec2(0, 76), ImVec2(112, h - 28), panel);
+					bg->AddRectFilled(ImVec2(112, h - 28), ImVec2(w, h), panel);
+					bg->AddLine(ImVec2(0, 76), ImVec2(w, 76), cyan, 1.5f);
+					bg->AddLine(ImVec2(112, 76), ImVec2(112, h - 28), cyan, 1.5f);
+					bg->AddLine(ImVec2(112, h - 28), ImVec2(w, h - 28), muted, 1.0f);
 
-				// Subtle retro-futuristic grid in the workspace.
-				for (float x = 132; x < w; x += 32)
-					bg->AddLine(ImVec2(x, 77), ImVec2(x, h - 29), IM_COL32(30, 95, 145, 32), 1.0f);
-				for (float y = 92; y < h - 28; y += 32)
-					bg->AddLine(ImVec2(113, y), ImVec2(w, y), IM_COL32(30, 95, 145, 32), 1.0f);
+					// Subtle retro-futuristic grid in the workspace.
+					for (float x = 132; x < w; x += 32)
+						bg->AddLine(ImVec2(x, 77), ImVec2(x, h - 29), IM_COL32(30, 95, 145, 32), 1.0f);
+					for (float y = 92; y < h - 28; y += 32)
+						bg->AddLine(ImVec2(113, y), ImVec2(w, y), IM_COL32(30, 95, 145, 32), 1.0f);
 
-				bg->AddCircleFilled(ImVec2(34, 38), 12, IM_COL32(20, 120, 190, 255), 24);
-				bg->AddCircle(ImVec2(34, 38), 17, cyan, 2.0f);
-				bg->AddText(ImVec2(60, 19), IM_COL32(225, 245, 255, 255), "SOFI-PURE");
-				bg->AddText(ImVec2(61, 43), muted, "SPACE INTERFACE");
-
-				bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
+					bg->AddCircleFilled(ImVec2(34, 38), 12, IM_COL32(20, 120, 190, 255), 24);
+					bg->AddCircle(ImVec2(34, 38), 17, cyan, 2.0f);
+					bg->AddText(ImVec2(60, 19), IM_COL32(225, 245, 255, 255), "SOFI-PURE");
+					bg->AddText(ImVec2(61, 43), muted, "SPACE INTERFACE");
+					bg->AddText(ImVec2(18, h - 20), muted, "SOFI SPACE // 01");
+				}
+				else
+				{
+					bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), IM_COL32(30, 30, 34, 255));
+				}
 			}
+
+			// Skin selector: anchored at the upper-right, below the application title bar.
+			ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 190.0f, 114.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(180.0f, 42.0f), ImGuiCond_Always);
+			ImGui::Begin("##SofiSkinSelectorWindow", NULL,
+				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
+				ImGuiWindowFlags_NoFocusOnAppearing);
+			ImGui::TextDisabled("SKIN");
+			ImGui::SameLine(0.0f, 8.0f);
+			ImGui::SetNextItemWidth(112.0f);
+			const char* skinPreview = (SofiSkinSelection == 0) ? "Neon Blue" : "None";
+			if (ImGui::BeginCombo("##SofiSkinSelector", skinPreview))
+			{
+				if (ImGui::Selectable("Neon Blue", SofiSkinSelection == 0))
+				{
+					SofiSkinSelection = 0;
+					ZL_Application::SettingsSet("interface_skin", "neon_blue");
+					DirtySettings();
+				}
+				if (SofiSkinSelection == 0) ImGui::SetItemDefaultFocus();
+				if (ImGui::Selectable("None", SofiSkinSelection == 1))
+				{
+					SofiSkinSelection = 1;
+					ZL_Application::SettingsSet("interface_skin", "none");
+					DirtySettings();
+				}
+				if (SofiSkinSelection == 1) ImGui::SetItemDefaultFocus();
+				ImGui::EndCombo();
+			}
+			ImGui::End();
 
 			// SOFI Space navigation: keep Explorer as the only visible navigation button.
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
