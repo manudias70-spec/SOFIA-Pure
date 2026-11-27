@@ -4179,7 +4179,7 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::SetNextWindowBgAlpha(0.94f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
-				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 12.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, infoPanelHeight < 560.0f ? 14.0f : 22.0f));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(40, 190, 255, 190));
 				if (ImGui::Begin("SOFI INFO", NULL,
 					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -4187,6 +4187,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
 					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
 				{
+					ImGui::SetWindowFontScale(infoPanelHeight < 560.0f ? 1.08f : 1.15f);
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "INFORMACIÓN");
 					ImGui::Separator();
 					ImGui::TextDisabled("Tema:");
@@ -4205,20 +4206,20 @@ static struct sDOSBoxPure : public ZL_Application
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
 
-					ImGui::Spacing();
+					ImGui::Dummy(ImVec2(0.0f, infoPanelHeight < 560.0f ? 10.0f : 20.0f));
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SISTEMA");
 					ImGui::Separator();
 					ImGui::TextDisabled("CPU");
 					ImGui::SameLine(142.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.32s", cpuName);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.24s", cpuName);
 					ImGui::TextDisabled("NÚCLEOS / HILOS");
 					ImGui::SameLine(170.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%u / %u",
 						physicalCores, (unsigned int)systemInfo.dwNumberOfProcessors);
 					ImGui::TextDisabled("GPU");
 					ImGui::SameLine(142.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.30s", gpuName);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.22s", gpuName);
 					ImGui::TextDisabled("MEMORIA RAM");
 					ImGui::SameLine(142.0f);
 					if (memoryAvailable)
