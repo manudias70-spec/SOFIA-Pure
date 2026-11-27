@@ -853,3 +853,8 @@ Se corrige el desvío introducido en el ajuste anterior: el hub vuelve a su posi
 ## Integración inicial de la skin Neon Blue
 
 Se incorpora el fondo gráfico `neon_blue.png` como recurso integrado en el ejecutable. Al seleccionar **Neon Blue**, la imagen se dibuja detrás de los controles reales de SOFIA Space; al seleccionar **None**, se conserva el fondo geométrico original. La selección continúa guardándose como antes. La textura se crea al necesitarse y se libera antes de cerrar el contexto gráfico. Este cambio es exclusivamente visual: no modifica el motor, la lógica de emulación, Commander, el Explorador ni el funcionamiento del hub.
+
+
+## Prueba de formato JPEG para Neon Blue
+
+La generación de las builds convierte el recurso fuente `neon_blue.png` a JPEG (calidad 90) antes de integrarlo en el ejecutable. SOFIA Space carga los mismos píxeles y conserva el comportamiento de los selectores **Neon Blue** y **None**; el cambio no altera la lógica de emulación, Commander ni las funciones del hub. Esta prueba permite comparar la detección de Kaspersky con la build anterior. El PNG fuente se conserva en el repositorio.
