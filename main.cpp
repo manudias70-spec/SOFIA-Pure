@@ -4714,14 +4714,21 @@ else
 				const float hubFrameWidth = hubPadding * 2.0f + hubArrowWidth * 2.0f + hubArrowGap * 2.0f + hubFiveCardsWidth;
 				const float hubWindowWidth = hubFrameWidth + hubAddGap + hubAddWidth + hubPadding;
 				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
-				const ImVec2 hubPos(112.0f, 76.0f);
+				const ImGuiWindow* infoWindow = ImGui::FindWindowByName("SOFI INFO");
+				const float hubInfoGap = 38.0f; // Approximately 1 cm at 96 DPI.
+				const float hubAvailableWidth = infoWindow
+					? ImMax(16.0f, infoWindow->Pos.x - hubInfoGap - 16.0f)
+					: ImMax(16.0f, hubDisplaySize.x - hubWindowWidth - 32.0f);
 				const ImVec2 hubDefaultSize(
-					(hubDisplaySize.x > hubPos.x + 16.0f) ? ImMin(hubWindowWidth, hubDisplaySize.x - hubPos.x - 16.0f) : 16.0f,
-					(hubDisplaySize.y > hubCardHeight + 32.0f) ? hubCardHeight + hubPadding * 2.0f : hubDisplaySize.y - hubPos.y - 16.0f);
-				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
+					ImMin(hubWindowWidth, hubAvailableWidth),
+					(hubDisplaySize.y > hubCardHeight + 32.0f) ? hubCardHeight + hubPadding * 2.0f : hubDisplaySize.y - 92.0f);
+				const ImVec2 hubPos(
+					infoWindow ? infoWindow->Pos.x - hubInfoGap - hubDefaultSize.x : 16.0f,
+					infoWindow ? infoWindow->Pos.y : 76.0f);
+				ImGui::SetNextWindowPos(hubPos, ImGuiCond_Always);
 				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_Always);
 				const ImGuiWindowFlags hubFlags =
-					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground |
 					(SofiLauncherPropertiesOpen ? ImGuiWindowFlags_NoBringToFrontOnFocus : 0);
 				if (ImGui::Begin("##SofiLauncherHub", NULL, hubFlags))
