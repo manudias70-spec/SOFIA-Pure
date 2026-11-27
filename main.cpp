@@ -4176,7 +4176,7 @@ static struct sDOSBoxPure : public ZL_Application
 				// Fit the INFO panel to its content and anchor its bottom edge above the taskbar.
 				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 16.0f,
 					io.DisplaySize.y - 44.0f - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-				ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(306.6f, 0.0f), ImGuiCond_Always);
 				ImGui::SetNextWindowBgAlpha(0.94f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
@@ -4190,6 +4190,28 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_AlwaysAutoResize))
 				{
 					ImGui::SetWindowFontScale(1.15f);
+					auto drawInfoValue = [&](const std::string& value)
+					{
+						const ImVec2 textSize = ImGui::CalcTextSize(value.c_str());
+						const float availableWidth = ImGui::GetContentRegionAvail().x;
+						if (textSize.x <= availableWidth)
+						{
+							ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%s", value.c_str());
+							return;
+						}
+						const ImVec2 textPos = ImGui::GetCursorScreenPos();
+						const float lineHeight = ImGui::GetTextLineHeight();
+						const float gap = 28.0f;
+						const float offset = fmodf((float)ImGui::GetTime() * 32.0f, textSize.x + gap);
+						const ImVec2 clipMax(textPos.x + availableWidth, textPos.y + lineHeight);
+						ImDrawList* drawList = ImGui::GetWindowDrawList();
+						drawList->PushClipRect(textPos, clipMax, true);
+						const ImU32 valueColor = IM_COL32(224, 240, 255, 255);
+						drawList->AddText(ImVec2(textPos.x - offset, textPos.y), valueColor, value.c_str());
+						drawList->AddText(ImVec2(textPos.x - offset + textSize.x + gap, textPos.y), valueColor, value.c_str());
+						drawList->PopClipRect();
+						ImGui::Dummy(ImVec2(availableWidth, lineHeight));
+					};
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "INFORMACIÓN");
 					ImGui::Separator();
 					ImGui::TextDisabled("Tema:");
@@ -4204,7 +4226,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::TextDisabled("Resolución:");
 					ImGui::SameLine(142.0f);
 					if (screenWidth > 0 && screenHeight > 0)
-						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%d x %d", screenWidth, screenHeight);
+						drawInfoValue(std::to_string(screenWidth) + " x " + std::to_string(screenHeight));
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
 
@@ -4214,23 +4236,22 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::Separator();
 					ImGui::TextDisabled("CPU");
 					ImGui::SameLine(142.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.24s", cpuName);
+					drawInfoValue(cpuName);
 					ImGui::TextDisabled("NÚCLEOS / HILOS");
 					ImGui::SameLine(170.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%u / %u",
-						physicalCores, (unsigned int)systemInfo.dwNumberOfProcessors);
+					drawInfoValue(std::to_string(physicalCores) + " / " + std::to_string((unsigned int)systemInfo.dwNumberOfProcessors));
 					ImGui::TextDisabled("GPU");
 					ImGui::SameLine(142.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.22s", gpuName);
+					drawInfoValue(gpuName);
 					ImGui::TextDisabled("MEMORIA RAM");
 					ImGui::SameLine(142.0f);
 					if (memoryAvailable)
-						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%llu GB", memoryGB);
+						drawInfoValue(std::to_string((unsigned long long)memoryGB) + " GB");
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
 					ImGui::TextDisabled("SISTEMA");
 					ImGui::SameLine(142.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows %s", architecture);
+					drawInfoValue(std::string("Windows ") + architecture);
 					ImGui::TextDisabled("SOFIA SPACE");
 					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #" SOFI_STRINGIZE(SOFIA_SPACE_BUILD));
