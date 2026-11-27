@@ -5085,8 +5085,11 @@ else
 					const float hubBottom = hubWindow->Pos.y + hubWindow->Size.y;
 					if (taskbarTop - hubBottom >= quickButtonHeight)
 					{
-						const float hubCenterX = hubWindow->Pos.x + hubWindow->Size.x * 0.5f;
-						const float rowX = hubCenterX - quickRowWidth * 0.5f;
+						const ImGuiWindow* infoWindow = ImGui::FindWindowByName("SOFI INFO");
+						const float desktopLeft = 16.0f;
+						const float infoRight = infoWindow ? infoWindow->Pos.x + infoWindow->Size.x : io.DisplaySize.x - 16.0f;
+						const float availableCenterX = (desktopLeft + infoRight) * 0.5f;
+						const float rowX = availableCenterX - quickRowWidth * 0.5f;
 						const float rowY = hubBottom + (taskbarTop - hubBottom - quickButtonHeight) * 0.5f;
 						ImGui::SetNextWindowPos(ImVec2(rowX, rowY), ImGuiCond_Always);
 						ImGui::SetNextWindowSize(ImVec2(quickRowWidth, quickButtonHeight), ImGuiCond_Always);
