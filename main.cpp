@@ -26,6 +26,7 @@
 #include <ZL_Thread.h>
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
+#include "../ZillaLib/Source/sdl/include/SDL_video.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 #include <windows.h>
