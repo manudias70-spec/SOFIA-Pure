@@ -4270,13 +4270,14 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// SOFI Space navigation: keep Explorer as the only visible navigation button.
 			ImGui::SetNextWindowPos(ImVec2(8.0f, 104.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(96.0f, 390.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(148.0f, 520.0f), ImGuiCond_Always);
 			ImGui::Begin("SOFI Navigation", NULL,
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 13.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 16.0f));
+			ImGui::SetWindowFontScale(1.2f);
 			const bool selected = SofiCommanderOpen;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
@@ -4284,7 +4285,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button(SofiText("EXPLORADOR", "EXPLORER"), ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button(SofiText("EXPLORADOR", "EXPLORER"), ImVec2(132.0f, 66.0f)))
 			{
 				if (!SofiCommanderOpen)
 				{
@@ -4314,7 +4315,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				launcherSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("GAME LAUNCHER", ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button("GAME LAUNCHER", ImVec2(132.0f, 66.0f)))
 				SofiToggleMainPanel(SofiLauncherOpen);
 			ImGui::PopStyleColor(4);
 			const bool coreSelected = SofiCorePanelOpen;
@@ -4324,7 +4325,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				coreSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("CORE", ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button("CORE", ImVec2(132.0f, 66.0f)))
 				SofiToggleMainPanel(SofiCorePanelOpen);
 			ImGui::PopStyleColor(4);
 			const bool videoSelected = SofiVideoPanelOpen;
@@ -4334,7 +4335,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				videoSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button("VIDEO", ImVec2(132.0f, 66.0f)))
 				SofiToggleMainPanel(SofiVideoPanelOpen);
 			ImGui::PopStyleColor(4);
 			const bool audioSelected = SofiAudioPanelOpen;
@@ -4344,7 +4345,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				audioSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button("AUDIO", ImVec2(132.0f, 66.0f)))
 				SofiToggleMainPanel(SofiAudioPanelOpen);
 			ImGui::PopStyleColor(4);
 			const bool osdSelected = SofiOSDPanelOpen;
@@ -4354,7 +4355,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				osdSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button("SOFI OSD", ImVec2(132.0f, 66.0f)))
 				SofiToggleMainPanel(SofiOSDPanelOpen);
 			ImGui::PopStyleColor(4);
 
@@ -4365,7 +4366,7 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("INPUT", ImVec2(88.0f, 44.0f)))
+			if (ImGui::Button("INPUT", ImVec2(132.0f, 66.0f)))
 				SofiToggleMainPanel(SofiInputPanelOpen);
 			ImGui::PopStyleColor(4);
 
