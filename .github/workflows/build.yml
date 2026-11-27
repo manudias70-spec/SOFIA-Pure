@@ -47,6 +47,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
+        python main/tools/patch_imgui_opengl3_scaling.py
         Add-Type -AssemblyName System.Drawing
         $skinPng = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.png"
         $skinJpg = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.jpg"
@@ -121,6 +122,7 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
+        python main/tools/patch_imgui_opengl3_scaling.py
         Add-Type -AssemblyName System.Drawing
         $skinPng = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.png"
         $skinJpg = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.jpg"

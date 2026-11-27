@@ -40,6 +40,10 @@ El proyecto combina programación e integración con asistencia de inteligencia 
 
 SOFIA-Pure no es un producto oficial ni está afiliado, respaldado o mantenido por los autores de DOSBox Pure, DOSBox Pure Unleashed, DOSBox-X o 86Box.
 
+### Escalado global de SOFI Space
+
+La interfaz adopta una superficie lógica común de **1920 × 1080**, independiente de la resolución de salida. El renderizador OpenGL de ImGui aplica una escala uniforme y centra el área de interfaz cuando la relación de aspecto disponible es diferente. La transformación se comparte entre Neon Blue, None y las skins futuras; las coordenadas del mouse se convierten al mismo espacio lógico. El renderizado del juego permanece fuera de esta transformación.
+
 ## Qué es SOFIA-Pure
 
 El objetivo es ampliar la experiencia de escritorio sin perder de vista la compatibilidad y la sencillez que hacen útil a DOSBox Pure.

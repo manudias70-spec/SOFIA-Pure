@@ -99,6 +99,40 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
+static const float SOFI_UI_REFERENCE_WIDTH = 1920.0f;
+static const float SOFI_UI_REFERENCE_HEIGHT = 1080.0f;
+static float SofiUIScale = 1.0f;
+static int SofiUIOffsetX = 0;
+static int SofiUIOffsetY = 0;
+
+// Keep every ImGui skin in one 1920x1080 logical space. Only the OpenGL
+// renderer is scaled; the game frame and DOSBox rendering remain untouched.
+static void SofiUpdateUIScaling(ImGuiIO& io)
+{
+	const int displayWidth = (int)ZLWIDTH;
+	const int displayHeight = (int)ZLHEIGHT;
+	if (displayWidth <= 0 || displayHeight <= 0) return;
+
+	SofiUIScale = std::min((float)displayWidth / SOFI_UI_REFERENCE_WIDTH,
+		(float)displayHeight / SOFI_UI_REFERENCE_HEIGHT);
+	if (SofiUIScale <= 0.0f) SofiUIScale = 1.0f;
+
+	const int scaledWidth = (int)(SOFI_UI_REFERENCE_WIDTH * SofiUIScale);
+	const int scaledHeight = (int)(SOFI_UI_REFERENCE_HEIGHT * SofiUIScale);
+	SofiUIOffsetX = (displayWidth - scaledWidth) / 2;
+	SofiUIOffsetY = (displayHeight - scaledHeight) / 2;
+
+	io.DisplaySize = ImVec2(SOFI_UI_REFERENCE_WIDTH, SOFI_UI_REFERENCE_HEIGHT);
+	io.DisplayFramebufferScale = ImVec2(SofiUIScale, SofiUIScale);
+	ImGui_ImplOpenGL3_SetViewportOffset(SofiUIOffsetX, SofiUIOffsetY);
+}
+
+static ImVec2 SofiMapPointerToLogical(float x, float y)
+{
+	if (SofiUIScale <= 0.0f) return ImVec2(x, y);
+	return ImVec2((x - (float)SofiUIOffsetX) / SofiUIScale,
+		(y - (float)SofiUIOffsetY) / SofiUIScale);
+}
 static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherCardSelected = false;
@@ -3233,7 +3267,8 @@ static void OnJoyDeviceChange(bool added, int which)
 static void OnImGuiPointerMove(ZL_PointerMoveEvent& e)
 {
 	if (e.which != 0 || !ImGuiReady || !SofiUIVisible || SofiCommanderCaptured) return;
-	ImGui::GetIO().AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	const ImVec2 logicalPos = SofiMapPointerToLogical((float)e.x, (float)(ZLHEIGHT - e.y));
+	ImGui::GetIO().AddMousePosEvent(logicalPos.x, logicalPos.y);
 }
 
 static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
@@ -3270,7 +3305,8 @@ static void OnImGuiPointerDown(ZL_PointerPressEvent& e)
 		return;
 	}
 
-	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	const ImVec2 logicalPos = SofiMapPointerToLogical((float)e.x, (float)(ZLHEIGHT - e.y));
+	io.AddMousePosEvent(logicalPos.x, logicalPos.y);
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
 	io.AddMouseButtonEvent(button, true);
 }
@@ -3286,7 +3322,8 @@ static void OnImGuiPointerUp(ZL_PointerPressEvent& e)
 	if (SofiCommanderCaptured) return;
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.AddMousePosEvent((float)e.x, (float)(ZLHEIGHT - e.y));
+	const ImVec2 logicalPos = SofiMapPointerToLogical((float)e.x, (float)(ZLHEIGHT - e.y));
+	io.AddMousePosEvent(logicalPos.x, logicalPos.y);
 	const int button = (e.button == ZL_BUTTON_LEFT ? 0 : e.button == ZL_BUTTON_RIGHT ? 1 : 2);
 	io.AddMouseButtonEvent(button, false);
 }
@@ -4060,13 +4097,15 @@ static struct sDOSBoxPure : public ZL_Application
 		if (ImGuiReady && srfOSD.GetGLTexture() && DBPS_IsShowingOSD())
 		{
 			ImGuiIO& io = ImGui::GetIO();
-			io.DisplaySize = ImVec2((float)ZLWIDTH, (float)ZLHEIGHT);
-			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+			SofiUpdateUIScaling(io);
 			io.DeltaTime = (float)ZL_Application::Elapsed;
 			if (io.DeltaTime <= 0.0f) io.DeltaTime = 1.0f / 60.0f;
 			ImGui_ImplOpenGL3_NewFrame();
 			if (SofiCommanderCaptured)
-				io.AddMousePosEvent((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
+			{
+				const ImVec2 logicalPos = SofiMapPointerToLogical((float)PointerLockPos.x, (float)(ZLHEIGHT - PointerLockPos.y));
+				io.AddMousePosEvent(logicalPos.x, logicalPos.y);
+			}
 			ImGui::NewFrame();
 			// Exactly one software cursor owner: SOFI outside Commander, Pure inside it.
 			io.MouseDrawCursor = SofiUIVisible && !SofiCommanderCaptured;
