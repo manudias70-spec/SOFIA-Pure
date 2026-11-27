@@ -4379,64 +4379,68 @@ static struct sDOSBoxPure : public ZL_Application
 			// game cards remain children of this stable, transparent area.
 			if (SofiUIVisible)
 			{
+				const float hubCardWidth = 153.0f;
+				const float hubCardHeight = 240.0f;
+				const float hubCardSpacing = 8.0f;
+				const float hubPadding = 8.0f;
+				const float hubArrowWidth = 18.0f;
+				const float hubArrowGap = 6.0f;
+				const float hubAddGap = 8.0f;
+				const float hubAddWidth = 40.0f;
+				const float hubFiveCardsWidth = hubCardWidth * 5.0f + hubCardSpacing * 4.0f;
+				const float hubFrameWidth = hubPadding * 2.0f + hubArrowWidth * 2.0f + hubArrowGap * 2.0f + hubFiveCardsWidth;
+				const float hubWindowWidth = hubFrameWidth + hubAddGap + hubAddWidth + hubPadding;
 				const ImVec2 hubDisplaySize = ImGui::GetIO().DisplaySize;
 				const ImVec2 hubPos(112.0f, 76.0f);
 				const ImVec2 hubDefaultSize(
-					(hubDisplaySize.x > hubPos.x + 16.0f) ? hubDisplaySize.x - hubPos.x : 16.0f,
-					(hubDisplaySize.y > 120.0f) ? hubDisplaySize.y - 120.0f : 16.0f);
+					(hubDisplaySize.x > hubPos.x + 16.0f) ? ImMin(hubWindowWidth, hubDisplaySize.x - hubPos.x - 16.0f) : 16.0f,
+					(hubDisplaySize.y > hubCardHeight + 32.0f) ? hubCardHeight + hubPadding * 2.0f : hubDisplaySize.y - hubPos.y - 16.0f);
 				ImGui::SetNextWindowPos(hubPos, ImGuiCond_FirstUseEver);
-				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_FirstUseEver);
+				ImGui::SetNextWindowSize(hubDefaultSize, ImGuiCond_Always);
 				const ImGuiWindowFlags hubFlags =
-					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground |
 					(SofiLauncherPropertiesOpen ? ImGuiWindowFlags_NoBringToFrontOnFocus : 0);
 				if (ImGui::Begin("##SofiLauncherHub", NULL, hubFlags))
 				{
-					// Temporary visible hub frame; the active skin will replace this treatment later.
+					// Transparent HUB: one compact frame around a single horizontal row.
 					const ImVec2 hubMin = ImGui::GetWindowPos();
 					const ImVec2 hubSize = ImGui::GetWindowSize();
-					const ImVec2 hubMax(hubMin.x + hubSize.x, hubMin.y + hubSize.y);
 					ImDrawList* hubDraw = ImGui::GetWindowDrawList();
-					hubDraw->AddRectFilled(hubMin, hubMax, IM_COL32(7, 17, 31, 220), 12.0f);
-					hubDraw->AddRect(hubMin, hubMax, IM_COL32(65, 145, 205, 230), 12.0f, 0, 2.0f);
-					hubDraw->AddText(ImVec2(hubMin.x + 22.0f, hubMin.y + 16.0f), IM_COL32(205, 230, 250, 255), "GAME LIBRARY");
-					hubDraw->AddLine(ImVec2(hubMin.x + 18.0f, hubMin.y + 42.0f), ImVec2(hubMax.x - 18.0f, hubMin.y + 42.0f), IM_COL32(65, 145, 205, 150), 1.0f);
-					ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMin.y + 58.0f));
+					const float cardsViewportWidth = ImMax(1.0f, hubSize.x - hubPadding * 3.0f - hubArrowWidth * 2.0f - hubArrowGap * 2.0f - hubAddGap - hubAddWidth);
+					const float hubFrameRight = hubMin.x + hubPadding * 2.0f + hubArrowWidth * 2.0f + hubArrowGap * 2.0f + cardsViewportWidth;
+					const ImVec2 hubFrameMax(hubFrameRight, hubMin.y + hubSize.y);
+					hubDraw->AddRect(hubMin, hubFrameMax, IM_COL32(65, 145, 205, 230), 3.0f, 0, 1.5f);
 
-					// Each card owns its executable, setup path and stable profile identity.
-					ImGui::BeginChild("##SofiLauncherCards", ImVec2(0.0f, -70.0f), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-					const float cardWidth = 153.0f;
+					const float cardWidth = hubCardWidth;
 					const float cardNameAreaHeight = 31.5f; // 75% of the original 42 px name area.
-					const float cardHeight = 240.0f;
-					const ImVec2 cardsViewportPos = ImGui::GetWindowPos();
-					const ImVec2 cardsViewportSize = ImGui::GetWindowSize();
-					const ImVec2 cardsMousePos = ImGui::GetIO().MousePos;
-					const bool mouseInsideCardsViewport =
-						cardsMousePos.x >= cardsViewportPos.x && cardsMousePos.x <= cardsViewportPos.x + cardsViewportSize.x &&
-						cardsMousePos.y >= cardsViewportPos.y && cardsMousePos.y <= cardsViewportPos.y + cardsViewportSize.y;
-					if (mouseInsideCardsViewport)
-					{
-						const float edgeZone = 42.0f;
-						const float scrollSpeed = 520.0f * ImGui::GetIO().DeltaTime;
-						const float scrollMaxX = ImGui::GetScrollMaxX();
-						const float scrollMaxY = ImGui::GetScrollMaxY();
-						float nextScrollX = ImGui::GetScrollX();
-						float nextScrollY = ImGui::GetScrollY();
-						if (cardsMousePos.x <= cardsViewportPos.x + edgeZone && nextScrollX > 0.0f)
-							nextScrollX -= scrollSpeed;
-						else if (cardsMousePos.x >= cardsViewportPos.x + cardsViewportSize.x - edgeZone && nextScrollX < scrollMaxX)
-							nextScrollX += scrollSpeed;
-						if (cardsMousePos.y <= cardsViewportPos.y + edgeZone && nextScrollY > 0.0f)
-							nextScrollY -= scrollSpeed;
-						else if (cardsMousePos.y >= cardsViewportPos.y + cardsViewportSize.y - edgeZone && nextScrollY < scrollMaxY)
-							nextScrollY += scrollSpeed;
-						ImGui::SetScrollX(nextScrollX);
-						ImGui::SetScrollY(nextScrollY);
-					}
-					const float availableWidth = ImGui::GetContentRegionAvail().x;
-					const float cardSpacingX = ImGui::GetStyle().ItemSpacing.x;
-					int columns = (int)((availableWidth + cardSpacingX) / (cardWidth + cardSpacingX));
-					if (columns < 1) columns = 1;
+					const float cardHeight = hubCardHeight;
+					const float cardSpacingX = hubCardSpacing;
+					const float cardsContentWidth = SofiLauncherProfiles.empty() ? 0.0f :
+						(float)SofiLauncherProfiles.size() * (cardWidth + cardSpacingX) - cardSpacingX;
+					const float cardsScrollMaxX = ImMax(0.0f, cardsContentWidth - cardsViewportWidth);
+					static float SofiLauncherHubScrollX = 0.0f;
+					SofiLauncherHubScrollX = ImClamp(SofiLauncherHubScrollX, 0.0f, cardsScrollMaxX);
+
+					ImGui::SetCursorScreenPos(ImVec2(hubMin.x + hubPadding, hubMin.y + (hubSize.y - 24.0f) * 0.5f));
+					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 3.0f));
+					const bool hubCanScrollLeft = SofiLauncherHubScrollX > 0.0f;
+					if (!hubCanScrollLeft) ImGui::BeginDisabled();
+					if (ImGui::ArrowButton("##SofiHubLeft", ImGuiDir_Left))
+						SofiLauncherHubScrollX = ImMax(0.0f, SofiLauncherHubScrollX - (cardWidth + cardSpacingX));
+					if (!hubCanScrollLeft) ImGui::EndDisabled();
+					ImGui::PopStyleVar();
+
+					const ImVec2 cardsViewportPos(hubMin.x + hubPadding + hubArrowWidth + hubArrowGap, hubMin.y + hubPadding);
+					ImGui::SetCursorScreenPos(cardsViewportPos);
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(cardSpacingX, ImGui::GetStyle().ItemSpacing.y));
+					ImGui::BeginChild("##SofiLauncherCards", ImVec2(cardsViewportWidth, cardHeight), false,
+						ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+					ImGui::PopStyleVar(2);
+					ImGui::SetScrollX(SofiLauncherHubScrollX);
+
+					// Each card keeps its executable, setup path and stable profile identity.
 					bool deletePopupRequested = false;
 					int pendingCardDragSource = -1;
 					int pendingCardDropTarget = -1;
@@ -4587,10 +4591,21 @@ static struct sDOSBoxPure : public ZL_Application
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 198.0f));
 						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 198.0f));
 						ImGui::EndGroup();
-						if (((profileIndex + 1) % (size_t)columns) != 0 && profileIndex + 1 < SofiLauncherProfiles.size())
+						if (profileIndex + 1 < SofiLauncherProfiles.size())
 							ImGui::SameLine();
 					}
+					SofiLauncherHubScrollX = ImGui::GetScrollX();
 					ImGui::EndChild();
+
+					ImGui::SetCursorScreenPos(ImVec2(hubFrameRight - hubArrowWidth - hubArrowGap, hubMin.y + (hubSize.y - 24.0f) * 0.5f));
+					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 3.0f));
+					const bool hubCanScrollRight = SofiLauncherHubScrollX < cardsScrollMaxX;
+					if (!hubCanScrollRight) ImGui::BeginDisabled();
+					if (ImGui::ArrowButton("##SofiHubRight", ImGuiDir_Right))
+						SofiLauncherHubScrollX = ImMin(cardsScrollMaxX, SofiLauncherHubScrollX + (cardWidth + cardSpacingX));
+					if (!hubCanScrollRight) ImGui::EndDisabled();
+					ImGui::PopStyleVar();
+
 					if (pendingCardDragSource >= 0 && pendingCardDropTarget >= 0 &&
 						pendingCardDragSource != pendingCardDropTarget &&
 						pendingCardDragSource < (int)SofiLauncherProfiles.size() &&
@@ -4640,13 +4655,15 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::EndPopup();
 						}
 					}
-					ImGui::SetCursorScreenPos(ImVec2(hubMax.x - 58.0f, hubMax.y - 58.0f));
+					ImGui::SetCursorScreenPos(ImVec2(hubFrameRight + hubAddGap, hubMin.y + (hubSize.y - 40.0f) * 0.5f));
 					if (ImGui::Button("+", ImVec2(40.0f, 40.0f)))
 					{
 						SofiLauncherNewProfileName[0] = 0;
 						SofiLauncherCreateProfileOpen = true;
 						ImGui::OpenPopup("##SofiCreateGameProfile");
 					}
+					if (!SofiLauncherProfileStatus.empty() && ImGui::IsItemHovered())
+						ImGui::SetTooltip("%s", SofiLauncherProfileStatus.c_str());
 					if (SofiLauncherCreateProfileOpen)
 					{
 						ImGui::SetNextWindowSize(ImVec2(430.0f, 0.0f), ImGuiCond_Appearing);
@@ -4684,11 +4701,7 @@ static struct sDOSBoxPure : public ZL_Application
 							ImGui::EndPopup();
 						}
 					}
-					if (!SofiLauncherProfileStatus.empty())
-					{
-						ImGui::SetCursorScreenPos(ImVec2(hubMin.x + 22.0f, hubMax.y - 42.0f));
-						ImGui::TextDisabled("%s", SofiLauncherProfileStatus.c_str());
-					}
+
 				}
 				ImGui::End();
 			}
