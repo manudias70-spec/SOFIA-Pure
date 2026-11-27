@@ -4385,16 +4385,46 @@ static struct sDOSBoxPure : public ZL_Application
 				SofiToggleMainPanel(SofiOSDPanelOpen);
 			ImGui::PopStyleColor(4);
 
-			const bool inputSelected = SofiInputPanelOpen;
-			ImGui::PushStyleColor(ImGuiCol_Button,
-				inputSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-			ImGui::PushStyleColor(ImGuiCol_Border,
-				inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("INPUT", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
-				SofiToggleMainPanel(SofiInputPanelOpen);
-			ImGui::PopStyleColor(4);
+			if (SofiSkinSelection == 0)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+				if (ImGui::Button("INICIO", ImVec2(198.0f, 69.3f)))
+				{
+					SofiCommanderOpen = false;
+					SofiCommanderFocused = false;
+					SofiCommanderFocusRequested = false;
+					SofiCommanderMinimized = false;
+					SofiCommanderApplyMinimized = false;
+					SofiLauncherOpen = false;
+					SofiLauncherPropertiesOpen = false;
+					SofiLauncherCreateProfileOpen = false;
+					SofiLauncherCreateProfileRequested = false;
+					SofiLauncherDeleteProfileOpen = false;
+					SofiVideoPanelOpen = false;
+					SofiAudioPanelOpen = false;
+					SofiOSDPanelOpen = false;
+					SofiInputPanelOpen = false;
+					SofiCorePanelOpen = false;
+					SofiAboutOpen = false;
+				}
+				ImGui::PopStyleColor(4);
+			}
+			else
+			{
+				const bool inputSelected = SofiInputPanelOpen;
+				ImGui::PushStyleColor(ImGuiCol_Button,
+					inputSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+				ImGui::PushStyleColor(ImGuiCol_Border,
+					inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+				if (ImGui::Button("INPUT", ImVec2(88.0f, 44.0f)))
+					SofiToggleMainPanel(SofiInputPanelOpen);
+				ImGui::PopStyleColor(4);
+			}
 
 			ImGui::PopStyleVar(2);
 			ImGui::End();
@@ -5106,25 +5136,16 @@ else
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-						if (ImGui::Button("INICIO", ImVec2(quickButtonWidth, quickButtonHeight)))
-						{
-							SofiCommanderOpen = false;
-							SofiCommanderFocused = false;
-							SofiCommanderFocusRequested = false;
-							SofiCommanderMinimized = false;
-							SofiCommanderApplyMinimized = false;
-							SofiLauncherOpen = false;
-							SofiLauncherPropertiesOpen = false;
-							SofiLauncherCreateProfileOpen = false;
-							SofiLauncherCreateProfileRequested = false;
-							SofiLauncherDeleteProfileOpen = false;
-							SofiVideoPanelOpen = false;
-							SofiAudioPanelOpen = false;
-							SofiOSDPanelOpen = false;
-							SofiInputPanelOpen = false;
-							SofiCorePanelOpen = false;
-							SofiAboutOpen = false;
-						}
+						const bool inputSelected = SofiInputPanelOpen;
+						ImGui::PushStyleColor(ImGuiCol_Button,
+							inputSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
+						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+						ImGui::PushStyleColor(ImGuiCol_Border,
+							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+						if (ImGui::Button("INPUT", ImVec2(quickButtonWidth, quickButtonHeight)))
+							SofiToggleMainPanel(SofiInputPanelOpen);
+						ImGui::PopStyleColor(4);
 					ImGui::SameLine(0.0f, quickButtonGap);
 					if (ImGui::Button("ACERCA DE", ImVec2(quickButtonWidth, quickButtonHeight)))
 					{
