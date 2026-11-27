@@ -37,6 +37,7 @@
 
 #include <cfloat>
 #include <ctime>
+#include <cstring>
 #include <vector>
 
 #include <libretro-common/include/libretro.h>
