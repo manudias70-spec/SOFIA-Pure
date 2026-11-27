@@ -4079,6 +4079,66 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 
+			// Neon Blue INFO panel: fixed to the lower-right, safely above the taskbar.
+			if (SofiSkinSelection == 0)
+			{
+				SYSTEM_INFO systemInfo = {};
+				GetSystemInfo(&systemInfo);
+				MEMORYSTATUSEX memoryStatus = {};
+				memoryStatus.dwLength = sizeof(memoryStatus);
+				const bool memoryAvailable = (GlobalMemoryStatusEx(&memoryStatus) != 0);
+				const unsigned long long memoryGB = memoryAvailable
+					? (unsigned long long)((memoryStatus.ullTotalPhys + (1024ULL * 1024ULL * 512ULL)) / (1024ULL * 1024ULL * 1024ULL))
+					: 0ULL;
+				const char* architecture = "Unknown";
+				switch (systemInfo.wProcessorArchitecture)
+				{
+					case PROCESSOR_ARCHITECTURE_AMD64: architecture = "x64"; break;
+					case PROCESSOR_ARCHITECTURE_INTEL: architecture = "x86"; break;
+#ifdef PROCESSOR_ARCHITECTURE_ARM64
+					case PROCESSOR_ARCHITECTURE_ARM64: architecture = "ARM64"; break;
+#endif
+				}
+				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 316.0f, io.DisplaySize.y - 224.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(300.0f, 168.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowBgAlpha(0.94f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 9.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(40, 190, 255, 190));
+				if (ImGui::Begin("SOFI INFO", NULL,
+					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
+					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
+				{
+					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SOFIA SPACE");
+					ImGui::SameLine(118.0f);
+					ImGui::TextDisabled("SYSTEM INFO");
+					ImGui::Separator();
+					ImGui::TextDisabled("EMULADOR");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "DOSBox Pure");
+					ImGui::TextDisabled("SISTEMA");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows");
+					ImGui::TextDisabled("ARQUITECTURA");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%s", architecture);
+					ImGui::TextDisabled("CPU LÓGICOS");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%u", (unsigned int)systemInfo.dwNumberOfProcessors);
+					ImGui::TextDisabled("MEMORIA RAM");
+					ImGui::SameLine(112.0f);
+					if (memoryAvailable)
+						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%llu GB", memoryGB);
+					else
+						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
+				}
+				ImGui::End();
+				ImGui::PopStyleColor();
+				ImGui::PopStyleVar(2);
+			}
+
 			// Skin selector: anchored at the upper-right, below the application title bar.
 			ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 190.0f, 114.0f), ImGuiCond_Always);
 			ImGui::SetNextWindowSize(ImVec2(180.0f, 42.0f), ImGuiCond_Always);
