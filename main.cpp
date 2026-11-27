@@ -26,7 +26,8 @@
 #include <ZL_Thread.h>
 #include <ZL_Math3D.h>
 #include <ZL_Network.h>
-#include "../ZillaLib/Source/sdl/include/SDL_video.h"
+
+extern "C" { void* SDL_GL_GetProcAddress(const char *proc); }
 
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WIN32__) || defined(WIN32) || defined(_WIN32)
 #include <windows.h>
@@ -561,7 +562,7 @@ extern "C" { void SDL_RestoreWindow(struct SDL_Window* window); }
 extern "C" { unsigned int SDL_GetWindowFlags(struct SDL_Window* window); }
 static const unsigned int SOFI_SDL_WINDOW_MAXIMIZED = 0x00000080u;
 extern "C" { void SDL_WarpMouseInWindow(struct SDL_Window* window, int x, int y); }
-extern "C" { void* SDL_GL_GetProcAddress(const char *proc); } 
+
 extern "C" { unsigned long SDL_GetThreadID(struct SDL_Thread* = NULL); }
 extern "C" { extern int SDL_GetLockModStates(void); }
 #if defined(ZILLALOG)
