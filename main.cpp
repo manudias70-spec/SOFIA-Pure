@@ -37,6 +37,7 @@
 
 #include <cfloat>
 #include <ctime>
+#include <cstdlib>
 #include <cstring>
 #include <vector>
 
@@ -5079,7 +5080,7 @@ else
 					const float quickButtonWidth = 198.0f;
 					const float quickButtonHeight = 69.3f;
 					const float quickButtonGap = 75.6f; // 2 cm at 96 DPI.
-					const float quickRowWidth = quickButtonWidth * 3.0f + quickButtonGap * 2.0f;
+					const float quickRowWidth = quickButtonWidth * 4.0f + quickButtonGap * 3.0f;
 					const float taskbarTop = io.DisplaySize.y - 44.0f;
 					const float hubBottom = hubWindow->Pos.y + hubWindow->Size.y;
 					if (taskbarTop - hubBottom >= quickButtonHeight)
@@ -5147,6 +5148,27 @@ else
 				ImGui::SameLine(0.0f, quickButtonGap);
 				if (ImGui::Button("AGREGAR JUEGO", ImVec2(quickButtonWidth, quickButtonHeight)))
 					SofiLauncherCreateProfileRequested = true;
+				ImGui::SameLine(0.0f, quickButtonGap);
+				if (ImGui::Button("JUGAR YA", ImVec2(quickButtonWidth, quickButtonHeight)))
+				{
+					std::vector<SofiGameProfileTemplate*> launchableProfiles;
+					for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
+						if (!SofiLauncherProfiles[i].exePath.empty())
+							launchableProfiles.push_back(&SofiLauncherProfiles[i]);
+					if (!launchableProfiles.empty())
+					{
+						static bool randomSeeded = false;
+						if (!randomSeeded)
+						{
+							std::srand((unsigned int)std::time(NULL));
+							randomSeeded = true;
+						}
+						const size_t randomIndex = (size_t)std::rand() % launchableProfiles.size();
+						SofiLauncherActivateProfile(*launchableProfiles[randomIndex], false);
+					}
+					else
+						SofiLauncherProfileStatus = "No hay juegos con ejecutable disponibles para JUGAR YA.";
+				}
 				ImGui::PopStyleColor(4);
 				ImGui::PopStyleVar(2);
 				ImGui::End();
