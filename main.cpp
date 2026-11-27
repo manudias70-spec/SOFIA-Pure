@@ -87,6 +87,8 @@ static float FastRate = 5.0f, SlowRate = 0.3f;
 static std::string PathSaves, PathSystem;
 static ZL_Vector PointerLockPos;
 static ZL_Json ConfigCache, ConfigOverrides;
+static ZL_String SofiConfigFilePath;
+static int SofiConfigResetDialog = 0; // 0=closed, 1=first confirmation, 2=final confirmation, 3=success, 4=cancelled, 5=error
 static const retro_core_option_v2_definition* SofiCoreOptionDefinitions = NULL;
 
 enum { FAST_FPS_LIMIT = 200 };
@@ -3967,6 +3969,7 @@ static struct sDOSBoxPure : public ZL_Application
 		}
 		#endif
 		ZL_Application::SettingsInit(basePath.c_str());
+		SofiConfigFilePath.assign(basePath.c_str()).append(".cfg");
 		ZL_String savedSofiSkin = ZL_Application::SettingsGet("interface_skin");
 		SofiSkinSelection = (!strcmp(savedSofiSkin.c_str(), "none")) ? 1 : 0;
 		SofiLauncherExePath.assign(ZL_Application::SettingsGet("interface_launcher_exe"));
@@ -4417,16 +4420,58 @@ const bool osdSelected = SofiOSDPanelOpen;
 			ImGui::PopStyleColor(4);
 			if (SofiSkinSelection == 0)
 			{
-const bool launcherSelected = SofiLauncherOpen;
-			ImGui::PushStyleColor(ImGuiCol_Button,
-				launcherSelected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-			ImGui::PushStyleColor(ImGuiCol_Border,
-				launcherSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("GAME LAUNCHER", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
-				SofiToggleMainPanel(SofiLauncherOpen);
-			ImGui::PopStyleColor(4);
+				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+				if (ImGui::Button("RESTAURAR", ImVec2(198.0f, 69.3f)))
+				{
+					SofiConfigResetDialog = 1;
+					ImGui::OpenPopup("RESTAURAR CONFIGURACIÓN");
+				}
+				ImGui::PopStyleColor(4);
+
+				if (ImGui::BeginPopupModal("RESTAURAR CONFIGURACIÓN", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					if (SofiConfigResetDialog == 1)
+					{
+						ImGui::TextWrapped("¿Desea restablecer todas las configuraciones globales a sus valores de fábrica?");
+						if (ImGui::Button("ACEPTAR", ImVec2(120.0f, 0.0f))) SofiConfigResetDialog = 2;
+						ImGui::SameLine();
+						if (ImGui::Button("CANCELAR", ImVec2(120.0f, 0.0f))) { SofiConfigResetDialog = 0; ImGui::CloseCurrentPopup(); }
+					}
+					else if (SofiConfigResetDialog == 2)
+					{
+						ImGui::TextUnformatted("¿Está seguro?");
+						if (ImGui::Button("SÍ", ImVec2(120.0f, 0.0f)))
+						{
+						// The settings backend writes <prefix>.cfg. Clear the pending save timer before deleting it.
+						dirtySettingsTick = 0;
+						if (!SofiConfigFilePath.empty() && remove(SofiConfigFilePath.c_str()) == 0)
+							SofiConfigResetDialog = 3;
+						else
+							SofiConfigResetDialog = 5;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("NO", ImVec2(120.0f, 0.0f))) SofiConfigResetDialog = 4;
+				}
+				else if (SofiConfigResetDialog == 3)
+				{
+					ImGui::TextWrapped("La configuración de SOFIA Space se ha restablecido a sus valores predeterminados de fábrica. La aplicación se cerrará para aplicar los cambios. Vuelva a abrirla.");
+					if (ImGui::Button("ACEPTAR", ImVec2(120.0f, 0.0f))) exit(0);
+				}
+				else if (SofiConfigResetDialog == 4)
+				{
+					ImGui::TextUnformatted("Las configuraciones no se han modificado.");
+					if (ImGui::Button("ACEPTAR", ImVec2(120.0f, 0.0f))) { SofiConfigResetDialog = 0; ImGui::CloseCurrentPopup(); }
+				}
+				else if (SofiConfigResetDialog == 5)
+				{
+					ImGui::TextWrapped("No se pudo eliminar DOSBoxPure.cfg. No se modificó la configuración.");
+					if (ImGui::Button("ACEPTAR", ImVec2(120.0f, 0.0f))) { SofiConfigResetDialog = 0; ImGui::CloseCurrentPopup(); }
+				}
+				ImGui::EndPopup();
+			}
 			}
 
 			if (SofiSkinSelection != 0)
