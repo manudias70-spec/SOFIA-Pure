@@ -4193,13 +4193,13 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Neon-Blue");
 					ImGui::TextDisabled("Plataforma:");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows 11 Style");
 					ImGui::TextDisabled("Motor:");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "MS-DOS Pure");
 					ImGui::TextDisabled("Resolución:");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					if (screenWidth > 0 && screenHeight > 0)
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%d x %d", screenWidth, screenHeight);
 					else
@@ -4210,26 +4210,26 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SISTEMA");
 					ImGui::Separator();
 					ImGui::TextDisabled("CPU");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.32s", cpuName);
 					ImGui::TextDisabled("NÚCLEOS / HILOS");
 					ImGui::SameLine(170.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%u / %u",
 						physicalCores, (unsigned int)systemInfo.dwNumberOfProcessors);
 					ImGui::TextDisabled("GPU");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.30s", gpuName);
 					ImGui::TextDisabled("MEMORIA RAM");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					if (memoryAvailable)
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%llu GB", memoryGB);
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
 					ImGui::TextDisabled("SISTEMA");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows %s", architecture);
 					ImGui::TextDisabled("SOFIA SPACE");
-					ImGui::SameLine(112.0f);
+					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #" SOFI_STRINGIZE(SOFIA_SPACE_BUILD));
 				}
 				ImGui::End();
