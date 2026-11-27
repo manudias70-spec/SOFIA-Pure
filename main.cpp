@@ -148,7 +148,7 @@ static unsigned int SofiLoadNeonBlueTexture()
 	if (SofiNeonBlueTextureAttempted) return 0;
 	SofiNeonBlueTextureAttempted = true;
 	int width = 0, height = 0, channels = 0;
-	unsigned char* pixels = stbi_load_from_memory(neon_blue_png, (int)sizeof(neon_blue_png), &width, &height, &channels, 4);
+	unsigned char* pixels = stbi_load_from_memory(neon_blue_jpg, (int)sizeof(neon_blue_jpg), &width, &height, &channels, 4);
 	if (!pixels || width <= 0 || height <= 0)
 	{
 		if (pixels) stbi_image_free(pixels);
