@@ -132,8 +132,10 @@ static void SofiToggleMainPanel(bool& panelOpen)
 static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
 
 #ifndef SOFIA_SPACE_BUILD
-#define SOFIA_SPACE_BUILD "DEV"
+#define SOFIA_SPACE_BUILD 0
 #endif
+#define SOFI_STRINGIZE_DETAIL(value) #value
+#define SOFI_STRINGIZE(value) SOFI_STRINGIZE_DETAIL(value)
 
 #if defined(_WIN32)
 static void SofiGetCpuBrand(char* output, size_t outputSize)
@@ -4216,7 +4218,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows %s", architecture);
 					ImGui::TextDisabled("SOFIA SPACE");
 					ImGui::SameLine(112.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #%s", SOFIA_SPACE_BUILD);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #" SOFI_STRINGIZE(SOFIA_SPACE_BUILD));
 				}
 				ImGui::End();
 				ImGui::PopStyleColor();
