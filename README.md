@@ -848,3 +848,8 @@ Sobre la build #641, se desplazó únicamente el área del hub otros 38 píxeles
 ## Build #643 — Ajuste de posición del selector de skin
 
 Se corrige el desvío introducido en el ajuste anterior: el hub vuelve a su posición original (`112, 114`) y recupera su cálculo de altura previo. El único elemento desplazado es el selector de skin, que baja 38 píxeles (aproximadamente 1 cm) dentro de la ventana de controles. Se amplía el alto de esa ventana para que el selector permanezca visible. No se modifican el funcionamiento de los controles, la lógica, el motor, Commander ni otras funciones.
+
+
+## Integración inicial de la skin Neon Blue
+
+Se incorpora el fondo gráfico `neon_blue.png` como recurso integrado en el ejecutable. Al seleccionar **Neon Blue**, la imagen se dibuja detrás de los controles reales de SOFIA Space; al seleccionar **None**, se conserva el fondo geométrico original. La selección continúa guardándose como antes. La textura se crea al necesitarse y se libera antes de cerrar el contexto gráfico. Este cambio es exclusivamente visual: no modifica el motor, la lógica de emulación, Commander, el Explorador ni el funcionamiento del hub.
