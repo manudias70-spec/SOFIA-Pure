@@ -4171,23 +4171,23 @@ static struct sDOSBoxPure : public ZL_Application
 				const unsigned int physicalCores = SofiGetPhysicalCoreCount();
 				const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
 				const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-				const float infoPanelHeight = io.DisplaySize.y * 0.62f;
-
-				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 436.0f,
-					io.DisplaySize.y - 44.0f - infoPanelHeight - 8.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(420.0f, infoPanelHeight), ImGuiCond_Always);
+				// Fit the INFO panel to its content and anchor its bottom edge above the taskbar.
+				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 16.0f,
+					io.DisplaySize.y - 44.0f - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+				ImGui::SetNextWindowSize(ImVec2(420.0f, 0.0f), ImGuiCond_Always);
 				ImGui::SetNextWindowBgAlpha(0.94f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
-				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, infoPanelHeight < 560.0f ? 14.0f : 22.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 18.0f));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(40, 190, 255, 190));
 				if (ImGui::Begin("SOFI INFO", NULL,
 					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
-					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
+					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav |
+					ImGuiWindowFlags_AlwaysAutoResize))
 				{
-					ImGui::SetWindowFontScale(infoPanelHeight < 560.0f ? 1.08f : 1.15f);
+					ImGui::SetWindowFontScale(1.15f);
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "INFORMACIÓN");
 					ImGui::Separator();
 					ImGui::TextDisabled("Tema:");
@@ -4206,7 +4206,7 @@ static struct sDOSBoxPure : public ZL_Application
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
 
-					ImGui::Dummy(ImVec2(0.0f, infoPanelHeight < 560.0f ? 10.0f : 20.0f));
+					ImGui::Dummy(ImVec2(0.0f, 16.0f));
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SISTEMA");
 					ImGui::Separator();
