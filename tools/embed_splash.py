@@ -21,16 +21,16 @@ with target.open("w", encoding="ascii", newline="\n") as out:
 
 print(f"Embedded {len(data)} bytes from {source.name} into {target.name}")
 
-skin_source = root / "neon_blue.png"
+skin_source = root / "neon_blue.jpg"
 skin_target = root / "neon_blue.h"
 skin_data = skin_source.read_bytes()
-if not skin_data.startswith(b"\x89PNG\r\n\x1a\n"):
-    raise SystemExit("neon_blue.png is not a valid PNG file")
+if not skin_data.startswith(b"\xFF\xD8\xFF"):
+    raise SystemExit("neon_blue.jpg is not a valid JPEG file")
 
 with skin_target.open("w", encoding="ascii", newline="\n") as out:
-    out.write("// Generated from neon_blue.png by tools/embed_splash.py. Do not edit.\n")
+    out.write("// Generated from neon_blue.jpg by tools/embed_splash.py. Do not edit.\n")
     out.write("#ifndef NEON_BLUE_H\n#define NEON_BLUE_H\n")
-    out.write("static const unsigned char neon_blue_png[] = {\n")
+    out.write("static const unsigned char neon_blue_jpg[] = {\n")
     for offset in range(0, len(skin_data), 16):
         chunk = skin_data[offset:offset + 16]
         out.write("    " + ", ".join("0x%02X" % byte for byte in chunk) + ",\n")
