@@ -4426,7 +4426,8 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 3.0f));
 					const bool hubCanScrollLeft = SofiLauncherHubScrollX > 0.0f;
 					if (!hubCanScrollLeft) ImGui::BeginDisabled();
-					if (ImGui::ArrowButton("##SofiHubLeft", ImGuiDir_Left))
+					ImGui::ArrowButton("##SofiHubLeft", ImGuiDir_Left);
+					if (ImGui::IsItemActivated())
 						SofiLauncherHubScrollX = ImMax(0.0f, SofiLauncherHubScrollX - (cardWidth + cardSpacingX));
 					if (!hubCanScrollLeft) ImGui::EndDisabled();
 					ImGui::PopStyleVar();
@@ -4594,14 +4595,14 @@ static struct sDOSBoxPure : public ZL_Application
 						if (profileIndex + 1 < SofiLauncherProfiles.size())
 							ImGui::SameLine();
 					}
-					SofiLauncherHubScrollX = ImGui::GetScrollX();
 					ImGui::EndChild();
 
 					ImGui::SetCursorScreenPos(ImVec2(hubFrameRight - hubArrowWidth - hubArrowGap, hubMin.y + (hubSize.y - 24.0f) * 0.5f));
 					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 3.0f));
 					const bool hubCanScrollRight = SofiLauncherHubScrollX < cardsScrollMaxX;
 					if (!hubCanScrollRight) ImGui::BeginDisabled();
-					if (ImGui::ArrowButton("##SofiHubRight", ImGuiDir_Right))
+					ImGui::ArrowButton("##SofiHubRight", ImGuiDir_Right);
+					if (ImGui::IsItemActivated())
 						SofiLauncherHubScrollX = ImMin(cardsScrollMaxX, SofiLauncherHubScrollX + (cardWidth + cardSpacingX));
 					if (!hubCanScrollRight) ImGui::EndDisabled();
 					ImGui::PopStyleVar();
