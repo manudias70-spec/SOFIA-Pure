@@ -4109,7 +4109,7 @@ static struct sDOSBoxPure : public ZL_Application
 					}
 					else
 					{
-						bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), IM_COL32(30, 30, 34, 255));
+						bg->AddRectFilled(ImVec2(0, 0), ImVec2(w, h), IM_COL32(8, 24, 48, 255));
 					}
 				}
 			}
