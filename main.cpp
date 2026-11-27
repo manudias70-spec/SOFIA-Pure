@@ -100,7 +100,9 @@ static bool SofiLauncherOpen = false;
 static bool SofiLauncherPropertiesOpen = false;
 static bool SofiLauncherCardSelected = false;
 static bool SofiLauncherCreateProfileOpen = false;
+static bool SofiLauncherCreateProfileRequested = false;
 static bool SofiLauncherDeleteProfileOpen = false;
+static bool SofiAboutOpen = false;
 static std::string SofiLauncherDeleteProfileId;
 static char SofiLauncherNewProfileName[128] = {};
 static unsigned int SofiLauncherNextProfileId = 1;
@@ -4995,6 +4997,13 @@ else
 					}
 					if (!SofiLauncherProfileStatus.empty() && ImGui::IsItemHovered())
 						ImGui::SetTooltip("%s", SofiLauncherProfileStatus.c_str());
+					if (SofiLauncherCreateProfileRequested)
+					{
+						SofiLauncherNewProfileName[0] = 0;
+						SofiLauncherCreateProfileOpen = true;
+						ImGui::OpenPopup("##SofiCreateGameProfile");
+						SofiLauncherCreateProfileRequested = false;
+					}
 					if (SofiLauncherCreateProfileOpen)
 					{
 						ImGui::SetNextWindowSize(ImVec2(430.0f, 0.0f), ImGuiCond_Appearing);
@@ -5037,6 +5046,92 @@ else
 				ImGui::End();
 			}
 }
+
+
+			// Neon Blue quick actions: centered under the HUB and in the free space above the taskbar.
+			// This row is deliberately skin-scoped; None keeps its original layout untouched.
+			if (SofiSkinSelection == 0 && SofiUIVisible)
+			{
+				ImGuiWindow* hubWindow = ImGui::FindWindowByName("##SofiLauncherHub");
+				if (hubWindow && hubWindow->Active)
+				{
+					const float quickButtonWidth = 198.0f;
+					const float quickButtonHeight = 99.0f;
+					const float quickButtonGap = 1.1f; // 0.3 mm at 96 DPI.
+					const float quickRowWidth = quickButtonWidth * 3.0f + quickButtonGap * 2.0f;
+					const float taskbarTop = io.DisplaySize.y - 44.0f;
+					const float hubBottom = hubWindow->Pos.y + hubWindow->Size.y;
+					if (taskbarTop - hubBottom >= quickButtonHeight)
+					{
+						const float hubCenterX = hubWindow->Pos.x + hubWindow->Size.x * 0.5f;
+						const float rowX = hubCenterX - quickRowWidth * 0.5f;
+						const float rowY = hubBottom + (taskbarTop - hubBottom - quickButtonHeight) * 0.5f;
+						ImGui::SetNextWindowPos(ImVec2(rowX, rowY), ImGuiCond_Always);
+						ImGui::SetNextWindowSize(ImVec2(quickRowWidth, quickButtonHeight), ImGuiCond_Always);
+						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+						ImGui::Begin("##SofiSpaceQuickButtons", NULL,
+							ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+							ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+							ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
+							ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 22.0f));
+						ImGui::SetWindowFontScale(1.3f);
+						ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+						if (ImGui::Button("INICIO", ImVec2(quickButtonWidth, quickButtonHeight)))
+						{
+							SofiCommanderOpen = false;
+							SofiCommanderFocused = false;
+							SofiCommanderFocusRequested = false;
+							SofiCommanderMinimized = false;
+							SofiCommanderApplyMinimized = false;
+							SofiLauncherOpen = false;
+							SofiLauncherPropertiesOpen = false;
+							SofiLauncherCreateProfileOpen = false;
+							SofiLauncherCreateProfileRequested = false;
+							SofiLauncherDeleteProfileOpen = false;
+							SofiVideoPanelOpen = false;
+							SofiAudioPanelOpen = false;
+							SofiOSDPanelOpen = false;
+							SofiInputPanelOpen = false;
+							SofiCorePanelOpen = false;
+							SofiAboutOpen = false;
+						}
+					ImGui::SameLine(0.0f, quickButtonGap);
+					if (ImGui::Button("ACERCA DE", ImVec2(quickButtonWidth, quickButtonHeight)))
+					{
+						SofiAboutOpen = true;
+						ImGui::OpenPopup("##SofiAbout");
+					}
+				if (SofiAboutOpen)
+				{
+						ImGui::SetNextWindowSize(ImVec2(380.0f, 0.0f), ImGuiCond_Appearing);
+						if (ImGui::BeginPopupModal("##SofiAbout", &SofiAboutOpen, ImGuiWindowFlags_AlwaysAutoResize))
+						{
+							ImGui::TextUnformatted("ACERCA DE SOFIA SPACE");
+							ImGui::Separator();
+							ImGui::TextDisabled("Contenido informativo próximamente.");
+							ImGui::Spacing();
+							if (ImGui::Button("CERRAR", ImVec2(120.0f, 34.0f)))
+							{
+								SofiAboutOpen = false;
+								ImGui::CloseCurrentPopup();
+							}
+							ImGui::EndPopup();
+						}
+				}
+				ImGui::SameLine(0.0f, quickButtonGap);
+				if (ImGui::Button("AGREGAR JUEGO", ImVec2(quickButtonWidth, quickButtonHeight)))
+					SofiLauncherCreateProfileRequested = true;
+				ImGui::PopStyleColor(4);
+				ImGui::PopStyleVar(2);
+				ImGui::End();
+				ImGui::PopStyleVar();
+				}
+			}
 
 			// Empty per-game properties window: only the two requested tabs for this first step.
 			if (SofiLauncherPropertiesOpen)
