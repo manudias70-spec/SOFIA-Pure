@@ -69,7 +69,9 @@ jobs:
     - uses: actions/upload-artifact@main
       with:
         name: sofia-space_win64
-        path: main/Release-vs2026x64/SOFIA Space.exe
+        path: |
+          main/Release-vs2026x64/SOFIA Space.exe
+          main/README.md
 
   build-win32-msvc:
     runs-on: windows-latest
@@ -123,7 +125,9 @@ jobs:
     - uses: actions/upload-artifact@main
       with:
         name: sofia-space_win32
-        path: main/Release-vs2026/SOFIA Space.exe
+        path: |
+          main/Release-vs2026/SOFIA Space.exe
+          main/README.md
 
 # Rebuild Commander maximize/restore toggle.
 
