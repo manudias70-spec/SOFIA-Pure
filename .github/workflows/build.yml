@@ -45,6 +45,21 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
+        Add-Type -AssemblyName System.Drawing
+        $skinPng = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.png"
+        $skinJpg = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.jpg"
+        $jpegEncoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq "image/jpeg" } | Select-Object -First 1
+        if (-not $jpegEncoder) { throw "JPEG encoder is unavailable" }
+        $skinImage = [System.Drawing.Image]::FromFile($skinPng)
+        $jpegParams = [System.Drawing.Imaging.EncoderParameters]::new(1)
+        try {
+          $jpegParams.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, [long]90)
+          $skinImage.Save($skinJpg, $jpegEncoder, $jpegParams)
+        } finally {
+          $jpegParams.Dispose()
+          $skinImage.Dispose()
+        }
+        if (-not (Test-Path $skinJpg)) { throw "Neon Blue JPEG conversion failed" }
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
         python main/tools/patch_osd_cursor.py
@@ -97,6 +112,21 @@ jobs:
         git clone --single-branch --branch main --depth 1 https://github.com/${{ github.repository_owner }}/ZillaLib.git ZillaLib
         python main/tools/patch_zillalib_imgui.py
         git clone --single-branch --branch v1.91.9b --depth 1 https://github.com/ocornut/imgui.git imgui
+        Add-Type -AssemblyName System.Drawing
+        $skinPng = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.png"
+        $skinJpg = Join-Path $env:GITHUB_WORKSPACE "main/neon_blue.jpg"
+        $jpegEncoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq "image/jpeg" } | Select-Object -First 1
+        if (-not $jpegEncoder) { throw "JPEG encoder is unavailable" }
+        $skinImage = [System.Drawing.Image]::FromFile($skinPng)
+        $jpegParams = [System.Drawing.Imaging.EncoderParameters]::new(1)
+        try {
+          $jpegParams.Param[0] = [System.Drawing.Imaging.EncoderParameter]::new([System.Drawing.Imaging.Encoder]::Quality, [long]90)
+          $skinImage.Save($skinJpg, $jpegEncoder, $jpegParams)
+        } finally {
+          $jpegParams.Dispose()
+          $skinImage.Dispose()
+        }
+        if (-not (Test-Path $skinJpg)) { throw "Neon Blue JPEG conversion failed" }
         python main/tools/embed_splash.py
         python main/tools/patch_osd_sidebar.py
         python main/tools/patch_osd_cursor.py
