@@ -73,7 +73,7 @@ enum EHotkeyFKeys
 static unsigned short HotkeyMod;
 static unsigned char ThrottleMode, LastAudioThrottleMode;
 static bool ThrottlePaused, SpeedModHold, DisableSystemALT, UseMiddleMouseMenu, PointerLock, DrawStretched, VariablesUpdated;
-static bool IntroActive = false, IntroDismissRequested;
+static bool IntroActive = true, IntroDismissRequested;
 static bool DrawCoreShader, DoApplyInterfaceOptions, DoApplyGeometry, DoSave, DoLoad, AudioSkip, DefaultPointerLock;
 static char Scaling;
 static int CRTFilter, AudioLatency;
@@ -3797,8 +3797,8 @@ static void OnDraw()
 	if (ui_last_audio_stretch) ui_last_audio_stretch = ZL_Math::Lerp(ui_last_audio_stretch, 1.0f, 0.1f);
 	#endif
 
-	// Diagnostic build: skip SOFI Splash and start DOSBox immediately.
-	static bool introdone = true;
+	// Restore the original SOFI Splash and wait for a key before entering SOFIA Space.
+	static bool introdone;
 	if (!introdone) introdone = DrawIntro();
 }
 
