@@ -113,8 +113,9 @@ static void SofiUpdateUIScaling(ImGuiIO& io)
 	const int displayHeight = (int)ZLHEIGHT;
 	if (displayWidth <= 0 || displayHeight <= 0) return;
 
-	SofiUIScale = std::min((float)displayWidth / SOFI_UI_REFERENCE_WIDTH,
-		(float)displayHeight / SOFI_UI_REFERENCE_HEIGHT);
+	const float scaleX = (float)displayWidth / SOFI_UI_REFERENCE_WIDTH;
+	const float scaleY = (float)displayHeight / SOFI_UI_REFERENCE_HEIGHT;
+	SofiUIScale = (scaleX < scaleY ? scaleX : scaleY);
 	if (SofiUIScale <= 0.0f) SofiUIScale = 1.0f;
 
 	const int scaledWidth = (int)(SOFI_UI_REFERENCE_WIDTH * SofiUIScale);
