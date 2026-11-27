@@ -5131,6 +5131,7 @@ else
 				ImGui::End();
 				ImGui::PopStyleVar();
 				}
+				}
 			}
 
 			// Empty per-game properties window: only the two requested tabs for this first step.
