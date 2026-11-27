@@ -4144,7 +4144,7 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 			}
 
-			// Neon Blue INFO panel: expanded hardware and build details, fixed above the taskbar.
+			// Neon Blue INFO panel: two clearly separated sections above the taskbar.
 			if (SofiSkinSelection == 0)
 			{
 				SYSTEM_INFO systemInfo = {};
@@ -4171,9 +4171,11 @@ static struct sDOSBoxPure : public ZL_Application
 				const unsigned int physicalCores = SofiGetPhysicalCoreCount();
 				const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
 				const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+				const float infoPanelHeight = io.DisplaySize.y * 0.5f;
 
-				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 376.0f, io.DisplaySize.y - 302.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowSize(ImVec2(360.0f, 246.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 376.0f,
+					io.DisplaySize.y - 44.0f - infoPanelHeight - 8.0f), ImGuiCond_Always);
+				ImGui::SetNextWindowSize(ImVec2(360.0f, infoPanelHeight), ImGuiCond_Always);
 				ImGui::SetNextWindowBgAlpha(0.94f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 9.0f));
@@ -4184,13 +4186,28 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings |
 					ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
 				{
-					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SOFIA SPACE");
-					ImGui::SameLine(158.0f);
-					ImGui::TextDisabled("SYSTEM INFO");
+					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "INFORMACIÓN");
 					ImGui::Separator();
-					ImGui::TextDisabled("EMULADOR");
+					ImGui::TextDisabled("Tema:");
 					ImGui::SameLine(112.0f);
-					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "DOSBox Pure");
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Neon-Blue");
+					ImGui::TextDisabled("Plataforma:");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows 11 Style");
+					ImGui::TextDisabled("Motor:");
+					ImGui::SameLine(112.0f);
+					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "MS-DOS Pure");
+					ImGui::TextDisabled("Resolución:");
+					ImGui::SameLine(112.0f);
+					if (screenWidth > 0 && screenHeight > 0)
+						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%d x %d", screenWidth, screenHeight);
+					else
+						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
+
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SISTEMA");
+					ImGui::Separator();
 					ImGui::TextDisabled("CPU");
 					ImGui::SameLine(112.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%.32s", cpuName);
@@ -4205,12 +4222,6 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::SameLine(112.0f);
 					if (memoryAvailable)
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%llu GB", memoryGB);
-					else
-						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
-					ImGui::TextDisabled("PANTALLA");
-					ImGui::SameLine(112.0f);
-					if (screenWidth > 0 && screenHeight > 0)
-						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "%d x %d", screenWidth, screenHeight);
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
 					ImGui::TextDisabled("SISTEMA");
