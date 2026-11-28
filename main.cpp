@@ -4353,7 +4353,7 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.5f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 18.0f));
-				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
 				if (ImGui::Begin("SOFI INFO", NULL,
 					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
@@ -5406,7 +5406,7 @@ else
 						ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
+						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
 										if (SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight)))
 					SofiLauncherCreateProfileRequested = true;
 				
@@ -5439,7 +5439,7 @@ const bool inputSelected = SofiInputPanelOpen;
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border,
-							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(65, 190, 245, 205));
 						if (SofiNavigationButton("##SofiQuickInput", "INPUT", 9, ImVec2(quickButtonWidth, quickButtonHeight)))
 							SofiToggleMainPanel(SofiInputPanelOpen);
 						ImGui::PopStyleColor(4);
