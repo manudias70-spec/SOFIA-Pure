@@ -888,3 +888,13 @@ Se ajusta el contorno del módulo lateral para aplicar el mismo margen interior 
 **Alcance:** solo geometría del contorno de navegación en Neon Blue. No se modifican la ventana, los botones, sus posiciones, dimensiones, separaciones, iconos, textos ni acciones. La skin **None** y el resto de la interfaz permanecen sin cambios.
 
 **Estado:** implementación integrada; pendiente de compilación y validación visual de Manu.
+
+
+
+## SOFI Space — Estados visuales y contornos de la barra Neon Blue
+
+Se refina la respuesta visual de los siete botones laterales de **Neon Blue**: se habilita un contorno fino para que el color cian de selección sea realmente visible y se aumenta moderadamente el redondeo de las esquinas. Se conservan los estados de color normal, hover y pulsado, así como el relleno y el borde diferenciados para los paneles seleccionados. El botón EXPLORADOR deja de mostrarse como seleccionado cuando Commander está minimizado.
+
+**Alcance:** exclusivamente presentación de la barra lateral en Neon Blue. Se mantienen los iconos Fluent celestes, los textos, el orden, las dimensiones, el espaciado y las acciones. La skin **None** conserva sus valores visuales originales. No se modifica lógica del emulador ni otras ventanas.
+
+**Estado:** cambio integrado en la rama de trabajo; pendiente de compilación y validación visual de Manu.
