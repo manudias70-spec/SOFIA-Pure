@@ -4349,7 +4349,7 @@ static struct sDOSBoxPure : public ZL_Application
 					io.DisplaySize.y - 44.0f - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 				ImGui::SetNextWindowSize(ImVec2(306.6f, 0.0f), ImGuiCond_Always);
 				ImGui::SetNextWindowBgAlpha(0.68f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.5f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 18.0f));
