@@ -357,6 +357,27 @@ static bool SofiBeginNeonWindow(const char* name, bool* open, ImGuiWindowFlags f
 }
 
 
+static bool SofiBeginNeonCommanderWindow(const char* name, ImGuiWindowFlags flags = 0)
+{
+	if (SofiSkinSelection != 0) return ImGui::Begin(name, NULL, flags);
+
+	// Style only Commander's outer frame and title bar; pop before its interior is drawn.
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 14.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f));
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(7, 22, 40, 238));
+	ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
+	ImGui::PushStyleColor(ImGuiCol_TitleBg, IM_COL32(5, 20, 38, 235));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, IM_COL32(8, 42, 68, 250));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, IM_COL32(4, 15, 28, 220));
+
+	const bool visible = ImGui::Begin(name, NULL, flags);
+	ImGui::PopStyleColor(5);
+	ImGui::PopStyleVar(3);
+	return visible;
+}
+
+
 #ifndef SOFIA_SPACE_BUILD
 #define SOFIA_SPACE_BUILD 0
 #endif
@@ -6030,7 +6051,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 						SofiCommanderFocusRequested = false;
 					}
 
-					const bool commanderVisible = ImGui::Begin("SOFI Commander", NULL, ImGuiWindowFlags_NoCollapse);
+					const bool commanderVisible = SofiBeginNeonCommanderWindow("SOFI Commander", ImGuiWindowFlags_NoCollapse);
 					bool commanderMinimizeClicked = false;
 					bool commanderRestoreClicked = false;
 					bool commanderCloseClicked = false;
@@ -6043,7 +6064,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 					}
 
 					// Compact title-bar controls, aligned to the right like SOFI Space.
-					const float titleBarHeight = ImGui::GetFrameHeight();
+					const float titleBarHeight = ImGui::GetFontSize() + 20.0f;
 					const float buttonSize = 22.0f;
 					const float buttonY = windowPos.y + (titleBarHeight - buttonSize) * 0.5f;
 					const float closeRight = windowPos.x + windowSize.x - 4.0f;
