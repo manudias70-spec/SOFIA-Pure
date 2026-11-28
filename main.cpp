@@ -5294,6 +5294,16 @@ else
 							IM_COL32(12, 24, 38, menuHovered ? 245 : 205), 5.0f);
 						for (int dot = -1; dot <= 1; ++dot)
 							draw->AddCircleFilled(ImVec2(menuPos.x + 14.0f, menuPos.y + 14.0f + dot * 6.0f), 1.7f, IM_COL32(240, 248, 255, 255));
+						ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 9.0f);
+						ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 8.0f));
+						ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.5f);
+						ImGui::PushStyleColor(ImGuiCol_PopupBg, IM_COL32(7, 22, 40, 248));
+						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 220));
+						ImGui::PushStyleColor(ImGuiCol_Header, IM_COL32(10, 60, 92, 220));
+						ImGui::PushStyleColor(ImGuiCol_HeaderHovered, IM_COL32(15, 100, 150, 245));
+						ImGui::PushStyleColor(ImGuiCol_HeaderActive, IM_COL32(20, 135, 190, 255));
+						ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(220, 240, 255, 255));
+						ImGui::PushStyleColor(ImGuiCol_Separator, IM_COL32(65, 190, 245, 150));
 						if (ImGui::BeginPopup(("##SofiCardActions_" + profile.Id()).c_str()))
 						{
 							if (ImGui::MenuItem("Agregar ejecutable..."))
@@ -5335,6 +5345,8 @@ else
 								deletePopupRequested = true;
 							}
 							ImGui::EndPopup();
+						ImGui::PopStyleColor(7);
+						ImGui::PopStyleVar(3);
 						}
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 198.0f));
 						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 198.0f));
