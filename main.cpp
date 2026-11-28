@@ -4481,10 +4481,12 @@ static struct sDOSBoxPure : public ZL_Application
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, (SofiSkinSelection == 0) ? 9.0f : 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
+			ImDrawList* navigationDrawList = nullptr;
+			ImDrawListSplitter navigationSplitter;
+			ImVec2 navigationGroupMin(0.0f, 0.0f);
 			if (SofiSkinSelection == 0)
 			{
-				ImDrawList* navigationDrawList = ImGui::GetWindowDrawList();
-				ImDrawListSplitter navigationSplitter;
+				navigationDrawList = ImGui::GetWindowDrawList();
 				navigationSplitter.Split(navigationDrawList, 2);
 				navigationSplitter.SetCurrentChannel(navigationDrawList, 1);
 				const float navigationButtonHeight = 69.3f;
@@ -4506,7 +4508,7 @@ if (SofiSkinSelection == 0)
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
 				const bool navigationInicioPressed = SofiNavigationButton("##SofiNavInicio", "INICIO", 0, ImVec2(198.0f, 69.3f), true);
-				const ImVec2 navigationGroupMin = ImGui::GetItemRectMin();
+				navigationGroupMin = ImGui::GetItemRectMin();
 				if (navigationInicioPressed)
 				{
 					SofiCommanderOpen = false;
