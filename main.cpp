@@ -4828,6 +4828,12 @@ if (SofiSkinSelection == 1)
 							}
 						}
 
+						// Subtle Neon Blue edge separates each artwork from the card frame.
+						draw->AddRect(ImVec2(cardPos.x + 1.0f, cardPos.y + 1.0f),
+							ImVec2(imageMax.x - 1.0f, imageMax.y - 1.0f), IM_COL32(65, 190, 245, 125), 5.0f, 0, 1.0f);
+						draw->AddLine(ImVec2(cardPos.x + 1.0f, imageMax.y), ImVec2(cardMax.x - 1.0f, imageMax.y),
+							IM_COL32(65, 190, 245, 105), 1.0f);
+
 						// Keep the card's selection hit-area separate from the three-dot menu.
 						// Overlapping ImGui items otherwise let the larger card button consume the click.
 						bool cardClicked = false;
