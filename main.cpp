@@ -5065,7 +5065,8 @@ else
 					const float cardsViewportWidth = ImMax(1.0f, hubSize.x - hubPadding * 3.0f - hubArrowWidth * 2.0f - hubArrowGap * 2.0f - hubAddGap - hubAddWidth);
 					const float hubFrameRight = hubMin.x + hubPadding * 2.0f + hubArrowWidth * 2.0f + hubArrowGap * 2.0f + cardsViewportWidth;
 					const ImVec2 hubFrameMax(hubFrameRight, hubMin.y + hubSize.y);
-					hubDraw->AddRect(hubMin, hubFrameMax, IM_COL32(65, 145, 205, 230), 3.0f, 0, 1.5f);
+					hubDraw->AddRectFilled(hubMin, hubFrameMax, IM_COL32(7, 22, 40, 138), 16.0f);
+					hubDraw->AddRect(hubMin, hubFrameMax, IM_COL32(65, 190, 245, 205), 16.0f, 0, 2.5f);
 
 					const float cardWidth = hubCardWidth;
 					const float cardNameAreaHeight = 31.5f; // 75% of the original 42 px name area.
