@@ -71,6 +71,11 @@ jobs:
         python main/tools/patch_osd_disable_mouse_joy_tab_navigation.py
         python main/tools/patch_sofi_controller_mapper_hotkey.py
         python main/tools/patch_sofi_shortcuts_bullets.py
+        # Rajdhani SemiBold is used only by the Neon Blue sidebar.
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/google/fonts/main/ofl/rajdhani/Rajdhani-SemiBold.ttf" -OutFile "main/Rajdhani-SemiBold.ttf"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/google/fonts/main/ofl/rajdhani/OFL.txt" -OutFile "main/Rajdhani-OFL.txt"
+        if (-not (Test-Path "main/Rajdhani-SemiBold.ttf")) { throw "Rajdhani font download failed" }
+        if (-not (Test-Path "main/Rajdhani-OFL.txt")) { throw "Rajdhani OFL license download failed" }
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -87,6 +92,8 @@ jobs:
         New-Item -ItemType Directory -Force -Path "main/dist" | Out-Null
         Copy-Item -LiteralPath "main/Release-vs2026x64/SOFIA Space.exe" -Destination "main/dist/SOFIA Space.exe"
         Copy-Item -LiteralPath "main/README.md" -Destination "main/dist/README.md"
+        Copy-Item -LiteralPath "main/Rajdhani-SemiBold.ttf" -Destination "main/dist/Rajdhani-SemiBold.ttf"
+        Copy-Item -LiteralPath "main/Rajdhani-OFL.txt" -Destination "main/dist/Rajdhani-OFL.txt"
     - uses: actions/upload-artifact@main
       with:
         name: sofia-space_win64
@@ -146,6 +153,11 @@ jobs:
         python main/tools/patch_osd_disable_mouse_joy_tab_navigation.py
         python main/tools/patch_sofi_controller_mapper_hotkey.py
         python main/tools/patch_sofi_shortcuts_bullets.py
+        # Rajdhani SemiBold is used only by the Neon Blue sidebar.
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/google/fonts/main/ofl/rajdhani/Rajdhani-SemiBold.ttf" -OutFile "main/Rajdhani-SemiBold.ttf"
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/google/fonts/main/ofl/rajdhani/OFL.txt" -OutFile "main/Rajdhani-OFL.txt"
+        if (-not (Test-Path "main/Rajdhani-SemiBold.ttf")) { throw "Rajdhani font download failed" }
+        if (-not (Test-Path "main/Rajdhani-OFL.txt")) { throw "Rajdhani OFL license download failed" }
     - if: ${{ github.event.inputs.versionstring == '' }}
       run: perl -i -pe "s/\"(.*)\"/\"\1-${GITHUB_SHA::7}\"/g" dosbox-pure/dosbox_pure_ver.h
       shell: bash
@@ -162,6 +174,8 @@ jobs:
         New-Item -ItemType Directory -Force -Path "main/dist" | Out-Null
         Copy-Item -LiteralPath "main/Release-vs2026/SOFIA Space.exe" -Destination "main/dist/SOFIA Space.exe"
         Copy-Item -LiteralPath "main/README.md" -Destination "main/dist/README.md"
+        Copy-Item -LiteralPath "main/Rajdhani-SemiBold.ttf" -Destination "main/dist/Rajdhani-SemiBold.ttf"
+        Copy-Item -LiteralPath "main/Rajdhani-OFL.txt" -Destination "main/dist/Rajdhani-OFL.txt"
     - uses: actions/upload-artifact@main
       with:
         name: sofia-space_win32
