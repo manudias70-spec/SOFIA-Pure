@@ -4476,19 +4476,11 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
 
-			// The Neon Blue frame is drawn behind the buttons and fitted to their measured item bounds.
-
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, (SofiSkinSelection == 0) ? 9.0f : 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
-			ImDrawList* navigationDrawList = nullptr;
-			ImDrawListSplitter navigationSplitter;
-			ImVec2 navigationGroupMin(0.0f, 0.0f);
 			if (SofiSkinSelection == 0)
 			{
-				navigationDrawList = ImGui::GetWindowDrawList();
-				navigationSplitter.Split(navigationDrawList, 2);
-				navigationSplitter.SetCurrentChannel(navigationDrawList, 1);
 				const float navigationButtonHeight = 69.3f;
 				const float navigationButtonCount = 7.0f;
 				const float navigationSpacingCount = navigationButtonCount - 1.0f;
@@ -4508,7 +4500,6 @@ if (SofiSkinSelection == 0)
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
 				const bool navigationInicioPressed = SofiNavigationButton("##SofiNavInicio", "INICIO", 0, ImVec2(198.0f, 69.3f), true);
-				navigationGroupMin = ImGui::GetItemRectMin();
 				if (navigationInicioPressed)
 				{
 					SofiCommanderOpen = false;
@@ -4621,23 +4612,12 @@ const bool osdSelected = SofiOSDPanelOpen;
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
 				const bool navigationRestorePressed = SofiNavigationButton("##SofiNavRestore", "RESTAURAR", 6, ImVec2(198.0f, 69.3f), true);
-				const ImVec2 navigationGroupMax = ImGui::GetItemRectMax();
 				if (navigationRestorePressed)
 				{
 					SofiConfigResetDialog = 1;
 					ImGui::OpenPopup("RESTAURAR CONFIGURACIÓN");
 				}
 				ImGui::PopStyleColor(4);
-				// Fit the frame to the real first/last button rectangles with one uniform 4 px inset.
-				navigationSplitter.SetCurrentChannel(navigationDrawList, 0);
-				const ImVec2 navigationFrameMin(navigationGroupMin.x - 4.0f, navigationGroupMin.y - 4.0f);
-				const ImVec2 navigationFrameMax(navigationGroupMax.x + 4.0f, navigationGroupMax.y + 4.0f);
-				navigationDrawList->AddRectFilled(navigationFrameMin, navigationFrameMax,
-					IM_COL32(7, 22, 40, 138), 16.0f);
-				navigationDrawList->AddRect(navigationFrameMin, navigationFrameMax,
-					IM_COL32(65, 190, 245, 205), 16.0f, 0, 2.5f);
-				navigationSplitter.SetCurrentChannel(navigationDrawList, 1);
-				navigationSplitter.Merge(navigationDrawList);
 				ImGui::PopStyleVar();
 
 				if (ImGui::BeginPopupModal("RESTAURAR CONFIGURACIÓN", NULL, ImGuiWindowFlags_AlwaysAutoResize))
