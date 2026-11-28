@@ -937,3 +937,53 @@ El contorno translúcido de **Neon Blue** ahora toma como referencia los rectán
 Se mantienen el radio de 16 px, los colores, la transparencia y el grosor del borde. No se modifican las dimensiones, posiciones ni funciones de los botones. La skin **None** permanece intacta.
 
 **Estado:** cambio integrado; pendiente de compilación y validación visual.
+
+## SOFI Space — Consolidación visual Neon Blue (builds #712–#726)
+
+Esta etapa consolidó la identidad visual de **Neon Blue** mediante ajustes pequeños, aislados y validados en builds reales. La skin **None** se mantuvo fuera del alcance de todos los cambios visuales descritos aquí.
+
+### HUB y panel INFO
+
+- Se ajustó la transparencia del panel INFO a **120/255**, conservando su fondo azul oscuro, borde celeste y esquinas redondeadas.
+- Se conservaron los valores visuales definidos para el HUB: fondo translúcido, borde celeste y radio de 16 px.
+- Las tarjetas del HUB recibieron un borde y una línea divisoria celeste para integrarlas con el lenguaje visual de Neon Blue.
+
+### Ventanas SOFI Space y SOFI Commander
+
+- Las ventanas de SOFI Space adoptaron un lenguaje visual coordinado de estilo Windows 11 Neon: fondos oscuros/translúcidos, bordes celestes, esquinas redondeadas y títulos, pestañas, controles y estados visuales coherentes.
+- En SOFI Commander el tratamiento se limitó estrictamente al marco exterior y a la barra de título. El interior de Commander, sus paneles, controles, contenido, lógica y comportamiento permanecieron intactos.
+- Las ventanas que todavía no fueron movidas por el usuario aparecen centradas por defecto. Cuando el usuario mueve una ventana, se conserva su posición personalizada al volver a abrirla o restaurarla. No se modificaron sus tamaños.
+- La barra superior exterior de Commander se hizo algo menos alta, ajustando únicamente el padding vertical de su título. No se redujo el ancho de la ventana ni se alteraron los iconos de minimizar, maximizar o cerrar.
+
+### Menú de tarjetas y estabilidad
+
+El popup del menú de opciones (⋮) de las tarjetas recibió el mismo tratamiento oscuro y celeste en Neon Blue. Durante la corrección se equilibraron las operaciones de estilo de ImGui para evitar desbalances de pila. La skin None no fue modificada.
+
+### Builds de referencia y validación
+
+- **#712:** tarjetas del HUB con borde y separador celeste. Validada por Manu.
+- **#713:** primera integración del lenguaje visual Neon en las ventanas y marco exterior de Commander. Build compilada correctamente.
+- **#714:** refinamiento del estilo de ventanas y Commander exterior, con el interior de Commander intacto. Build compilada y probada por Manu; validada.
+- **#715:** primer intento del estilo del popup de tarjetas; presentó un problema de balance de estilos y no se considera base válida.
+- **#716:** corrección del balance de la pila de estilos del popup. Build compilada y probada por Manu; validada.
+- **#723:** intento de centrado que no compiló por una operación no admitida entre `ImVec2` y `float`; descartado.
+- **#725:** centrado por defecto de ventanas, conservando las posiciones personalizadas después de moverlas. Build compilada y probada por Manu; validada.
+- **#726:** reducción moderada de la altura de la barra de título exterior de Commander mediante el cambio exclusivo del padding vertical de `FramePadding` de 10 a 5 px. Commit `d85a56beb4813d518bd1bd46ee53b3a0a64c9d47`. Build compilada y probada por Manu; validada como cierre de esta etapa.
+
+La build **#726** queda como última referencia validada de esta etapa. No se deben introducir más cambios en estos elementos salvo pedido expreso de Manu.
+
+## SOFI Space — Próxima expansión de fondos Neon Blue (diseño acordado)
+
+Queda definida como futura mejora visual la posibilidad de elegir entre **tres fondos intercambiables** en SOFI Space:
+
+1. **Fondo original:** se conserva sin modificaciones. Presenta a Sofi en su faceta más kawai, tierna y juvenil.
+2. **Fondo nuevo — estación espacial:** Sofi en una faceta más seria, madura y elegante, dentro de una ambientación de estación orbital futurista.
+3. **Fondo nuevo — templo cósmico:** Sofi en una faceta más adulta, majestuosa y sofisticada, dentro de una arquitectura cósmica.
+
+Las tres imágenes representan distintas facetas de **Sofi**, no copias idénticas ni personajes diferentes. Deben compartir su identidad esencial, incluido el cabello marrón, y mantener la paleta y el lenguaje visual de Neon Blue: azul profundo, negro y acentos luminosos celestes. Las dos nuevas composiciones pueden variar expresión, pose, vestimenta y presencia para reflejar sus facetas más serias y adultas; no deben intentar reproducir exactamente la apariencia kawai del fondo original.
+
+Los fondos nuevos se prepararán como imágenes panorámicas **16:9**, sin texto, logotipos ni controles, con espacio visual suficiente para que los elementos de la interfaz sigan siendo legibles. La elección del fondo será intercambiable desde la interfaz.
+
+**Alcance previsto:** solo personalización visual de **Neon Blue**. La skin **None** debe permanecer absolutamente intacta. No se modifica Commander, las ventanas, los botones, la lógica del emulador ni ninguna otra función. Primero se diseñarán y aprobarán las imágenes; la implementación se hará después, en cambios pequeños y con builds probadas por Manu.
+
+**Estado:** diseño y dirección artística acordados; imágenes e implementación pendientes.
