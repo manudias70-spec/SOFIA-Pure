@@ -4482,7 +4482,7 @@ static struct sDOSBoxPure : public ZL_Application
 				const ImVec2 navigationWindowMin = ImGui::GetWindowPos();
 				const ImVec2 navigationWindowSize = ImGui::GetWindowSize();
 				// Keep the translucent navigation panel inset equally on all four sides.
-				const float navigationInset = 8.0f;
+				const float navigationInset = 14.0f;
 				const float navigationRounding = 16.0f;
 				const ImVec2 navigationBlockMin(
 					navigationWindowMin.x + navigationInset,
