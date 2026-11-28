@@ -5385,7 +5385,12 @@ else
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-										if (SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight)))
+										ImDrawList* quickButtonsDrawList = ImGui::GetWindowDrawList();
+ImDrawListSplitter quickButtonsSplitter;
+quickButtonsSplitter.Split(quickButtonsDrawList, 2);
+quickButtonsSplitter.SetCurrentChannel(quickButtonsDrawList, 1);
+const ImVec2 quickButtonsGroupMin = ImGui::GetCursorScreenPos();
+if (SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight)))
 					SofiLauncherCreateProfileRequested = true;
 				
 					ImGui::SameLine(0.0f, quickButtonGap);
@@ -5444,8 +5449,18 @@ ImGui::SameLine(0.0f, quickButtonGap);
 							}
 							ImGui::EndPopup();
 						}
+						const ImVec2 quickButtonsGroupMax = ImGui::GetItemRectMax();
 				}
-				ImGui::PopStyleColor(4);
+				quickButtonsSplitter.SetCurrentChannel(quickButtonsDrawList, 0);
+const ImVec2 quickButtonsFrameMin(quickButtonsGroupMin.x - 4.0f, quickButtonsGroupMin.y - 4.0f);
+const ImVec2 quickButtonsFrameMax(quickButtonsGroupMax.x + 4.0f, quickButtonsGroupMax.y + 4.0f);
+quickButtonsDrawList->AddRectFilled(quickButtonsFrameMin, quickButtonsFrameMax,
+	IM_COL32(7, 22, 40, 138), 16.0f);
+quickButtonsDrawList->AddRect(quickButtonsFrameMin, quickButtonsFrameMax,
+	IM_COL32(65, 190, 245, 205), 16.0f, 0, 2.5f);
+quickButtonsSplitter.SetCurrentChannel(quickButtonsDrawList, 1);
+quickButtonsSplitter.Merge(quickButtonsDrawList);
+ImGui::PopStyleColor(4);
 				ImGui::PopStyleVar(2);
 				ImGui::End();
 				ImGui::PopStyleVar();
