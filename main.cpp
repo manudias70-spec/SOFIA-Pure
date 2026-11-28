@@ -279,6 +279,13 @@ static bool SofiNavigationButton(const char* id, const char* label, int icon, co
 	return pressed;
 }
 
+static void SofiDrawNavigationButtonBorder(ImU32 color)
+{
+	const ImVec2 buttonMin = ImGui::GetItemRectMin();
+	const ImVec2 buttonMax = ImGui::GetItemRectMax();
+	ImGui::GetWindowDrawList()->AddRect(buttonMin, buttonMax, color, 10.0f, 0, 1.0f);
+}
+
 static void SofiLoadNavigationFont()
 {
 #if defined(_WIN32)
@@ -4296,8 +4303,9 @@ static struct sDOSBoxPure : public ZL_Application
 				const float taskbarTop = io.DisplaySize.y - taskbarHeight;
 				const ImU32 taskbarFill = IM_COL32(5, 15, 31, 238);
 				const ImU32 taskbarEdge = IM_COL32(40, 190, 255, 190);
-				taskbar->AddRectFilled(ImVec2(0.0f, taskbarTop), io.DisplaySize, taskbarFill);
-				taskbar->AddLine(ImVec2(0.0f, taskbarTop), ImVec2(io.DisplaySize.x, taskbarTop), taskbarEdge, 1.0f);
+				taskbar->AddRectFilled(ImVec2(0.0f, taskbarTop), io.DisplaySize, taskbarFill,
+					16.0f, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+				taskbar->AddLine(ImVec2(16.0f, taskbarTop), ImVec2(io.DisplaySize.x - 16.0f, taskbarTop), taskbarEdge, 1.0f);
 
 				const std::time_t now = std::time(NULL);
 				const std::tm* localTime = std::localtime(&now);
@@ -5404,16 +5412,19 @@ else
 						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
 						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 22.0f));
 						ImGui::SetWindowFontScale(1.3f);
-						ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
 						ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-										if (SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight)))
-					SofiLauncherCreateProfileRequested = true;
+										const bool quickAddPressed = SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight));
+					SofiDrawNavigationButtonBorder(IM_COL32(35, 105, 145, 190));
+					if (quickAddPressed) SofiLauncherCreateProfileRequested = true;
 				
 					ImGui::SameLine(0.0f, quickButtonGap);
-				if (SofiNavigationButton("##SofiQuickPlay", "JUGAR YA", 8, ImVec2(quickButtonWidth, quickButtonHeight)))
+				const bool quickPlayPressed = SofiNavigationButton("##SofiQuickPlay", "JUGAR YA", 8, ImVec2(quickButtonWidth, quickButtonHeight));
+					SofiDrawNavigationButtonBorder(IM_COL32(35, 105, 145, 190));
+					if (quickPlayPressed)
 				{
 					std::vector<SofiGameProfileTemplate*> launchableProfiles;
 					for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
@@ -5442,8 +5453,9 @@ const bool inputSelected = SofiInputPanelOpen;
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border,
 							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-						if (SofiNavigationButton("##SofiQuickInput", "INPUT", 9, ImVec2(quickButtonWidth, quickButtonHeight)))
-							SofiToggleMainPanel(SofiInputPanelOpen);
+						const bool quickInputPressed = SofiNavigationButton("##SofiQuickInput", "INPUT", 9, ImVec2(quickButtonWidth, quickButtonHeight));
+						SofiDrawNavigationButtonBorder(inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+						if (quickInputPressed) SofiToggleMainPanel(SofiInputPanelOpen);
 						ImGui::PopStyleColor(4);
 					ImGui::SameLine(0.0f, quickButtonGap);
 ImGui::SameLine(0.0f, quickButtonGap);
