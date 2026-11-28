@@ -4398,16 +4398,16 @@ static struct sDOSBoxPure : public ZL_Application
 					};
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "INFORMACIÓN");
 					ImGui::Separator();
-					ImGui::TextDisabled("Tema:");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "Tema:");
 					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Neon-Blue");
-					ImGui::TextDisabled("Plataforma:");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "Plataforma:");
 					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "Windows 11 Style");
-					ImGui::TextDisabled("Motor:");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "Motor:");
 					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "MS-DOS Pure");
-					ImGui::TextDisabled("Resolución:");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "Resolución:");
 					ImGui::SameLine(142.0f);
 					if (screenWidth > 0 && screenHeight > 0)
 						drawInfoValue(std::to_string(screenWidth) + " x " + std::to_string(screenHeight));
@@ -4418,25 +4418,25 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::Separator();
 					ImGui::TextColored(ImVec4(0.35f, 0.82f, 1.0f, 1.0f), "SISTEMA");
 					ImGui::Separator();
-					ImGui::TextDisabled("CPU");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "CPU");
 					ImGui::SameLine(142.0f);
 					drawInfoValue(cpuName);
-					ImGui::TextDisabled("NÚCLEOS / HILOS");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "NÚCLEOS / HILOS");
 					ImGui::SameLine(170.0f);
 					drawInfoValue(std::to_string(physicalCores) + " / " + std::to_string((unsigned int)systemInfo.dwNumberOfProcessors));
-					ImGui::TextDisabled("GPU");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "GPU");
 					ImGui::SameLine(142.0f);
 					drawInfoValue(gpuName);
-					ImGui::TextDisabled("MEMORIA RAM");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "MEMORIA RAM");
 					ImGui::SameLine(142.0f);
 					if (memoryAvailable)
 						drawInfoValue(std::to_string((unsigned long long)memoryGB) + " GB");
 					else
 						ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "N/D");
-					ImGui::TextDisabled("SISTEMA");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "SISTEMA");
 					ImGui::SameLine(142.0f);
 					drawInfoValue(std::string("Windows ") + architecture);
-					ImGui::TextDisabled("SOFIA SPACE");
+					ImGui::TextColored(ImVec4(0.68f, 0.82f, 0.95f, 1.0f), "SOFIA SPACE");
 					ImGui::SameLine(142.0f);
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #" SOFI_STRINGIZE(SOFIA_SPACE_BUILD));
 				}
