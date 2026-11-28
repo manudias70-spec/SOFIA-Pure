@@ -919,3 +919,12 @@ Se establece un margen interior uniforme de **14 px** en los cuatro lados del pa
 **Alcance:** exclusivamente la geometría del contorno del panel lateral en Neon Blue. No se alteran botones, dimensiones de ventana, posiciones, separaciones, iconos, textos ni acciones. La skin **None** permanece intacta.
 
 **Estado:** cambio integrado; pendiente de compilación y validación visual.
+
+
+## SOFI Space — Balance vertical del contorno Neon Blue
+
+Se conservan los márgenes laterales del panel en **14 px** y se reducen los márgenes superior e inferior a **8 px** para evitar un exceso de espacio vertical. El radio de las esquinas, el color, la transparencia y el grosor del contorno permanecen sin cambios.
+
+**Alcance:** solo la geometría del panel lateral en Neon Blue. La skin **None** y el resto de la interfaz permanecen intactas.
+
+**Estado:** cambio integrado; pendiente de compilación y validación visual.
