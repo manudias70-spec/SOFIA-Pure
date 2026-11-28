@@ -4348,11 +4348,12 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 16.0f,
 					io.DisplaySize.y - 44.0f - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 				ImGui::SetNextWindowSize(ImVec2(306.6f, 0.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowBgAlpha(0.94f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 4.0f);
+				ImGui::SetNextWindowBgAlpha(0.68f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.5f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 18.0f));
-				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(40, 190, 255, 190));
+				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
 				if (ImGui::Begin("SOFI INFO", NULL,
 					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
@@ -4429,7 +4430,7 @@ static struct sDOSBoxPure : public ZL_Application
 				}
 				ImGui::End();
 				ImGui::PopStyleColor();
-				ImGui::PopStyleVar(3);
+				ImGui::PopStyleVar(4);
 			}
 
 			// Skin selector: anchored at the upper-right, below the application title bar.
