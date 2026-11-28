@@ -5459,7 +5459,9 @@ const bool inputSelected = SofiInputPanelOpen;
 						ImGui::PopStyleColor(4);
 					ImGui::SameLine(0.0f, quickButtonGap);
 ImGui::SameLine(0.0f, quickButtonGap);
-					if (SofiNavigationButton("##SofiQuickAbout", "ACERCA DE", 10, ImVec2(quickButtonWidth, quickButtonHeight)))
+					const bool quickAboutPressed = SofiNavigationButton("##SofiQuickAbout", "ACERCA DE", 10, ImVec2(quickButtonWidth, quickButtonHeight));
+					SofiDrawNavigationButtonBorder(SofiAboutOpen ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
+					if (quickAboutPressed)
 					{
 						SofiAboutOpen = true;
 						ImGui::OpenPopup("##SofiAbout");
