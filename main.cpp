@@ -4307,6 +4307,9 @@ static struct sDOSBoxPure : public ZL_Application
 					16.0f, ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
 				taskbar->AddLine(ImVec2(16.0f, taskbarTop), ImVec2(io.DisplaySize.x - 16.0f, taskbarTop), taskbarEdge, 1.0f);
 
+				taskbar->AddText(ImGui::GetFont(), 18.0f, ImVec2(22.0f, taskbarTop + 12.0f),
+					IM_COL32(205, 235, 255, 255), "Sofía Space");
+
 				const std::time_t now = std::time(NULL);
 				const std::tm* localTime = std::localtime(&now);
 				if (localTime)
