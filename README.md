@@ -879,3 +879,12 @@ La barra vertical izquierda de **Neon Blue** recibe un fondo común semitranspar
 **Alcance:** solo presentación de la barra lateral en Neon Blue. Se conservan exactamente la posición y las dimensiones actuales de la ventana, así como el tamaño, orden, separación, iconos, textos y acciones de los siete botones. La skin **None** y el resto de la interfaz no se modifican.
 
 **Estado:** implementación integrada; pendiente de compilación y validación visual de Manu.
+
+
+## SOFI Space — Márgenes simétricos del módulo de navegación Neon Blue
+
+Se ajusta el contorno del módulo lateral para aplicar el mismo margen interior en los cuatro lados, tomando como referencia el padding horizontal y vertical de la ventana ImGui. El marco conserva su proporción con el escalado global y mantiene intactos el fondo, el color, el grosor y el redondeo del contorno.
+
+**Alcance:** solo geometría del contorno de navegación en Neon Blue. No se modifican la ventana, los botones, sus posiciones, dimensiones, separaciones, iconos, textos ni acciones. La skin **None** y el resto de la interfaz permanecen sin cambios.
+
+**Estado:** implementación integrada; pendiente de compilación y validación visual de Manu.
