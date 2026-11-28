@@ -304,6 +304,59 @@ static void SofiLoadNavigationFont()
 
 static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
 
+static bool SofiBeginNeonWindow(const char* name, bool* open, ImGuiWindowFlags flags = 0)
+{
+	if (SofiSkinSelection != 0) return ImGui::Begin(name, open, flags);
+
+	// Shared Windows 11 Neon treatment for SOFI Space windows only.
+	// Frame padding is enlarged only while Begin computes the title bar.
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 14.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 7.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_PopupRounding, 8.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarRounding, 8.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 7.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_TabRounding, 7.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f));
+
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(7, 22, 40, 238));
+	ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(5, 15, 30, 205));
+	ImGui::PushStyleColor(ImGuiCol_PopupBg, IM_COL32(7, 22, 40, 250));
+	ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
+	ImGui::PushStyleColor(ImGuiCol_TitleBg, IM_COL32(5, 20, 38, 235));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, IM_COL32(8, 42, 68, 250));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgCollapsed, IM_COL32(4, 15, 28, 220));
+	ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(10, 28, 48, 230));
+	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(15, 100, 150, 245));
+	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(20, 135, 190, 255));
+	ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
+	ImGui::PushStyleColor(ImGuiCol_Header, IM_COL32(10, 60, 92, 220));
+	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, IM_COL32(15, 100, 150, 245));
+	ImGui::PushStyleColor(ImGuiCol_HeaderActive, IM_COL32(20, 135, 190, 255));
+	ImGui::PushStyleColor(ImGuiCol_Tab, IM_COL32(8, 35, 58, 230));
+	ImGui::PushStyleColor(ImGuiCol_TabHovered, IM_COL32(15, 100, 150, 245));
+	ImGui::PushStyleColor(ImGuiCol_TabActive, IM_COL32(12, 65, 98, 255));
+	ImGui::PushStyleColor(ImGuiCol_Separator, IM_COL32(65, 190, 245, 150));
+	ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, IM_COL32(4, 14, 26, 180));
+	ImGui::PushStyleColor(ImGuiCol_ScrollbarGrab, IM_COL32(35, 105, 145, 220));
+	ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabHovered, IM_COL32(65, 190, 245, 230));
+	ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabActive, IM_COL32(100, 210, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_CheckMark, IM_COL32(100, 210, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, IM_COL32(65, 190, 245, 230));
+	ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, IM_COL32(130, 220, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(220, 240, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_TextDisabled, IM_COL32(125, 165, 190, 255));
+
+	const bool visible = ImGui::Begin(name, open, flags);
+	ImGui::PopStyleColor(29);
+	ImGui::PopStyleVar(9);
+	return visible;
+}
+
+
 #ifndef SOFIA_SPACE_BUILD
 #define SOFIA_SPACE_BUILD 0
 #endif
@@ -5505,7 +5558,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			{
 				ImGui::SetNextWindowPos(ImVec2(180.0f, 150.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("PROPIEDADES DEL JUEGO", &SofiLauncherPropertiesOpen, ImGuiWindowFlags_NoCollapse))
+				if (SofiBeginNeonWindow("PROPIEDADES DEL JUEGO", &SofiLauncherPropertiesOpen, ImGuiWindowFlags_NoCollapse))
 				{
 					if (!SofiLauncherPropertiesWasOpen || SofiLauncherVideoDraftExe != SofiLauncherExePath || SofiLauncherAudioDraftExe != SofiLauncherExePath || SofiLauncherCoreDraftExe != SofiLauncherExePath)
 						SofiLauncherInitializePropertiesDrafts(SofiLauncherExePath);
@@ -5636,7 +5689,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			{
 				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("SOFI AUDIO", &SofiAudioPanelOpen,
+				if (SofiBeginNeonWindow("SOFI AUDIO", &SofiAudioPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled(SofiTranslate("CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR"));
@@ -5720,7 +5773,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			{
 				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("SOFI VIDEO", &SofiVideoPanelOpen,
+				if (SofiBeginNeonWindow("SOFI VIDEO", &SofiVideoPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled(SofiTranslate("CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR"));
@@ -5747,7 +5800,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			{
 				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("SOFI OSD", &SofiOSDPanelOpen,
+				if (SofiBeginNeonWindow("SOFI OSD", &SofiOSDPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled(SofiText("GENERAL  //  CONFIGURACIÓN", "GENERAL  //  SETTINGS"));
@@ -5803,7 +5856,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			{
 				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("SOFI INPUT", &SofiInputPanelOpen,
+				if (SofiBeginNeonWindow("SOFI INPUT", &SofiInputPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
@@ -5899,7 +5952,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			{
 				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
-				if (ImGui::Begin("SOFI CORE", &SofiCorePanelOpen,
+				if (SofiBeginNeonWindow("SOFI CORE", &SofiCorePanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
 					ImGui::TextDisabled(SofiTranslate("CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS"));
