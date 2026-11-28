@@ -364,7 +364,7 @@ static bool SofiBeginNeonCommanderWindow(const char* name, ImGuiWindowFlags flag
 	// Style only Commander's outer frame and title bar; pop before its interior is drawn.
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 14.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 5.0f));
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(7, 22, 40, 238));
 	ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, IM_COL32(5, 20, 38, 235));
