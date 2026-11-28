@@ -4479,7 +4479,7 @@ static struct sDOSBoxPure : public ZL_Application
 
 			// The Neon Blue frame is drawn behind the buttons and fitted to their measured item bounds.
 
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, (SofiSkinSelection == 0) ? 9.0f : 5.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, (SofiSkinSelection == 0) ? 10.0f : 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
 			ImDrawList* navigationDrawList = nullptr;
@@ -5399,7 +5399,7 @@ else
 							ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 							ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground |
 							ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
-						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
 						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 22.0f));
 						ImGui::SetWindowFontScale(1.3f);
 						ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.5f);
