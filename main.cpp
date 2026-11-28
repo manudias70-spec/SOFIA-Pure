@@ -99,6 +99,7 @@ static ZL_Mutex mtxCoreOptions;
 static ZL_Font fntOSD;
 static ZL_Shader shdrCore, shdrOSD;
 static bool ImGuiReady = false;
+static ImFont* SofiNavigationFont = NULL;
 static const float SOFI_UI_REFERENCE_WIDTH = 1920.0f;
 static const float SOFI_UI_REFERENCE_HEIGHT = 1080.0f;
 static float SofiUIScale = 1.0f;
@@ -261,7 +262,7 @@ static void SofiDrawNavigationIcon(ImDrawList* drawList, int icon, const ImVec2&
 	}
 }
 
-static bool SofiNavigationButton(const char* id, const char* label, int icon, const ImVec2& size)
+static bool SofiNavigationButton(const char* id, const char* label, int icon, const ImVec2& size, bool useRajdhani = false)
 {
 	const bool pressed = ImGui::Button(id, size);
 	const ImVec2 buttonMin = ImGui::GetItemRectMin();
@@ -269,11 +270,29 @@ static bool SofiNavigationButton(const char* id, const char* label, int icon, co
 	const ImVec2 iconCenter(buttonMin.x + 30.0f, (buttonMin.y + buttonMax.y) * 0.5f);
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	SofiDrawNavigationIcon(drawList, icon, iconCenter, IM_COL32(100, 205, 255, 255));
-	const ImVec2 textSize = ImGui::CalcTextSize(label);
+	ImFont* labelFont = (useRajdhani && SofiNavigationFont) ? SofiNavigationFont : ImGui::GetFont();
+	const float labelFontSize = (useRajdhani && SofiNavigationFont) ? 20.0f : ImGui::GetFontSize();
+	const ImVec2 textSize = labelFont->CalcTextSizeA(labelFontSize, FLT_MAX, 0.0f, label);
 	const ImVec2 textPos(buttonMin.x + 58.0f, buttonMin.y + (size.y - textSize.y) * 0.5f);
-	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), textPos,
+	drawList->AddText(labelFont, labelFontSize, textPos,
 		ImGui::GetColorU32(ImGuiCol_Text), label);
 	return pressed;
+}
+
+static void SofiLoadNavigationFont()
+{
+#if defined(_WIN32)
+	char executablePath[MAX_PATH] = {};
+	const DWORD pathLength = GetModuleFileNameA(NULL, executablePath, MAX_PATH);
+	if (pathLength == 0 || pathLength >= MAX_PATH) return;
+	char* directoryEnd = strrchr(executablePath, '\\');
+	char* forwardSlash = strrchr(executablePath, '/');
+	if (forwardSlash && (!directoryEnd || forwardSlash > directoryEnd)) directoryEnd = forwardSlash;
+	if (!directoryEnd) return;
+	*(directoryEnd + 1) = '\0';
+	const std::string fontPath = std::string(executablePath) + "Rajdhani-SemiBold.ttf";
+	SofiNavigationFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(fontPath.c_str(), 20.0f);
+#endif
 }
 
 static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
@@ -4056,6 +4075,7 @@ static void OnLoad(int argc, char *argv[])
 	ImGui::CreateContext();
 	ImGui::GetIO().IniFilename = SofiCommanderIniPath.empty() ? NULL : SofiCommanderIniPath.c_str();
 	ImGui::StyleColorsDark();
+	SofiLoadNavigationFont();
 	ImGuiReady = ImGui_ImplOpenGL3_Init("#version 130");
 	if (!ImGuiReady) ImGui::DestroyContext();
 	DoApplyGeometry = DoApplyInterfaceOptions = true;
@@ -4497,7 +4517,7 @@ if (SofiSkinSelection == 0)
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-				if (SofiNavigationButton("##SofiNavInicio", "INICIO", 0, ImVec2(198.0f, 69.3f)))
+				if (SofiNavigationButton("##SofiNavInicio", "INICIO", 0, ImVec2(198.0f, 69.3f), true))
 				{
 					SofiCommanderOpen = false;
 					SofiCommanderFocused = false;
@@ -4525,7 +4545,7 @@ const bool selected = SofiCommanderOpen && !SofiCommanderMinimized;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavExplorer", SofiText("EXPLORADOR", "EXPLORER"), 1, ImVec2(198.0f, 69.3f)) : ImGui::Button(SofiText("EXPLORADOR", "EXPLORER"), ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavExplorer", SofiText("EXPLORADOR", "EXPLORER"), 1, ImVec2(198.0f, 69.3f), true) : ImGui::Button(SofiText("EXPLORADOR", "EXPLORER"), ImVec2(88.0f, 44.0f)))
 			{
 				if (!SofiCommanderOpen)
 				{
@@ -4569,7 +4589,7 @@ const bool coreSelected = SofiCorePanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				coreSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavCore", "CORE", 2, ImVec2(198.0f, 69.3f)) : ImGui::Button("CORE", ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavCore", "CORE", 2, ImVec2(198.0f, 69.3f), true) : ImGui::Button("CORE", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiCorePanelOpen);
 			ImGui::PopStyleColor(4);
 const bool videoSelected = SofiVideoPanelOpen;
@@ -4579,7 +4599,7 @@ const bool videoSelected = SofiVideoPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				videoSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavVideo", "VIDEO", 3, ImVec2(198.0f, 69.3f)) : ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavVideo", "VIDEO", 3, ImVec2(198.0f, 69.3f), true) : ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiVideoPanelOpen);
 			ImGui::PopStyleColor(4);
 const bool audioSelected = SofiAudioPanelOpen;
@@ -4589,7 +4609,7 @@ const bool audioSelected = SofiAudioPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				audioSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavAudio", "AUDIO", 4, ImVec2(198.0f, 69.3f)) : ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavAudio", "AUDIO", 4, ImVec2(198.0f, 69.3f), true) : ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiAudioPanelOpen);
 			ImGui::PopStyleColor(4);
 const bool osdSelected = SofiOSDPanelOpen;
@@ -4599,7 +4619,7 @@ const bool osdSelected = SofiOSDPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				osdSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavOSD", "SOFI OSD", 5, ImVec2(198.0f, 69.3f)) : ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavOSD", "SOFI OSD", 5, ImVec2(198.0f, 69.3f), true) : ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiOSDPanelOpen);
 			ImGui::PopStyleColor(4);
 			if (SofiSkinSelection == 0)
@@ -4608,7 +4628,7 @@ const bool osdSelected = SofiOSDPanelOpen;
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-				if (SofiNavigationButton("##SofiNavRestore", "RESTAURAR", 6, ImVec2(198.0f, 69.3f)))
+				if (SofiNavigationButton("##SofiNavRestore", "RESTAURAR", 6, ImVec2(198.0f, 69.3f), true))
 				{
 					SofiConfigResetDialog = 1;
 					ImGui::OpenPopup("RESTAURAR CONFIGURACIÓN");
