@@ -4628,7 +4628,7 @@ const bool osdSelected = SofiOSDPanelOpen;
 					ImGui::OpenPopup("RESTAURAR CONFIGURACIÓN");
 				}
 				ImGui::PopStyleColor(4);
-				// Fit the frame to the real first/last button rectangles with one uniform 8 px inset.
+				// Fit the frame to the real first/last button rectangles with one uniform 4 px inset.
 				navigationSplitter.SetCurrentChannel(navigationDrawList, 0);
 				const ImVec2 navigationFrameMin(navigationGroupMin.x - 4.0f, navigationGroupMin.y - 4.0f);
 				const ImVec2 navigationFrameMax(navigationGroupMax.x + 4.0f, navigationGroupMax.y + 4.0f);
