@@ -861,3 +861,12 @@ Se incorporan siete iconos vectoriales de estilo **Fluent**, inspirado en Window
 **Alcance:** presentación exclusiva de la skin **Neon Blue**. Se conservan las dimensiones, el orden, el centrado vertical y las acciones existentes. La skin **None** permanece sin cambios. No se agregan fuentes, imágenes ni dependencias externas.
 
 **Estado:** implementación integrada; pendiente de compilación y validación funcional de Manu.
+
+
+## SOFI Space — Iconos Fluent en la fila inferior de Neon Blue
+
+Se incorporan cuatro iconos vectoriales de estilo **Fluent** a los botones AGREGAR JUEGO, JUGAR YA, INPUT y ACERCA DE: suma, reproducción, teclado e información. Se reutiliza el dibujo nativo de ImGui y el mismo lenguaje visual celeste de la barra lateral.
+
+**Alcance:** exclusivamente la fila inferior de la skin **Neon Blue**. Se mantienen el tamaño y la posición de los cuatro botones, sus separaciones, estilos y acciones. La skin **None** y el resto de la interfaz permanecen sin cambios.
+
+**Estado:** implementación integrada; pendiente de compilación y validación funcional de Manu.

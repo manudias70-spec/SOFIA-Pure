@@ -237,6 +237,27 @@ static void SofiDrawNavigationIcon(ImDrawList* drawList, int icon, const ImVec2&
 			drawList->AddLine(ImVec2(center.x + 8.0f, center.y - 7.0f), ImVec2(center.x + 8.0f, center.y - 1.0f), color, t);
 			drawList->AddLine(ImVec2(center.x + 8.0f, center.y - 1.0f), ImVec2(center.x + 2.0f, center.y - 1.0f), color, t);
 			break;
+
+		case 7: // Add game
+			drawList->AddLine(ImVec2(center.x - 8.0f, center.y), ImVec2(center.x + 8.0f, center.y), color, t);
+			drawList->AddLine(ImVec2(center.x, center.y - 8.0f), ImVec2(center.x, center.y + 8.0f), color, t);
+			break;
+		case 8: // Play
+			drawList->AddLine(ImVec2(center.x - 6.0f, center.y - 10.0f), ImVec2(center.x + 9.0f, center.y), color, t);
+			drawList->AddLine(ImVec2(center.x + 9.0f, center.y), ImVec2(center.x - 6.0f, center.y + 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 6.0f, center.y + 10.0f), ImVec2(center.x - 6.0f, center.y - 10.0f), color, t);
+			break;
+		case 9: // Input keyboard
+			drawList->AddRect(ImVec2(center.x - 12.0f, center.y - 8.0f), ImVec2(center.x + 12.0f, center.y + 8.0f), color, 2.0f, 0, t);
+			for (int key = -7; key <= 7; key += 7)
+				drawList->AddLine(ImVec2(center.x + (float)key, center.y - 4.0f), ImVec2(center.x + (float)key, center.y - 1.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 7.0f, center.y + 3.0f), ImVec2(center.x + 7.0f, center.y + 3.0f), color, t);
+			break;
+		case 10: // About information
+			drawList->AddCircle(ImVec2(center.x, center.y), 10.0f, color, 0, t);
+			drawList->AddCircleFilled(ImVec2(center.x, center.y - 5.0f), 1.5f, color);
+			drawList->AddLine(ImVec2(center.x, center.y - 1.0f), ImVec2(center.x, center.y + 6.0f), color, t);
+			break;
 	}
 }
 
@@ -5338,11 +5359,11 @@ else
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-										if (ImGui::Button("AGREGAR JUEGO", ImVec2(quickButtonWidth, quickButtonHeight)))
+										if (SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight)))
 					SofiLauncherCreateProfileRequested = true;
 				
 					ImGui::SameLine(0.0f, quickButtonGap);
-				if (ImGui::Button("JUGAR YA", ImVec2(quickButtonWidth, quickButtonHeight)))
+				if (SofiNavigationButton("##SofiQuickPlay", "JUGAR YA", 8, ImVec2(quickButtonWidth, quickButtonHeight)))
 				{
 					std::vector<SofiGameProfileTemplate*> launchableProfiles;
 					for (size_t i = 0; i < SofiLauncherProfiles.size(); ++i)
@@ -5371,12 +5392,12 @@ const bool inputSelected = SofiInputPanelOpen;
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border,
 							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-						if (ImGui::Button("INPUT", ImVec2(quickButtonWidth, quickButtonHeight)))
+						if (SofiNavigationButton("##SofiQuickInput", "INPUT", 9, ImVec2(quickButtonWidth, quickButtonHeight)))
 							SofiToggleMainPanel(SofiInputPanelOpen);
 						ImGui::PopStyleColor(4);
 					ImGui::SameLine(0.0f, quickButtonGap);
 ImGui::SameLine(0.0f, quickButtonGap);
-					if (ImGui::Button("ACERCA DE", ImVec2(quickButtonWidth, quickButtonHeight)))
+					if (SofiNavigationButton("##SofiQuickAbout", "ACERCA DE", 10, ImVec2(quickButtonWidth, quickButtonHeight)))
 					{
 						SofiAboutOpen = true;
 						ImGui::OpenPopup("##SofiAbout");
