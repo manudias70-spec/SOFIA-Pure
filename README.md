@@ -902,3 +902,11 @@ Se refina la respuesta visual de los siete botones laterales de **Neon Blue**: s
 **Alcance:** exclusivamente presentación de la barra lateral en Neon Blue. Se mantienen los iconos Fluent celestes, los textos, el orden, las dimensiones, el espaciado y las acciones. La skin **None** conserva sus valores visuales originales. No se modifica lógica del emulador ni otras ventanas.
 
 **Estado:** cambio integrado en la rama de trabajo; pendiente de compilación y validación visual de Manu.
+
+## SOFI Space — Ajuste del panel translúcido Neon Blue
+
+Se fija un margen interior uniforme de 8 px en los cuatro lados del panel translúcido de navegación y se redondean más sus esquinas, manteniendo el mismo fondo semitransparente, color y grosor del contorno.
+
+**Alcance:** únicamente el fondo y el contorno del módulo lateral en Neon Blue. No se alteran la ventana, los botones, sus posiciones, dimensiones, separaciones, iconos, textos ni acciones. La skin **None** y el resto de la interfaz permanecen sin cambios.
+
+**Estado:** cambio integrado en la rama de trabajo; pendiente de compilación y validación visual de Manu.
