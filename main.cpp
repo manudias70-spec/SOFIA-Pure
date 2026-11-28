@@ -378,6 +378,29 @@ static bool SofiBeginNeonCommanderWindow(const char* name, ImGuiWindowFlags flag
 }
 
 
+static void SofiCenterWindowIfAtLegacyDefault(const ImVec2& legacyPosition)
+{
+	if (SofiSkinSelection != 0) return;
+
+	ImGuiStorage* state = ImGui::GetStateStorage();
+	const ImGuiID migrationKey = ImGui::GetID("##SofiCenterWindowMigration");
+	if (state->GetBool(migrationKey, false)) return;
+	state->SetBool(migrationKey, true);
+
+	const ImVec2 currentPosition = ImGui::GetWindowPos();
+	if (currentPosition.x > legacyPosition.x - 1.0f &&
+		currentPosition.x < legacyPosition.x + 1.0f &&
+		currentPosition.y > legacyPosition.y - 1.0f &&
+		currentPosition.y < legacyPosition.y + 1.0f)
+	{
+		const ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+		const ImVec2 windowSize = ImGui::GetWindowSize();
+		ImGui::SetWindowPos(ImVec2((displaySize.x - windowSize.x) * 0.5f,
+			(displaySize.y - windowSize.y) * 0.5f), ImGuiCond_Always);
+	}
+}
+
+
 #ifndef SOFIA_SPACE_BUILD
 #define SOFIA_SPACE_BUILD 0
 #endif
@@ -5589,10 +5612,14 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			// Empty per-game properties window: only the two requested tabs for this first step.
 			if (SofiLauncherPropertiesOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(180.0f, 150.0f), ImGuiCond_FirstUseEver);
+				if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+				else
+					ImGui::SetNextWindowPos(ImVec2(180.0f, 150.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(620.0f, 700.0f), ImGuiCond_FirstUseEver);
 				if (SofiBeginNeonWindow("PROPIEDADES DEL JUEGO", &SofiLauncherPropertiesOpen, ImGuiWindowFlags_NoCollapse))
 				{
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(180.0f, 150.0f));
 					if (!SofiLauncherPropertiesWasOpen || SofiLauncherVideoDraftExe != SofiLauncherExePath || SofiLauncherAudioDraftExe != SofiLauncherExePath || SofiLauncherCoreDraftExe != SofiLauncherExePath)
 						SofiLauncherInitializePropertiesDrafts(SofiLauncherExePath);
 					if (ImGui::BeginTabBar("##SofiGamePropertiesTabs"))
@@ -5720,11 +5747,15 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			// AUDIO uses the same live settings path as VIDEO; MIDI uses the core's dynamic list.
 			if (SofiAudioPanelOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+				else
+					ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (SofiBeginNeonWindow("SOFI AUDIO", &SofiAudioPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(116.0f, 104.0f));
 					ImGui::TextDisabled(SofiTranslate("CONFIGURACIÓN ACTIVA  //  CAMBIOS EN EL EMULADOR"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiAudioOptions", ImVec2(0.0f, 0.0f), false,
@@ -5804,11 +5835,15 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			// through the same settings path used by the Libretro environment callbacks.
 			if (SofiVideoPanelOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+				else
+					ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (SofiBeginNeonWindow("SOFI VIDEO", &SofiVideoPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(116.0f, 104.0f));
 					ImGui::TextDisabled(SofiTranslate("CONFIGURACIÓN ACTIVA  //  CAMBIOS APLICADOS AL EMULADOR"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiVideoOptions", ImVec2(0.0f, 0.0f), false,
@@ -5831,11 +5866,15 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			// same settings/update path used by the DOSBox Pure core options.
 			if (SofiOSDPanelOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+				else
+					ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (SofiBeginNeonWindow("SOFI OSD", &SofiOSDPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(116.0f, 104.0f));
 					ImGui::TextDisabled(SofiText("GENERAL  //  CONFIGURACIÓN", "GENERAL  //  SETTINGS"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiOSDOptions", ImVec2(0.0f, 0.0f), false,
@@ -5887,11 +5926,15 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			// Controller assignments use the existing frontend capture/binding API.
 			if (SofiInputPanelOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+				else
+					ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (SofiBeginNeonWindow("SOFI INPUT", &SofiInputPanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(116.0f, 104.0f));
 					ImGui::TextDisabled("INPUT  //  CONFIGURACIÓN DEL TECLADO, MOUSE Y CONTROLES");
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiInputOptions", ImVec2(0.0f, 0.0f), false,
@@ -5983,11 +6026,15 @@ ImGui::SameLine(0.0f, quickButtonGap);
 			// the same live core-option path already used by INPUT.
 			if (SofiCorePanelOpen)
 			{
-				ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
+				if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+				else
+					ImGui::SetNextWindowPos(ImVec2(116.0f, 104.0f), ImGuiCond_FirstUseEver);
 				ImGui::SetNextWindowSize(ImVec2(560.0f, 680.0f), ImGuiCond_FirstUseEver);
 				if (SofiBeginNeonWindow("SOFI CORE", &SofiCorePanelOpen,
 					ImGuiWindowFlags_NoCollapse))
 				{
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(116.0f, 104.0f));
 					ImGui::TextDisabled(SofiTranslate("CORE  //  HARDWARE, OTROS SO Y ESTADÍSTICAS"));
 					ImGui::Separator();
 					ImGui::BeginChild("##SofiCoreOptions", ImVec2(0.0f, 0.0f), false,
@@ -6038,6 +6085,9 @@ ImGui::SameLine(0.0f, quickButtonGap);
 					// persisted position and size after a full application restart.
 					if (SofiCommanderApplyMinimized)
 						SofiCommanderApplyMinimized = false;
+					if (SofiSkinSelection == 0)
+					ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f), ImGuiCond_FirstUseEver, ImVec2(0.5f, 0.5f));
+					else
 					ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_FirstUseEver);
 					ImGui::SetNextWindowSize(ImVec2(520.0f, 320.0f), ImGuiCond_FirstUseEver);
 					if (SofiCommanderApplyGeometry)
@@ -6064,6 +6114,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 					}
 
 					const bool commanderVisible = SofiBeginNeonCommanderWindow("SOFI Commander", ImGuiWindowFlags_NoCollapse);
+					SofiCenterWindowIfAtLegacyDefault(ImVec2(20.0f, 20.0f));
 					bool commanderMinimizeClicked = false;
 					bool commanderRestoreClicked = false;
 					bool commanderCloseClicked = false;
