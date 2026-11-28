@@ -5433,6 +5433,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 						SofiAboutOpen = true;
 						ImGui::OpenPopup("##SofiAbout");
 					}
+				const ImVec2 quickButtonsGroupMax = ImGui::GetItemRectMax();
 				if (SofiAboutOpen)
 				{
 						ImGui::SetNextWindowSize(ImVec2(380.0f, 0.0f), ImGuiCond_Appearing);
@@ -5449,7 +5450,6 @@ ImGui::SameLine(0.0f, quickButtonGap);
 							}
 							ImGui::EndPopup();
 						}
-						const ImVec2 quickButtonsGroupMax = ImGui::GetItemRectMax();
 				}
 				quickButtonsSplitter.SetCurrentChannel(quickButtonsDrawList, 0);
 const ImVec2 quickButtonsFrameMin(quickButtonsGroupMin.x - 4.0f, quickButtonsGroupMin.y - 4.0f);
