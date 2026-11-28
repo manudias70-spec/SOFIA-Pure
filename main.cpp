@@ -5401,6 +5401,7 @@ else
 						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 22.0f));
 						ImGui::SetWindowFontScale(1.3f);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.5f);
 						ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
@@ -5466,7 +5467,7 @@ ImGui::SameLine(0.0f, quickButtonGap);
 						}
 				}
 				ImGui::PopStyleColor(4);
-				ImGui::PopStyleVar(2);
+				ImGui::PopStyleVar(3);
 				ImGui::End();
 				ImGui::PopStyleVar();
 				}
