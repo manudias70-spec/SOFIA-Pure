@@ -870,3 +870,12 @@ Se incorporan cuatro iconos vectoriales de estilo **Fluent** a los botones AGREG
 **Alcance:** exclusivamente la fila inferior de la skin **Neon Blue**. Se mantienen el tamaño y la posición de los cuatro botones, sus separaciones, estilos y acciones. La skin **None** y el resto de la interfaz permanecen sin cambios.
 
 **Estado:** implementación integrada; pendiente de compilación y validación funcional de Manu.
+
+
+## SOFI Space — Módulo unificado de navegación Neon Blue
+
+La barra vertical izquierda de **Neon Blue** recibe un fondo común semitransparente y un único contorno exterior celeste, más definido, para que sus siete acciones se perciban como un solo módulo de navegación y no como botones aislados.
+
+**Alcance:** solo presentación de la barra lateral en Neon Blue. Se conservan exactamente la posición y las dimensiones actuales de la ventana, así como el tamaño, orden, separación, iconos, textos y acciones de los siete botones. La skin **None** y el resto de la interfaz no se modifican.
+
+**Estado:** implementación integrada; pendiente de compilación y validación visual de Manu.

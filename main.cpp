@@ -4455,6 +4455,21 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 				ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground);
+
+			// Neon Blue: visually unify the seven navigation actions into one translucent module.
+			if (SofiSkinSelection == 0)
+			{
+				const ImVec2 navigationBlockMin = ImGui::GetWindowPos();
+				const ImVec2 navigationBlockSize = ImGui::GetWindowSize();
+				const ImVec2 navigationBlockMax(
+					navigationBlockMin.x + navigationBlockSize.x,
+					navigationBlockMin.y + navigationBlockSize.y);
+				ImDrawList* navigationDrawList = ImGui::GetWindowDrawList();
+				navigationDrawList->AddRectFilled(navigationBlockMin, navigationBlockMax,
+					IM_COL32(7, 22, 40, 138), 12.0f);
+				navigationDrawList->AddRect(navigationBlockMin, navigationBlockMax,
+					IM_COL32(65, 190, 245, 205), 12.0f, 0, 2.5f);
+			}
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
