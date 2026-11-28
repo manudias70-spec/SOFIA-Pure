@@ -4481,18 +4481,20 @@ static struct sDOSBoxPure : public ZL_Application
 			{
 				const ImVec2 navigationWindowMin = ImGui::GetWindowPos();
 				const ImVec2 navigationWindowSize = ImGui::GetWindowSize();
-				const ImVec2 navigationInset = ImGui::GetStyle().WindowPadding;
+				// Keep the translucent navigation panel inset equally on all four sides.
+				const float navigationInset = 8.0f;
+				const float navigationRounding = 16.0f;
 				const ImVec2 navigationBlockMin(
-					navigationWindowMin.x + navigationInset.x,
-					navigationWindowMin.y + navigationInset.y);
+					navigationWindowMin.x + navigationInset,
+					navigationWindowMin.y + navigationInset);
 				const ImVec2 navigationBlockMax(
-					navigationWindowMin.x + navigationWindowSize.x - navigationInset.x,
-					navigationWindowMin.y + navigationWindowSize.y - navigationInset.y);
+					navigationWindowMin.x + navigationWindowSize.x - navigationInset,
+					navigationWindowMin.y + navigationWindowSize.y - navigationInset);
 				ImDrawList* navigationDrawList = ImGui::GetWindowDrawList();
 				navigationDrawList->AddRectFilled(navigationBlockMin, navigationBlockMax,
-					IM_COL32(7, 22, 40, 138), 12.0f);
+					IM_COL32(7, 22, 40, 138), navigationRounding);
 				navigationDrawList->AddRect(navigationBlockMin, navigationBlockMax,
-					IM_COL32(65, 190, 245, 205), 12.0f, 0, 2.5f);
+					IM_COL32(65, 190, 245, 205), navigationRounding, 0, 2.5f);
 			}
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, (SofiSkinSelection == 0) ? 9.0f : 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
