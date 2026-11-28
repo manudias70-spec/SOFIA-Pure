@@ -5345,9 +5345,9 @@ else
 								deletePopupRequested = true;
 							}
 							ImGui::EndPopup();
+						}
 						ImGui::PopStyleColor(7);
 						ImGui::PopStyleVar(3);
-						}
 						ImGui::SetCursorScreenPos(ImVec2(cardPos.x, cardPos.y + 198.0f));
 						ImGui::Dummy(ImVec2(cardWidth, cardHeight - 198.0f));
 						ImGui::EndGroup();
