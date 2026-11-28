@@ -910,3 +910,12 @@ Se fija un margen interior uniforme de 8 px en los cuatro lados del panel transl
 **Alcance:** únicamente el fondo y el contorno del módulo lateral en Neon Blue. No se alteran la ventana, los botones, sus posiciones, dimensiones, separaciones, iconos, textos ni acciones. La skin **None** y el resto de la interfaz permanecen sin cambios.
 
 **Estado:** cambio integrado en la rama de trabajo; pendiente de compilación y validación visual de Manu.
+
+
+## SOFI Space — Corrección geométrica del contorno Neon Blue
+
+Se establece un margen interior uniforme de **14 px** en los cuatro lados del panel translúcido de navegación. El ajuste hace visible la separación del contorno respecto de los límites del módulo y mantiene iguales los márgenes superior, inferior, izquierdo y derecho. No se modifica el radio de las esquinas, el color, la transparencia ni el grosor del borde.
+
+**Alcance:** exclusivamente la geometría del contorno del panel lateral en Neon Blue. No se alteran botones, dimensiones de ventana, posiciones, separaciones, iconos, textos ni acciones. La skin **None** permanece intacta.
+
+**Estado:** cambio integrado; pendiente de compilación y validación visual.
