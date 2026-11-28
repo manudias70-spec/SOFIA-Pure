@@ -4459,11 +4459,15 @@ static struct sDOSBoxPure : public ZL_Application
 			// Neon Blue: visually unify the seven navigation actions into one translucent module.
 			if (SofiSkinSelection == 0)
 			{
-				const ImVec2 navigationBlockMin = ImGui::GetWindowPos();
-				const ImVec2 navigationBlockSize = ImGui::GetWindowSize();
+				const ImVec2 navigationWindowMin = ImGui::GetWindowPos();
+				const ImVec2 navigationWindowSize = ImGui::GetWindowSize();
+				const ImVec2 navigationInset = ImGui::GetStyle().WindowPadding;
+				const ImVec2 navigationBlockMin(
+					navigationWindowMin.x + navigationInset.x,
+					navigationWindowMin.y + navigationInset.y);
 				const ImVec2 navigationBlockMax(
-					navigationBlockMin.x + navigationBlockSize.x,
-					navigationBlockMin.y + navigationBlockSize.y);
+					navigationWindowMin.x + navigationWindowSize.x - navigationInset.x,
+					navigationWindowMin.y + navigationWindowSize.y - navigationInset.y);
 				ImDrawList* navigationDrawList = ImGui::GetWindowDrawList();
 				navigationDrawList->AddRectFilled(navigationBlockMin, navigationBlockMax,
 					IM_COL32(7, 22, 40, 138), 12.0f);
