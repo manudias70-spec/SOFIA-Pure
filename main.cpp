@@ -4474,7 +4474,7 @@ static struct sDOSBoxPure : public ZL_Application
 				navigationDrawList->AddRect(navigationBlockMin, navigationBlockMax,
 					IM_COL32(65, 190, 245, 205), 12.0f, 0, 2.5f);
 			}
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, (SofiSkinSelection == 0) ? 9.0f : 5.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, (SofiSkinSelection == 0) ? ImVec2(8.0f, 22.0f) : ImVec2(4.0f, 13.0f));
 			ImGui::SetWindowFontScale((SofiSkinSelection == 0) ? 1.3f : 1.0f);
 			if (SofiSkinSelection == 0)
@@ -4489,6 +4489,8 @@ static struct sDOSBoxPure : public ZL_Application
 				if (navigationTopPadding > 0.0f)
 					ImGui::SetCursorPosY(ImGui::GetCursorPosY() + navigationTopPadding);
 			}
+if (SofiSkinSelection == 0)
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 if (SofiSkinSelection == 0)
 			{
 				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
@@ -4516,7 +4518,7 @@ if (SofiSkinSelection == 0)
 				}
 				ImGui::PopStyleColor(4);
 			}
-const bool selected = SofiCommanderOpen;
+const bool selected = SofiCommanderOpen && !SofiCommanderMinimized;
 			ImGui::PushStyleColor(ImGuiCol_Button,
 				selected ? IM_COL32(12, 75, 120, 245) : IM_COL32(10, 28, 48, 225));
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
@@ -4612,6 +4614,7 @@ const bool osdSelected = SofiOSDPanelOpen;
 					ImGui::OpenPopup("RESTAURAR CONFIGURACIÓN");
 				}
 				ImGui::PopStyleColor(4);
+				ImGui::PopStyleVar();
 
 				if (ImGui::BeginPopupModal("RESTAURAR CONFIGURACIÓN", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 				{
