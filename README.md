@@ -928,3 +928,12 @@ Se conservan los márgenes laterales del panel en **14 px** y se reducen los má
 **Alcance:** solo la geometría del panel lateral en Neon Blue. La skin **None** y el resto de la interfaz permanecen intactas.
 
 **Estado:** cambio integrado; pendiente de compilación y validación visual.
+
+
+## SOFI Space — Contorno ajustado al grupo de navegación
+
+El contorno translúcido de **Neon Blue** ahora toma como referencia los rectángulos reales de los botones **INICIO** y **RESTAURAR**, que delimitan el grupo vertical de siete acciones. Se aplica una separación uniforme de **8 px** alrededor del conjunto. El fondo y el borde se dibujan detrás de los botones, sin cubrirlos.
+
+Se mantienen el radio de 16 px, los colores, la transparencia y el grosor del borde. No se modifican las dimensiones, posiciones ni funciones de los botones. La skin **None** permanece intacta.
+
+**Estado:** cambio integrado; pendiente de compilación y validación visual.
