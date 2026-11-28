@@ -169,6 +169,92 @@ static void SofiToggleMainPanel(bool& panelOpen)
 	SofiLauncherOpen = false;
 	panelOpen = shouldOpen;
 }
+static void SofiDrawNavigationIcon(ImDrawList* drawList, int icon, const ImVec2& center, ImU32 color)
+{
+	const float t = 2.0f;
+	switch (icon)
+	{
+		case 0: // Home
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y - 1.0f), ImVec2(center.x, center.y - 11.0f), color, t);
+			drawList->AddLine(ImVec2(center.x, center.y - 11.0f), ImVec2(center.x + 11.0f, center.y - 1.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 8.0f, center.y - 3.0f), ImVec2(center.x - 8.0f, center.y + 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 8.0f, center.y - 3.0f), ImVec2(center.x + 8.0f, center.y + 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 8.0f, center.y + 10.0f), ImVec2(center.x + 8.0f, center.y + 10.0f), color, t);
+			drawList->AddRect(ImVec2(center.x - 2.5f, center.y + 3.0f), ImVec2(center.x + 2.5f, center.y + 10.0f), color, 1.0f, 0, t);
+			break;
+		case 1: // Explorer folder
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y - 6.0f), ImVec2(center.x - 3.0f, center.y - 6.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 3.0f, center.y - 6.0f), ImVec2(center.x, center.y - 2.0f), color, t);
+			drawList->AddLine(ImVec2(center.x, center.y - 2.0f), ImVec2(center.x + 10.0f, center.y - 2.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 10.0f, center.y - 2.0f), ImVec2(center.x + 8.0f, center.y + 9.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 8.0f, center.y + 9.0f), ImVec2(center.x - 10.0f, center.y + 9.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 10.0f, center.y + 9.0f), ImVec2(center.x - 11.0f, center.y - 6.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y - 6.0f), ImVec2(center.x - 11.0f, center.y - 9.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y - 9.0f), ImVec2(center.x - 3.0f, center.y - 9.0f), color, t);
+			break;
+		case 2: // Core chip
+			drawList->AddRect(ImVec2(center.x - 8.0f, center.y - 8.0f), ImVec2(center.x + 8.0f, center.y + 8.0f), color, 2.0f, 0, t);
+			drawList->AddRect(ImVec2(center.x - 4.0f, center.y - 4.0f), ImVec2(center.x + 4.0f, center.y + 4.0f), color, 1.0f, 0, t);
+			for (int pin = -1; pin <= 1; ++pin)
+			{
+				const float offset = (float)pin * 6.0f;
+				drawList->AddLine(ImVec2(center.x + offset, center.y - 12.0f), ImVec2(center.x + offset, center.y - 8.0f), color, t);
+				drawList->AddLine(ImVec2(center.x + offset, center.y + 8.0f), ImVec2(center.x + offset, center.y + 12.0f), color, t);
+				drawList->AddLine(ImVec2(center.x - 12.0f, center.y + offset), ImVec2(center.x - 8.0f, center.y + offset), color, t);
+				drawList->AddLine(ImVec2(center.x + 8.0f, center.y + offset), ImVec2(center.x + 12.0f, center.y + offset), color, t);
+			}
+			break;
+		case 3: // Video display
+			drawList->AddRect(ImVec2(center.x - 12.0f, center.y - 9.0f), ImVec2(center.x + 12.0f, center.y + 6.0f), color, 2.0f, 0, t);
+			drawList->AddLine(ImVec2(center.x, center.y + 6.0f), ImVec2(center.x, center.y + 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 6.0f, center.y + 10.0f), ImVec2(center.x + 6.0f, center.y + 10.0f), color, t);
+			break;
+		case 4: // Audio speaker
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y - 4.0f), ImVec2(center.x - 5.0f, center.y - 4.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 5.0f, center.y - 4.0f), ImVec2(center.x + 3.0f, center.y - 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 3.0f, center.y - 10.0f), ImVec2(center.x + 3.0f, center.y + 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 3.0f, center.y + 10.0f), ImVec2(center.x - 5.0f, center.y + 4.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 5.0f, center.y + 4.0f), ImVec2(center.x - 11.0f, center.y + 4.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y + 4.0f), ImVec2(center.x - 11.0f, center.y - 4.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 7.0f, center.y - 5.0f), ImVec2(center.x + 11.0f, center.y), color, t);
+			drawList->AddLine(ImVec2(center.x + 11.0f, center.y), ImVec2(center.x + 7.0f, center.y + 5.0f), color, t);
+			break;
+		case 5: // Gamepad / OSD
+			drawList->AddRect(ImVec2(center.x - 12.0f, center.y - 6.0f), ImVec2(center.x + 12.0f, center.y + 7.0f), color, 6.0f, 0, t);
+			drawList->AddLine(ImVec2(center.x - 7.0f, center.y - 2.0f), ImVec2(center.x - 7.0f, center.y + 4.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 10.0f, center.y + 1.0f), ImVec2(center.x - 4.0f, center.y + 1.0f), color, t);
+			drawList->AddCircle(ImVec2(center.x + 5.0f, center.y - 1.0f), 1.8f, color, 0, t);
+			drawList->AddCircle(ImVec2(center.x + 9.0f, center.y + 3.0f), 1.8f, color, 0, t);
+			break;
+		case 6: // Restore
+			drawList->AddLine(ImVec2(center.x + 8.0f, center.y - 7.0f), ImVec2(center.x + 1.0f, center.y - 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 1.0f, center.y - 10.0f), ImVec2(center.x - 7.0f, center.y - 7.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 7.0f, center.y - 7.0f), ImVec2(center.x - 11.0f, center.y), color, t);
+			drawList->AddLine(ImVec2(center.x - 11.0f, center.y), ImVec2(center.x - 8.0f, center.y + 7.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 8.0f, center.y + 7.0f), ImVec2(center.x - 1.0f, center.y + 10.0f), color, t);
+			drawList->AddLine(ImVec2(center.x - 1.0f, center.y + 10.0f), ImVec2(center.x + 7.0f, center.y + 7.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 7.0f, center.y + 7.0f), ImVec2(center.x + 11.0f, center.y), color, t);
+			drawList->AddLine(ImVec2(center.x + 8.0f, center.y - 7.0f), ImVec2(center.x + 8.0f, center.y - 1.0f), color, t);
+			drawList->AddLine(ImVec2(center.x + 8.0f, center.y - 1.0f), ImVec2(center.x + 2.0f, center.y - 1.0f), color, t);
+			break;
+	}
+}
+
+static bool SofiNavigationButton(const char* id, const char* label, int icon, const ImVec2& size)
+{
+	const bool pressed = ImGui::Button(id, size);
+	const ImVec2 buttonMin = ImGui::GetItemRectMin();
+	const ImVec2 buttonMax = ImGui::GetItemRectMax();
+	const ImVec2 iconCenter(buttonMin.x + 30.0f, (buttonMin.y + buttonMax.y) * 0.5f);
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	SofiDrawNavigationIcon(drawList, icon, iconCenter, IM_COL32(100, 205, 255, 255));
+	const ImVec2 textSize = ImGui::CalcTextSize(label);
+	const ImVec2 textPos(buttonMin.x + 58.0f, buttonMin.y + (size.y - textSize.y) * 0.5f);
+	drawList->AddText(ImGui::GetFont(), ImGui::GetFontSize(), textPos,
+		ImGui::GetColorU32(ImGuiCol_Text), label);
+	return pressed;
+}
+
 static int SofiSkinSelection = 0; // 0 = Neon Blue, 1 = None
 
 #ifndef SOFIA_SPACE_BUILD
@@ -4369,7 +4455,7 @@ if (SofiSkinSelection == 0)
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-				if (ImGui::Button("INICIO", ImVec2(198.0f, 69.3f)))
+				if (SofiNavigationButton("##SofiNavInicio", "INICIO", 0, ImVec2(198.0f, 69.3f)))
 				{
 					SofiCommanderOpen = false;
 					SofiCommanderFocused = false;
@@ -4397,7 +4483,7 @@ const bool selected = SofiCommanderOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				selected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button(SofiText("EXPLORADOR", "EXPLORER"), (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavExplorer", SofiText("EXPLORADOR", "EXPLORER"), 1, ImVec2(198.0f, 69.3f)) : ImGui::Button(SofiText("EXPLORADOR", "EXPLORER"), ImVec2(88.0f, 44.0f)))
 			{
 				if (!SofiCommanderOpen)
 				{
@@ -4441,7 +4527,7 @@ const bool coreSelected = SofiCorePanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				coreSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("CORE", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavCore", "CORE", 2, ImVec2(198.0f, 69.3f)) : ImGui::Button("CORE", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiCorePanelOpen);
 			ImGui::PopStyleColor(4);
 const bool videoSelected = SofiVideoPanelOpen;
@@ -4451,7 +4537,7 @@ const bool videoSelected = SofiVideoPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				videoSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("VIDEO", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavVideo", "VIDEO", 3, ImVec2(198.0f, 69.3f)) : ImGui::Button("VIDEO", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiVideoPanelOpen);
 			ImGui::PopStyleColor(4);
 const bool audioSelected = SofiAudioPanelOpen;
@@ -4461,7 +4547,7 @@ const bool audioSelected = SofiAudioPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				audioSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("AUDIO", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavAudio", "AUDIO", 4, ImVec2(198.0f, 69.3f)) : ImGui::Button("AUDIO", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiAudioPanelOpen);
 			ImGui::PopStyleColor(4);
 const bool osdSelected = SofiOSDPanelOpen;
@@ -4471,7 +4557,7 @@ const bool osdSelected = SofiOSDPanelOpen;
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 			ImGui::PushStyleColor(ImGuiCol_Border,
 				osdSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
-			if (ImGui::Button("SOFI OSD", (SofiSkinSelection == 0) ? ImVec2(198.0f, 69.3f) : ImVec2(88.0f, 44.0f)))
+			if ((SofiSkinSelection == 0) ? SofiNavigationButton("##SofiNavOSD", "SOFI OSD", 5, ImVec2(198.0f, 69.3f)) : ImGui::Button("SOFI OSD", ImVec2(88.0f, 44.0f)))
 				SofiToggleMainPanel(SofiOSDPanelOpen);
 			ImGui::PopStyleColor(4);
 			if (SofiSkinSelection == 0)
@@ -4480,7 +4566,7 @@ const bool osdSelected = SofiOSDPanelOpen;
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
-				if (ImGui::Button("RESTAURAR", ImVec2(198.0f, 69.3f)))
+				if (SofiNavigationButton("##SofiNavRestore", "RESTAURAR", 6, ImVec2(198.0f, 69.3f)))
 				{
 					SofiConfigResetDialog = 1;
 					ImGui::OpenPopup("RESTAURAR CONFIGURACIÓN");

@@ -852,3 +852,12 @@ Se incorpora el selector de skins sobre la base confirmada de la build **#639** 
 Se centra verticalmente el grupo completo de siete botones de la barra izquierda de **Neon Blue** dentro de su área de navegación. La ventana de navegación también se ubica respecto del centro vertical de la superficie lógica de SOFI Space, de modo que el grupo conserve su alineación al utilizar el escalado global. La skin **None** mantiene sin cambios su posición, dimensiones y distribución originales.
 
 **Alcance:** ajuste exclusivo de presentación en `main.cpp`; no modifica el escalado OpenGL, los botones, sus acciones ni otras ventanas. Pendiente de compilación y validación funcional.
+
+
+## SOFI Space — Iconos Fluent en la barra Neon Blue
+
+Se incorporan siete iconos vectoriales de estilo **Fluent**, inspirado en Windows 11, a los botones INICIO, EXPLORADOR, CORE, VIDEO, AUDIO, SOFI OSD y RESTAURAR. Los símbolos se dibujan directamente con primitivas de ImGui, en azul celeste, junto al texto de cada botón.
+
+**Alcance:** presentación exclusiva de la skin **Neon Blue**. Se conservan las dimensiones, el orden, el centrado vertical y las acciones existentes. La skin **None** permanece sin cambios. No se agregan fuentes, imágenes ni dependencias externas.
+
+**Estado:** implementación integrada; pendiente de compilación y validación funcional de Manu.
