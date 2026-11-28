@@ -4348,11 +4348,12 @@ static struct sDOSBoxPure : public ZL_Application
 				ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x - 16.0f,
 					io.DisplaySize.y - 44.0f - 8.0f), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
 				ImGui::SetNextWindowSize(ImVec2(306.6f, 0.0f), ImGuiCond_Always);
-				ImGui::SetNextWindowBgAlpha(0.68f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+				ImGui::SetNextWindowBgAlpha(138.0f / 255.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 16.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.5f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(18.0f, 16.0f));
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 18.0f));
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(7, 22, 40, 255));
 				ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
 				if (ImGui::Begin("SOFI INFO", NULL,
 					ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -4429,7 +4430,7 @@ static struct sDOSBoxPure : public ZL_Application
 					ImGui::TextColored(ImVec4(0.88f, 0.94f, 1.0f, 1.0f), "BUILD #" SOFI_STRINGIZE(SOFIA_SPACE_BUILD));
 				}
 				ImGui::End();
-				ImGui::PopStyleColor();
+				ImGui::PopStyleColor(2);
 				ImGui::PopStyleVar(4);
 			}
 
@@ -5402,11 +5403,11 @@ else
 						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.0f);
 						ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 22.0f));
 						ImGui::SetWindowFontScale(1.3f);
-						ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.5f);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 						ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 28, 48, 225));
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
-						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(65, 190, 245, 205));
+						ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(35, 105, 145, 190));
 										if (SofiNavigationButton("##SofiQuickAdd", "AGREGAR JUEGO", 7, ImVec2(quickButtonWidth, quickButtonHeight)))
 					SofiLauncherCreateProfileRequested = true;
 				
@@ -5439,7 +5440,7 @@ const bool inputSelected = SofiInputPanelOpen;
 						ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(15, 100, 150, 245));
 						ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(20, 135, 190, 255));
 						ImGui::PushStyleColor(ImGuiCol_Border,
-							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(65, 190, 245, 205));
+							inputSelected ? IM_COL32(50, 205, 255, 255) : IM_COL32(35, 105, 145, 190));
 						if (SofiNavigationButton("##SofiQuickInput", "INPUT", 9, ImVec2(quickButtonWidth, quickButtonHeight)))
 							SofiToggleMainPanel(SofiInputPanelOpen);
 						ImGui::PopStyleColor(4);
