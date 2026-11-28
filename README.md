@@ -72,6 +72,10 @@ Para utilizar la emulación **Roland MT-32 / Sound Canvas y sus variantes**, los
 
 La personalización mediante skins forma parte de la visión del proyecto. La apariencia es independiente de la emulación y no debe alterar su funcionamiento.
 
+### Tipografía de navegación Neon Blue
+
+La prueba tipográfica de la barra lateral utiliza **Rajdhani SemiBold**, distribuida por Google Fonts bajo la licencia **SIL Open Font License 1.1**. El archivo de fuente y su licencia se incluyen junto al ejecutable de Windows. Su uso está limitado a las etiquetas de la barra lateral de la skin Neon Blue; no modifica la tipografía de la fila inferior, las ventanas, la skin None ni la interfaz de emulación.
+
 ## Procedencia y agradecimientos
 
 SOFIA-Pure reconoce expresamente los proyectos y autores cuyo trabajo constituye su base o se utiliza en componentes integrados:
